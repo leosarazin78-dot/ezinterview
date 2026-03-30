@@ -2,10 +2,6 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const anthropic = new Anthropic();
 
-export const config = {
-  api: { bodyParser: false },
-};
-
 export async function POST(request) {
   try {
     const formData = await request.formData();
