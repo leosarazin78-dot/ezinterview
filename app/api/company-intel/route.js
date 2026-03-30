@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { extractJSONObject } from "../../lib/parse-json";
 
 const anthropic = new Anthropic();
 
@@ -34,10 +35,10 @@ Sois précis et factuel. Pour les actualités, donne les plus récentes que tu c
     });
 
     const text = message.content[0].text;
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return Response.json({ error: "Erreur d'analyse" }, { status: 500 });
+    const parsed = extractJSONObject(text);
+    if (!parsed) return Response.json({ error: "Erreur d'analyse. Réessaie." }, { status: 500 });
 
-    return Response.json(JSON.parse(jsonMatch[0]));
+    return Response.json(parsed);
   } catch (err) {
     console.error("Company intel error:", err);
     return Response.json({ error: err.message }, { status: 500 });

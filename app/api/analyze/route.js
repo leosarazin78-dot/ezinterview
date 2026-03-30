@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { extractJSONArray } from "../../lib/parse-json";
 
 const anthropic = new Anthropic();
 
@@ -41,11 +42,11 @@ Retourne UNIQUEMENT du JSON strict — un tableau de correspondances :
     });
 
     const text = message.content[0].text;
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch)
-      return Response.json({ error: "Erreur d'analyse" }, { status: 500 });
+    const parsed = extractJSONArray(text);
+    if (!parsed)
+      return Response.json({ error: "Erreur d'analyse. Réessaie." }, { status: 500 });
 
-    return Response.json(JSON.parse(jsonMatch[0]));
+    return Response.json(parsed);
   } catch (err) {
     console.error("Analyze error:", err);
     return Response.json({ error: err.message }, { status: 500 });

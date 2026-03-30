@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { extractJSONArray } from "../../lib/parse-json";
 
 const anthropic = new Anthropic();
 
@@ -110,11 +111,11 @@ Retourne UNIQUEMENT le JSON valide.`,
     });
 
     const text = message.content[0].text;
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch)
-      return Response.json({ error: "Erreur de génération" }, { status: 500 });
+    const parsed = extractJSONArray(text);
+    if (!parsed)
+      return Response.json({ error: "Le plan généré contient du JSON invalide. Réessaie." }, { status: 500 });
 
-    return Response.json(JSON.parse(jsonMatch[0]));
+    return Response.json(parsed);
   } catch (err) {
     console.error("Plan generation error:", err);
     return Response.json({ error: err.message }, { status: 500 });

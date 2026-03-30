@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as cheerio from "cheerio";
+import { extractJSONObject } from "../../lib/parse-json";
 
 const anthropic = new Anthropic();
 
@@ -98,14 +99,11 @@ IMPORTANT :
     });
 
     const text = message.content[0].text;
-    // Extraire le JSON de la réponse
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch)
-      return Response.json({ error: "Erreur d'analyse" }, { status: 500 });
+    const jobData = extractJSONObject(text);
+    if (!jobData)
+      return Response.json({ error: "Erreur d'analyse de l'offre. Réessaie." }, { status: 500 });
 
-    const jobData = JSON.parse(jsonMatch[0]);
     jobData.source = source;
-
     return Response.json(jobData);
   } catch (err) {
     console.error("API error:", err);

@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { extractJSONObject } from "../../lib/parse-json";
 
 const anthropic = new Anthropic();
 
@@ -78,10 +79,10 @@ Extrais uniquement les compétences TECHNIQUES.`,
     });
 
     const responseText = message.content[0].text;
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return Response.json({ error: "Erreur d'analyse du CV" }, { status: 500 });
+    const parsed = extractJSONObject(responseText);
+    if (!parsed) return Response.json({ error: "Erreur d'analyse du CV. Réessaie." }, { status: 500 });
 
-    return Response.json(JSON.parse(jsonMatch[0]));
+    return Response.json(parsed);
   } catch (err) {
     console.error("CV parse error:", err);
     return Response.json({ error: "Erreur : " + err.message }, { status: 500 });
