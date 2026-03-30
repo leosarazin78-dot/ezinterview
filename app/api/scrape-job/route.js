@@ -76,23 +76,25 @@ Format attendu :
   "company": "Nom de l'entreprise",
   "location": "Lieu",
   "type": "CDI/CDD/Stage/Freelance",
-  "salary": "Salaire si mentionné ou null",
+  "salary": "Salaire si mentionne ou null",
   "description": "Description courte du poste (2-3 phrases)",
   "requirements": [
-    {"id": 1, "label": "Compétence technique", "category": "tech", "level": "Avancé/Intermédiaire/Basique"}
+    {"id": 1, "label": "Competence ou connaissance requise", "category": "pro", "level": "Avance/Intermediaire/Basique"}
   ],
   "interviewSteps": [
-    {"step": 1, "label": "Nom de l'étape", "interlocutor": "Qui", "duration": "Durée", "type": "visio/sur site/tel/take home"}
+    {"step": 1, "label": "Nom de l'etape", "interlocutor": "Qui", "duration": "Duree", "type": "visio/sur site/tel"}
   ],
   "companyInfo": {
-    "sector": "Secteur d'activité",
-    "techStack": ["Tech1", "Tech2"]
+    "sector": "Secteur d'activite",
+    "techStack": ["Outil/methode/techno 1", "Outil/methode/techno 2"]
   }
 }
 
 IMPORTANT :
-- requirements : uniquement des compétences TECHNIQUES (pas de soft skills, pas de langues)
-- interviewSteps : extrais-les si le processus est décrit dans l'offre, sinon retourne un tableau vide []
+- requirements : extrais les competences PROFESSIONNELLES et METIER demandees (techniques, outils, connaissances sectorielles, methodologies, certifications). Pas de soft skills ni de langues.
+  Exemples selon le domaine : "React" pour un dev, "Modelisation financiere" pour un analyste, "Droit des contrats" pour un juriste, "SEO/SEA" pour un marketeur, "Normes IFRS" pour un comptable
+- interviewSteps : extrais-les si le processus est decrit dans l'offre, sinon retourne un tableau vide []
+- companyInfo.techStack : liste les outils, technologies, methodes ou frameworks mentionnes (logiciels, ERP, CRM, outils metier, methodologies...)
 - Retourne UNIQUEMENT le JSON valide`,
         },
       ],

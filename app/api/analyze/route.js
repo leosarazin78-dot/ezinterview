@@ -15,11 +15,11 @@ export async function POST(request) {
       messages: [
         {
           role: "user",
-          content: `Compare ce profil candidat avec cette offre d'emploi. Analyse UNIQUEMENT les compétences techniques.
+          content: `Compare ce profil candidat avec cette offre d'emploi. Analyse les competences PROFESSIONNELLES et METIER (pas les soft skills ni les langues).
 
 OFFRE :
 Poste : ${jobData.title} chez ${jobData.company}
-Compétences requises : ${jobData.requirements?.map((r) => r.label).join(", ")}
+Competences requises : ${jobData.requirements?.map((r) => r.label).join(", ")}
 
 PROFIL :
 ${JSON.stringify(profile)}
@@ -30,13 +30,18 @@ Retourne UNIQUEMENT du JSON strict — un tableau de correspondances :
 [
   {
     "reqId": 1,
-    "label": "Nom de la compétence requise",
+    "label": "Nom de la competence requise",
     "match": "strong" | "partial" | "weak",
-    "profileEvidence": "Explication courte de pourquoi ce niveau"
+    "profileEvidence": "Explication courte de pourquoi ce niveau, basee sur l'experience et les connaissances du candidat"
   }
 ]
 
-Évalue chaque requirement de l'offre. "strong" = bien couvert, "partial" = partiellement, "weak" = peu ou pas couvert.`,
+Evalue chaque requirement de l'offre :
+- "strong" = le candidat maitrise bien cette competence (experience directe, formation, certifications)
+- "partial" = le candidat a des bases ou une experience connexe
+- "weak" = peu ou pas de couverture dans le profil
+
+Adapte ton analyse au domaine du poste : pour un poste en finance, evalue les connaissances financieres ; pour un poste juridique, les competences juridiques ; pour un poste technique, les competences techniques, etc.`,
         },
       ],
     });

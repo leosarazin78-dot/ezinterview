@@ -250,7 +250,7 @@ function CulturePanel({ companyInfo, jobData }) {
 
       {ci.techStack?.length > 0 && (
         <div>
-          <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600 }}>Stack technique</p>
+          <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600 }}>Outils & methodes</p>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{ci.techStack.map(t => <Badge key={t} v="tech">{t}</Badge>)}</div>
         </div>
       )}
@@ -718,7 +718,7 @@ export default function EzInterview() {
                           <p style={{ margin: "0 0 6px", color: T.muted }}>{ci.founded && `Fondee en ${ci.founded} · `}{ci.hq} · {ci.employees} employes · {ci.sector}</p>
                           {ci.recentNews?.length > 0 && <><p style={{ margin: "0 0 4px", fontWeight: 500, fontSize: 12 }}>Actualites :</p>{ci.recentNews.map((n, i) => <p key={i} style={{ margin: "0 0 3px", fontSize: 12, paddingLeft: 8 }}>— {n}</p>)}</>}
                           {ci.competitors?.length > 0 && <><p style={{ margin: "8px 0 4px", fontWeight: 500, fontSize: 12 }}>Concurrents :</p><div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{ci.competitors.map(c => <Badge key={c} v="info">{c}</Badge>)}</div></>}
-                          {ci.techStack?.length > 0 && <><p style={{ margin: "8px 0 4px", fontWeight: 500, fontSize: 12 }}>Stack :</p><div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{ci.techStack.map(t => <Badge key={t} v="tech">{t}</Badge>)}</div></>}
+                          {ci.techStack?.length > 0 && <><p style={{ margin: "8px 0 4px", fontWeight: 500, fontSize: 12 }}>Outils & methodes :</p><div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{ci.techStack.map(t => <Badge key={t} v="tech">{t}</Badge>)}</div></>}
                         </div>
                       );
                     })()}
@@ -750,7 +750,7 @@ export default function EzInterview() {
                 <div>
                   {interviewSteps.length === 0 && <p style={{ margin: "0 0 12px", fontSize: 13, color: T.muted }}>Pas detectees — ajoute-les pour adapter le plan.</p>}
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "flex-end" }}>
-                    <div style={{ flex: "1 1 140px" }}><label style={{ fontSize: 12, color: T.muted, display: "block", marginBottom: 3 }}>Etape</label><input style={inp} placeholder="Technical Interview" value={newStepLabel} onChange={e => setNewStepLabel(e.target.value)} /></div>
+                    <div style={{ flex: "1 1 140px" }}><label style={{ fontSize: 12, color: T.muted, display: "block", marginBottom: 3 }}>Etape</label><input style={inp} placeholder="Entretien technique, RH, cas pratique..." value={newStepLabel} onChange={e => setNewStepLabel(e.target.value)} /></div>
                     <div style={{ flex: "1 1 140px" }}><label style={{ fontSize: 12, color: T.muted, display: "block", marginBottom: 3 }}>Interlocuteur</label><input style={inp} placeholder="Lead Engineer" value={newStepPerson} onChange={e => setNewStepPerson(e.target.value)} /></div>
                     <div style={{ flex: "0 0 100px" }}><label style={{ fontSize: 12, color: T.muted, display: "block", marginBottom: 3 }}>Format</label><select style={{ ...inp, cursor: "pointer" }} value={newStepType} onChange={e => setNewStepType(e.target.value)}><option value="visio">Visio</option><option value="sur site">Sur site</option><option value="tel">Telephone</option></select></div>
                     <button style={newStepLabel.trim() ? { ...btnP, padding: "10px 14px" } : { ...btnD, padding: "10px 14px" }} onClick={handleAddManualStep}>Ajouter</button>
@@ -781,8 +781,8 @@ export default function EzInterview() {
           </div>
           <div style={{ marginTop: 20 }}>
             <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600 }}>Petits plus <span style={{ fontSize: 12, color: T.light, fontWeight: 400 }}>(optionnel)</span></h3>
-            <p style={{ margin: "0 0 10px", fontSize: 13, color: T.muted }}>Technos a creuser, points techniques a renforcer...</p>
-            <textarea style={{ ...inp, minHeight: 70, resize: "vertical" }} placeholder="Ex: Je veux m'ameliorer en system design..." value={extras} onChange={e => setExtras(e.target.value)} />
+            <p style={{ margin: "0 0 10px", fontSize: 13, color: T.muted }}>Competences a creuser, points a renforcer...</p>
+            <textarea style={{ ...inp, minHeight: 70, resize: "vertical" }} placeholder="Ex: Je veux approfondir la modelisation financiere, le droit social, le system design..." value={extras} onChange={e => setExtras(e.target.value)} />
           </div>
         </div>
       )}
@@ -823,7 +823,7 @@ export default function EzInterview() {
           )}
 
           <div style={card}>
-            <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600 }}>Correspondances techniques</h3>
+            <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600 }}>Correspondances avec le poste</h3>
             <p style={{ margin: "0 0 16px", fontSize: 13, color: T.muted }}>Selectionne les sujets prioritaires</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {matches.map(m => {
@@ -848,7 +848,7 @@ export default function EzInterview() {
                 <div style={{ fontSize: 13 }}>
                   {ci.recentNews?.length > 0 && <div style={{ marginBottom: 10 }}><span style={{ fontWeight: 500, fontSize: 12 }}>Actualites :</span>{ci.recentNews.map((n, i) => <p key={i} style={{ margin: "3px 0", paddingLeft: 8, fontSize: 13 }}>— {n}</p>)}</div>}
                   {ci.competitors?.length > 0 && <div style={{ marginBottom: 10 }}><span style={{ fontWeight: 500, fontSize: 12 }}>Concurrents :</span><div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4 }}>{ci.competitors.map(c => <Badge key={c} v="info">{c}</Badge>)}</div></div>}
-                  {ci.techStack?.length > 0 && <div><span style={{ fontWeight: 500, fontSize: 12 }}>Stack :</span><div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4 }}>{ci.techStack.map(t => <Badge key={t} v="tech">{t}</Badge>)}</div></div>}
+                  {ci.techStack?.length > 0 && <div><span style={{ fontWeight: 500, fontSize: 12 }}>Outils & methodes :</span><div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 4 }}>{ci.techStack.map(t => <Badge key={t} v="tech">{t}</Badge>)}</div></div>}
                 </div>
               ); })()}
             </div>

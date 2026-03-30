@@ -14,22 +14,25 @@ export async function POST(request) {
       messages: [
         {
           role: "user",
-          content: `Donne-moi une fiche intelligence économique sur l'entreprise "${company}" (secteur : ${sector || "non précisé"}).
+          content: `Donne-moi une fiche intelligence economique sur l'entreprise "${company}" (secteur : ${sector || "non precise"}).
 
 Retourne UNIQUEMENT du JSON strict :
 {
-  "founded": "Année de fondation",
-  "hq": "Siège social",
-  "employees": "Nombre approximatif d'employés",
-  "sector": "Secteur d'activité",
-  "recentNews": ["Actualité 1 (avec date)", "Actualité 2", "Actualité 3", "Actualité 4"],
+  "founded": "Annee de fondation",
+  "hq": "Siege social",
+  "employees": "Nombre approximatif d'employes",
+  "sector": "Secteur d'activite",
+  "recentNews": ["Actualite 1 (avec date)", "Actualite 2", "Actualite 3", "Actualite 4"],
   "competitors": ["Concurrent 1", "Concurrent 2", "Concurrent 3", "Concurrent 4", "Concurrent 5"],
-  "techStack": ["Tech 1", "Tech 2"],
-  "businessModel": "Modèle économique en 1 phrase",
-  "culture": "Culture d'entreprise en 1-2 phrases"
+  "techStack": ["Outil/methode/techno 1", "Outil/methode/techno 2"],
+  "businessModel": "Modele economique en 1 phrase",
+  "culture": "Culture d'entreprise en 1-2 phrases (valeurs, ambiance, mode de travail)"
 }
 
-Sois précis et factuel. Pour les actualités, donne les plus récentes que tu connais.`,
+IMPORTANT :
+- techStack : liste les outils, logiciels, technologies, methodes ou frameworks utilises par l'entreprise. Pour une entreprise tech ce sera des langages/frameworks, pour un cabinet de conseil des methodologies, pour une banque des outils financiers/ERP, etc.
+- culture : decris concretement la culture (ex: startup agile, grand groupe hierarchique, cabinet collaboratif...)
+- Sois precis et factuel. Pour les actualites, donne les plus recentes que tu connais.`,
         },
       ],
     });
