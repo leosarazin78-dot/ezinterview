@@ -3,95 +3,118 @@ import { extractJSONArray } from "../../lib/parse-json";
 
 const anthropic = new Anthropic();
 
+// Génère le plan avec retry automatique (max 2 tentatives)
+async function generateWithRetry(prompt, maxRetries = 2) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const message = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 8192,
+        messages: [{ role: "user", content: prompt }],
+      });
+
+      const text = message.content[0].text;
+      const parsed = extractJSONArray(text);
+
+      if (parsed && Array.isArray(parsed) && parsed.length > 0) {
+        // Valider la structure basique
+        const valid = parsed.every(
+          (d) => d.day && d.title && Array.isArray(d.items)
+        );
+        if (valid) return parsed;
+      }
+
+      console.warn(`Attempt ${attempt + 1}: invalid JSON structure, retrying...`);
+    } catch (err) {
+      console.error(`Attempt ${attempt + 1} error:`, err.message);
+      if (attempt === maxRetries - 1) throw err;
+    }
+  }
+  return null;
+}
+
 export async function POST(request) {
   try {
-    const { jobData, matches, priorities, interviewDate, nextInterlocutor, companyInfo } = await request.json();
+    const {
+      jobData,
+      matches,
+      priorities,
+      interviewDate,
+      nextInterlocutor,
+      companyInfo,
+    } = await request.json();
 
     if (!priorities?.length || !interviewDate)
-      return Response.json({ error: "Données manquantes" }, { status: 400 });
+      return Response.json({ error: "Donnees manquantes" }, { status: 400 });
 
-    const daysAvailable = Math.max(1, Math.ceil((new Date(interviewDate) - new Date()) / 86400000));
+    const daysAvailable = Math.max(
+      1,
+      Math.ceil((new Date(interviewDate) - new Date()) / 86400000)
+    );
     const planDays = Math.min(daysAvailable, 14);
 
     const priorityLabels = priorities
-      .map((id) => matches?.find((m) => m.reqId === id || m.reqId === String(id))?.label)
+      .map(
+        (id) =>
+          matches?.find((m) => m.reqId === id || m.reqId === String(id))?.label
+      )
       .filter(Boolean);
 
-    const sector = companyInfo?.sector || jobData?.companyInfo?.sector || "non précisé";
+    const sector =
+      companyInfo?.sector || jobData?.companyInfo?.sector || "non precise";
     const company = jobData?.company || "l'entreprise";
 
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
-      messages: [
-        {
-          role: "user",
-          content: `Tu es un expert en preparation d'entretien professionnel, tous secteurs confondus. Cree un plan de preparation COMPLET et INTERACTIF de ${planDays} jours.
+    const prompt = `Tu es un expert en preparation d'entretien professionnel. Genere un plan de ${planDays} jours en JSON.
 
 CONTEXTE :
 - Poste : ${jobData?.title} chez ${company}
 - Secteur : ${sector}
 - Entretien dans ${daysAvailable} jours${nextInterlocutor ? ` avec ${nextInterlocutor}` : ""}
-- Competences prioritaires a travailler : ${priorityLabels.join(", ")}
-${companyInfo ? `- Concurrents : ${companyInfo.competitors?.join(", ")}` : ""}
-${companyInfo?.techStack?.length ? `- Outils/methodes utilises : ${companyInfo.techStack.join(", ")}` : ""}
+- Priorites : ${priorityLabels.join(", ")}
+${companyInfo?.competitors?.length ? `- Concurrents : ${companyInfo.competitors.join(", ")}` : ""}
+${companyInfo?.techStack?.length ? `- Outils : ${companyInfo.techStack.join(", ")}` : ""}
 
-IMPORTANT : Le plan doit etre adapte au DOMAINE du poste.
-- Pour un poste technique (dev, data, ingenieur) : exercices de code, system design, algorithmes
-- Pour un poste en finance/economie : etudes de cas, analyse financiere, modelisation, actualite economique
-- Pour un poste en droit : cas pratiques juridiques, jurisprudence, analyse de contrats
-- Pour un poste litteraire/communication : analyse de texte, redaction, etude de campagnes, portfolio review
-- Pour un poste commercial/marketing : role-plays de vente, etudes de marche, analyse de KPIs, cas business
-- Pour un poste en sante/social : etudes de cas cliniques, protocoles, reglementation
-- Pour un poste en gestion/management : etudes de cas, gestion de projet, analyse strategique
-- Adapte les exercices et ressources au domaine specifique du poste
-
-STRUCTURE JSON STRICTE — chaque jour contient des items, chaque item est RICHE :
+FORMAT JSON STRICT — retourne UNIQUEMENT un tableau JSON valide, rien d'autre :
 
 [
   {
     "day": 1,
-    "title": "Titre descriptif du jour",
+    "title": "Titre du jour",
     "focus": "Mot-cle court",
     "items": [
       {
         "type": "note",
-        "title": "Titre clair et specifique",
-        "duration": "XX min",
+        "title": "Titre clair",
+        "duration": "20 min",
         "content": {
-          "summary": "Resume en 3-5 phrases de ce qu'il faut retenir",
-          "keyPoints": ["Point cle 1", "Point cle 2", "Point cle 3"],
-          "tips": ["Astuce pratique 1", "Astuce pratique 2"],
+          "summary": "Resume en 3 phrases",
+          "keyPoints": ["Point 1", "Point 2", "Point 3"],
+          "tips": ["Astuce 1"],
           "links": [
-            {"label": "Nom du cours/article", "url": "URL reelle vers une ressource specifique", "type": "article"},
-            {"label": "Nom de la video", "url": "URL YouTube ou autre reelle", "type": "video"}
+            {"label": "Nom ressource", "url": "https://domaine-connu.com/page", "type": "article"},
+            {"label": "Video", "url": "https://youtube.com/watch?v=...", "type": "video"}
           ]
         },
-        "miniQuiz": [
-          {"q": "Question de verification rapide ?", "options": ["A", "B", "C", "D"], "correct": 0}
-        ]
+        "miniQuiz": [{"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0}]
       },
       {
         "type": "exercise",
-        "title": "Exercice pratique specifique au domaine",
-        "duration": "XX min",
+        "title": "Exercice pratique",
+        "duration": "30 min",
         "content": {
-          "objective": "Ce que l'exercice permet de pratiquer",
-          "steps": ["Etape 1", "Etape 2", "Etape 3"],
-          "tips": ["Conseil pour reussir"],
-          "links": [
-            {"label": "Plateforme ou ressource d'exercices", "url": "URL reelle", "type": "lab"}
-          ]
+          "objective": "Ce que ca permet de pratiquer",
+          "steps": ["Etape 1", "Etape 2"],
+          "tips": ["Conseil"],
+          "links": [{"label": "Ressource", "url": "https://...", "type": "lab"}]
         }
       },
       {
         "type": "quiz",
-        "title": "Quiz de verification : [theme]",
-        "duration": "10-15 min",
+        "title": "Quiz du jour",
+        "duration": "10 min",
         "content": {
           "questions": [
-            {"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "Explication de la bonne reponse"},
-            {"q": "Question 2 ?", "options": ["A", "B", "C", "D"], "correct": 1, "explanation": "Explication"}
+            {"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "Explication"}
           ]
         }
       }
@@ -99,49 +122,33 @@ STRUCTURE JSON STRICTE — chaque jour contient des items, chaque item est RICHE
   }
 ]
 
-REGLES CRITIQUES :
-1. Chaque jour a ${planDays <= 7 ? "4-6" : "3-5"} items
-2. Chaque jour FINIT par un quiz de 5-8 questions
-3. Les "note" et "memo" ont des miniQuiz de 1-2 questions
-4. SOURCES MULTIPLES OBLIGATOIRES — chaque item "note" ou "memo" doit avoir 2-3 liens de sources DIFFERENTES :
-   - Toujours croiser : 1 source de reference officielle/academique + 1 source pratique/video + 1 source complementaire
-   - Privilegier les sources de verite reconnues dans le domaine :
+REGLES :
+1. Exactement ${planDays} jours, chacun avec 3-5 items
+2. Chaque jour finit par un quiz de 5-8 questions
+3. Les "note" ont des miniQuiz de 1-2 questions
+4. Chaque note a 2-3 liens de sources REELLES et DIFFERENTES (pas d'URLs inventees)
+5. Adapte au domaine : tech=code/system design, finance=cas/modelisation, droit=jurisprudence, marketing=KPIs/campagnes, sante=protocoles, etc.
+6. Un jour complet sur ${company} : produits, actualites, concurrents, culture
+7. Dernier jour = revision + quiz final de 10 questions
+8. Contenu CONCRET : vrais points cles, definitions, exemples
+9. Sources de reference : docs officielles, Coursera, YouTube educatif, Legifrance, Investopedia, MDN, PubMed selon le domaine
+10. Les URLs doivent utiliser des domaines connus (coursera.org, youtube.com, developer.mozilla.org, legifrance.gouv.fr, etc.)
+11. Pas de caracteres speciaux dans les strings JSON (pas de guillemets courbes, pas de retours a la ligne)
+12. IMPORTANT : le JSON doit etre COMPLET et VALIDE. Ne pas tronquer.
 
-   SOURCES DE REFERENCE PAR DOMAINE (utiliser en priorite) :
-   - Tech/dev : documentation officielle (docs.python.org, react.dev, developer.mozilla.org), GitHub repos de reference, StackOverflow docs
-   - Finance/eco : Investopedia, Banque de France, INSEE, OCDE, Bloomberg, Les Echos, Financial Times
-   - Droit : Legifrance.gouv.fr, Dalloz, Service-Public.fr, EUR-Lex, cours officiels des universites
-   - Marketing/commerce : HubSpot Academy, Google Skillshop, Think with Google, Statista
-   - Sante/medical : OMS (who.int), HAS (has-sante.fr), PubMed, Vidal, ANSM
-   - Sciences/recherche : Google Scholar, ArXiv, JSTOR, Cairn.info, HAL, Nature
-   - Gestion/management : Harvard Business Review, McKinsey Insights, BCG publications
-   - Comptabilite : Plan Comptable General, ANC, Ordre des Experts-Comptables
-   - RH : Code du travail (Legifrance), ANDRH, Ministere du Travail
-   - BTP/industrie : normes AFNOR, Batiactu, techniques-ingenieur.fr
+Retourne UNIQUEMENT le tableau JSON, sans aucun texte avant ou apres.`;
 
-   SOURCES PEDAGOGIQUES (en complement) :
-   - Cours gratuits : Coursera, edX, OpenClassrooms, Khan Academy, MIT OpenCourseWare, FUN-MOOC
-   - Videos : YouTube (chaines educatives reconnues), TED Talks
-   - Exercices : LeetCode, HackerRank, exercism.io, Codecademy, Brilliant.org
-   - Generales : Wikipedia (pour les definitions), Cairn.info, Persee.fr
+    const parsed = await generateWithRetry(prompt);
 
-5. Le contenu des notes doit etre CONCRET : pas de "apprenez ceci", mais du vrai contenu avec les points cles, definitions, exemples
-6. Inclure au moins 1 jour complet sur ${company} : produits, services, actualites, concurrents, culture, positionnement dans le marche
-7. Le dernier jour = revision + quiz final recapitulatif (10 questions)
-8. Les exercices doivent etre adaptes au metier : etude de cas, analyse, redaction, calcul, code, mise en situation...
-9. Concentre-toi sur les competences metier et la connaissance entreprise/secteur
-10. ${planDays} jours exactement
-11. Les URLs doivent pointer vers des pages REELLES qui existent. Utilise des URLs de domaines connus (pas d'URLs inventees). Prefere les pages principales de plateformes connues plutot que des URLs de pages specifiques qui pourraient ne pas exister.
-
-Retourne UNIQUEMENT le JSON valide.`,
+    if (!parsed) {
+      return Response.json(
+        {
+          error:
+            "Impossible de generer le plan. Reessaie ou reduis le nombre de jours.",
         },
-      ],
-    });
-
-    const text = message.content[0].text;
-    const parsed = extractJSONArray(text);
-    if (!parsed)
-      return Response.json({ error: "Le plan généré contient du JSON invalide. Réessaie." }, { status: 500 });
+        { status: 500 }
+      );
+    }
 
     return Response.json(parsed);
   } catch (err) {

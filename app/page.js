@@ -340,11 +340,32 @@ function LandingPage() {
         .ez-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.35); }
         .ez-cat:hover { transform: scale(1.03); }
         .ez-cat { transition: all 0.15s ease; cursor: default; }
+        @media (max-width: 768px) {
+          .ez-hero-grid { grid-template-columns: 1fr !important; }
+          .ez-hero-text h1 { font-size: 32px !important; }
+          .ez-hero-text p { font-size: 15px !important; }
+          .ez-stats-row { display: flex !important; gap: 8px !important; }
+          .ez-stats-row > div { flex: 1; min-width: 0; }
+          .ez-courses-grid { grid-template-columns: 1fr !important; }
+          .ez-cat-grid { grid-template-columns: 1fr 1fr !important; }
+          .ez-features-grid { grid-template-columns: 1fr !important; }
+          .ez-testimonials-grid { grid-template-columns: 1fr !important; }
+          .ez-section { padding-left: 16px !important; padding-right: 16px !important; }
+          .ez-nav-inner { padding: 0 16px !important; }
+          .ez-hero-mockup { display: none !important; }
+          .ez-cta-box { padding: 40px 24px !important; }
+          .ez-cta-box h2 { font-size: 24px !important; }
+        }
+        @media (max-width: 480px) {
+          .ez-cat-grid { grid-template-columns: 1fr !important; }
+          .ez-hero-text h1 { font-size: 26px !important; }
+          .ez-hero-stats { flex-direction: column !important; gap: 12px !important; }
+        }
       `}</style>
 
       {/* ─── Nav ─── */}
       <nav style={{ background: L.white, borderBottom: `1px solid ${L.border}`, position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "0 32px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="ez-nav-inner" style={{ maxWidth: 1080, margin: "0 auto", padding: "0 32px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: L.blue, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
@@ -360,9 +381,9 @@ function LandingPage() {
 
       {/* ─── Hero ─── */}
       <section style={{ background: L.white, borderBottom: `1px solid ${L.border}` }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "80px 32px 64px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+        <div className="ez-hero-grid ez-section" style={{ maxWidth: 1080, margin: "0 auto", padding: "80px 32px 64px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
           {/* Left: text */}
-          <div style={{ animation: "fadeIn 0.5s ease" }}>
+          <div className="ez-hero-text" style={{ animation: "fadeIn 0.5s ease" }}>
             <div style={{ display: "inline-block", padding: "5px 14px", borderRadius: 20, background: L.blueLight, fontSize: 13, fontWeight: 600, color: L.blue, marginBottom: 24 }}>Nouveau : IA adaptee a tous les metiers</div>
             <h1 style={{ fontSize: 44, fontWeight: 900, lineHeight: 1.1, margin: "0 0 20px", letterSpacing: "-1.5px", color: L.navy }}>
               Prepare ton entretien comme un pro.
@@ -376,7 +397,7 @@ function LandingPage() {
               </button>
               <span style={{ fontSize: 13, color: L.gray }}>Gratuit, sans carte bancaire</span>
             </div>
-            <div style={{ display: "flex", gap: 24, marginTop: 36 }}>
+            <div className="ez-hero-stats" style={{ display: "flex", gap: 24, marginTop: 36 }}>
               {[{ n: "14 jours", l: "de plan max" }, { n: "100+", l: "sources fiables" }, { n: "Tous", l: "les metiers" }].map((s, i) => (
                 <div key={i}>
                   <div style={{ fontSize: 22, fontWeight: 800, color: L.navy }}>{s.n}</div>
@@ -387,7 +408,7 @@ function LandingPage() {
           </div>
 
           {/* Right: mockup card */}
-          <div style={{ animation: "fadeIn 0.7s ease" }}>
+          <div className="ez-hero-mockup" style={{ animation: "fadeIn 0.7s ease" }}>
             <div style={{ background: L.bg, borderRadius: 16, padding: 24, border: `1px solid ${L.border}`, boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
               {/* Mini plan card */}
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
@@ -421,12 +442,12 @@ function LandingPage() {
       </section>
 
       {/* ─── Categories (AdEspresso style) ─── */}
-      <section style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
+      <section className="ez-section" style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.5px", color: L.navy }}>Adapte a tous les domaines</h2>
           <p style={{ fontSize: 15, color: L.gray, margin: 0 }}>Nos plans s'adaptent a ton secteur avec des ressources specialisees</p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+        <div className="ez-cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
           {categories.map((c, i) => (
             <div key={i} className="ez-cat" style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", borderRadius: L.radius, background: L.white, border: `1px solid ${L.border}` }}>
               <div style={{ width: 44, height: 44, borderRadius: 10, background: c.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -443,12 +464,12 @@ function LandingPage() {
 
       {/* ─── How it works — Course cards (AdEspresso style) ─── */}
       <section style={{ background: L.white, borderTop: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
+        <div className="ez-section" style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <div style={{ display: "inline-block", padding: "5px 14px", borderRadius: 20, background: L.orangeLight, fontSize: 12, fontWeight: 700, color: L.orange, marginBottom: 12, textTransform: "uppercase", letterSpacing: "1px" }}>Comment ca marche</div>
             <h2 style={{ fontSize: 28, fontWeight: 800, margin: 0, color: L.navy }}>3 etapes simples</h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+          <div className="ez-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
             {courses.map((c, i) => (
               <div key={i} className="ez-card" style={{ borderRadius: L.radius, background: L.white, border: `1px solid ${L.border}`, overflow: "hidden" }}>
                 {/* Colored top bar */}
@@ -472,12 +493,12 @@ function LandingPage() {
       </section>
 
       {/* ─── Features ─── */}
-      <section style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
+      <section className="ez-section" style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 8px", color: L.navy }}>Tout pour reussir ton entretien</h2>
           <p style={{ fontSize: 15, color: L.gray, margin: 0 }}>Des outils complets pour une preparation serieuse et efficace</p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+        <div className="ez-features-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
           {highlights.map((h, i) => (
             <div key={i} style={{ display: "flex", gap: 16, padding: 24, borderRadius: L.radius, background: L.white, border: `1px solid ${L.border}` }}>
               <div style={{ width: 48, height: 48, borderRadius: L.radius, background: [L.blueLight, L.purpleLight, L.orangeLight, L.greenLight][i], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>{h.icon}</div>
@@ -492,12 +513,12 @@ function LandingPage() {
 
       {/* ─── Testimonials ─── */}
       <section style={{ background: L.white, borderTop: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
+        <div className="ez-section" style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 8px", color: L.navy }}>Ils ont decroche leur poste</h2>
             <p style={{ fontSize: 15, color: L.gray, margin: 0 }}>Rejoins des centaines de candidats satisfaits</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+          <div className="ez-testimonials-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
             {testimonials.map((t, i) => (
               <div key={i} style={{ padding: 24, borderRadius: L.radius, background: L.bg, border: `1px solid ${L.border}` }}>
                 <div style={{ display: "flex", gap: 3, marginBottom: 12 }}>
@@ -518,8 +539,8 @@ function LandingPage() {
       </section>
 
       {/* ─── CTA ─── */}
-      <section style={{ maxWidth: 1080, margin: "0 auto", padding: "80px 32px", textAlign: "center" }}>
-        <div style={{ maxWidth: 600, margin: "0 auto", padding: "56px 40px", borderRadius: 20, background: L.navy, color: "#fff" }}>
+      <section className="ez-section" style={{ maxWidth: 1080, margin: "0 auto", padding: "80px 32px", textAlign: "center" }}>
+        <div className="ez-cta-box" style={{ maxWidth: 600, margin: "0 auto", padding: "56px 40px", borderRadius: 20, background: L.navy, color: "#fff" }}>
           <h2 style={{ fontSize: 32, fontWeight: 900, margin: "0 0 12px", letterSpacing: "-0.8px" }}>Pret a decrocher ton poste ?</h2>
           <p style={{ fontSize: 16, color: "rgba(255,255,255,0.7)", margin: "0 0 28px", lineHeight: 1.6 }}>
             Commence ta preparation gratuitement. Sans carte bancaire, en 2 minutes.
@@ -678,6 +699,7 @@ export default function EzInterview() {
   const [profile, setProfile] = useState(null);
   const [companyInfo, setCompanyInfo] = useState(null);
   const [matches, setMatches] = useState([]);
+  const [analysisResult, setAnalysisResult] = useState(null);
   const [selectedPriorities, setSelectedPriorities] = useState([]);
   const [interviewDate, setInterviewDate] = useState("");
   const [nextInterlocutor, setNextInterlocutor] = useState("");
@@ -824,7 +846,14 @@ export default function EzInterview() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobData, profile: profileData, extras: extras.slice(0, 5000) }),
       });
-      setMatches(data);
+      // Handle both old format (array) and new format (object with matches)
+      if (Array.isArray(data)) {
+        setMatches(data);
+        setAnalysisResult(null);
+      } else {
+        setMatches(data.matches || []);
+        setAnalysisResult(data);
+      }
     } catch (err) { setError(err.message); }
     setAnalysisLoading(false);
   };
@@ -871,7 +900,7 @@ export default function EzInterview() {
 
   const resetFlow = () => {
     setStep("input"); setActiveTab("offer"); setJobUrl(""); setJobData(null); setCvText(""); setCvFile(null);
-    setLinkedinUrl(""); setExtras(""); setProfile(null); setCompanyInfo(null); setMatches([]); setSelectedPriorities([]);
+    setLinkedinUrl(""); setExtras(""); setProfile(null); setCompanyInfo(null); setMatches([]); setAnalysisResult(null); setSelectedPriorities([]);
     setInterviewDate(""); setNextInterlocutor(""); setPrepPlan([]); setExpandedDay(null); setExpandedItems({});
     setInterviewSteps([]); setManualStepMode(false); setCompletedDays({}); setCurrentPlanId(null); setError("");
   };
@@ -1067,15 +1096,79 @@ export default function EzInterview() {
   );
 
   // ─── STEP 2 ───
-  const step2 = () => (
+  const step2 = () => {
+    const score = analysisResult?.overallScore || 0;
+    const stats = analysisResult?.stats;
+    const summary = analysisResult?.summary;
+    const scoreColor = score >= 70 ? T.mint : score >= 45 ? T.warn : T.coral;
+    const scoreLabel = score >= 70 ? "Excellent match !" : score >= 45 ? "Bon potentiel" : "A preparer — tu peux le faire !";
+
+    return (
     <>
       {analysisLoading ? <Spin text="Analyse du poste et de ton profil..." /> : (
         <>
           <ErrorBanner msg={error} />
-          <div style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
             <div><h3 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>{jobData?.title}</h3><p style={{ margin: "2px 0 0", fontSize: 13, color: T.muted }}>{jobData?.company} · {jobData?.location}</p></div>
-            <button style={btnS} onClick={() => { setStep("input"); setMatches([]); }}>Modifier</button>
+            <button style={btnS} onClick={() => { setStep("input"); setMatches([]); setAnalysisResult(null); }}>Modifier</button>
           </div>
+
+          {/* Score & Stats motivants */}
+          {analysisResult && (
+            <div style={card}>
+              <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                {/* Score circulaire */}
+                <div style={{ textAlign: "center", flexShrink: 0 }}>
+                  <div style={{ width: 90, height: 90, borderRadius: "50%", border: `4px solid ${scoreColor}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: `${scoreColor}10` }}>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>{score}%</div>
+                    <div style={{ fontSize: 10, color: scoreColor, fontWeight: 500 }}>match</div>
+                  </div>
+                </div>
+                {/* Summary + stats */}
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: scoreColor, marginBottom: 6 }}>{scoreLabel}</div>
+                  {summary && <p style={{ margin: "0 0 10px", fontSize: 13, color: T.muted, lineHeight: 1.6 }}>{summary}</p>}
+                  {stats && (
+                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      {stats.strongCount > 0 && (
+                        <div style={{ padding: "6px 12px", borderRadius: T.r, background: T.mintBg, border: `1px solid ${T.mintBd}` }}>
+                          <span style={{ fontSize: 18, fontWeight: 700, color: T.mint }}>{stats.strongCount}</span>
+                          <span style={{ fontSize: 12, color: T.mint, marginLeft: 4 }}>acquises</span>
+                        </div>
+                      )}
+                      {stats.partialCount > 0 && (
+                        <div style={{ padding: "6px 12px", borderRadius: T.r, background: T.warnBg, border: `1px solid ${T.warnBd}` }}>
+                          <span style={{ fontSize: 18, fontWeight: 700, color: T.warn }}>{stats.partialCount}</span>
+                          <span style={{ fontSize: 12, color: T.warn, marginLeft: 4 }}>en cours</span>
+                        </div>
+                      )}
+                      {stats.weakCount > 0 && (
+                        <div style={{ padding: "6px 12px", borderRadius: T.r, background: T.badBg, border: `1px solid ${T.badBd}` }}>
+                          <span style={{ fontSize: 18, fontWeight: 700, color: T.coral }}>{stats.weakCount}</span>
+                          <span style={{ fontSize: 12, color: T.coral, marginLeft: 4 }}>a travailler</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Motivation tip */}
+              {stats?.improvementTip && (
+                <div style={{ marginTop: 14, padding: "10px 14px", borderRadius: T.r, background: T.accentLt, border: `1px solid ${T.accentBd}` }}>
+                  <span style={{ fontSize: 13, color: T.accent }}>💡 {stats.improvementTip}</span>
+                </div>
+              )}
+              {stats?.topStrength && (
+                <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: T.r, background: T.mintBg, border: `1px solid ${T.mintBd}` }}>
+                  <span style={{ fontSize: 13, color: T.mint }}>⭐ Ton atout principal : <strong>{stats.topStrength}</strong></span>
+                </div>
+              )}
+              {/* Stat motivante */}
+              <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: T.r, background: "#F0EDE6", border: `1px solid ${T.border}` }}>
+                <span style={{ fontSize: 12, color: T.muted }}>📊 Les candidats qui suivent un plan de preparation structure ont <strong style={{ color: T.text }}>3x plus de chances</strong> de reussir leur entretien. En preparant {selectedPriorities.length || "tes"} sujets prioritaires, tu maximises tes chances !</span>
+              </div>
+            </div>
+          )}
 
           {interviewSteps.length > 0 && (
             <div style={card}>
@@ -1097,7 +1190,7 @@ export default function EzInterview() {
 
           <div style={card}>
             <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600 }}>Correspondances avec le poste</h3>
-            <p style={{ margin: "0 0 16px", fontSize: 13, color: T.muted }}>Selectionne les sujets prioritaires</p>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: T.muted }}>Selectionne les competences a travailler en priorite</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {matches.map(m => {
                 const sel = selectedPriorities.includes(m.reqId);
@@ -1105,7 +1198,7 @@ export default function EzInterview() {
                   <div key={m.reqId} onClick={() => togglePriority(m.reqId)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: `${sel ? 2 : 1}px solid ${sel ? T.accent : T.border}`, borderRadius: T.r, cursor: "pointer", background: sel ? T.accentLt : T.card, transition: "all .15s" }}>
                     <div style={{ width: 18, height: 18, borderRadius: T.r, border: sel ? "none" : `2px solid ${T.border}`, background: sel ? T.accent : T.card, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{sel && <span style={{ color: "#fff", fontSize: 11, fontWeight: 700 }}>OK</span>}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 14, fontWeight: 500 }}>{m.label}</span><Badge v={m.match}>{m.match === "strong" ? "Fort" : m.match === "partial" ? "Partiel" : "A travailler"}</Badge></div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><span style={{ fontSize: 14, fontWeight: 500 }}>{m.label}</span><Badge v={m.match}>{m.match === "strong" ? "Acquis" : m.match === "partial" ? "Bases solides" : "A preparer"}</Badge></div>
                       <p style={{ margin: "3px 0 0", fontSize: 12, color: T.muted }}>{m.profileEvidence}</p>
                     </div>
                   </div>
@@ -1143,7 +1236,8 @@ export default function EzInterview() {
         </>
       )}
     </>
-  );
+    );
+  };
 
   // ─── STEP 3 ───
   const step3 = () => (
