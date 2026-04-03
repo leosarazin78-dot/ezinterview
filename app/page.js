@@ -258,7 +258,7 @@ function CulturePanel({ companyInfo, jobData }) {
   );
 }
 
-// ─── Landing Page + Auth ───
+// ─── Landing Page + Auth (AdEspresso-inspired) ───
 function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
   const [mode, setMode] = useState("login");
@@ -292,125 +292,304 @@ function LandingPage() {
     } catch (err) { setError(err.message); setLoading(false); }
   };
 
-  const features = [
-    { icon: "1", title: "Colle ton offre", desc: "L'IA analyse le poste, l'entreprise, et detecte les competences requises — quel que soit le domaine." },
-    { icon: "2", title: "Upload ton CV", desc: "On compare ton profil avec l'offre et on identifie tes forces et tes axes de progression." },
-    { icon: "3", title: "Suis ton plan", desc: "Un plan jour par jour avec cours, exercices, quiz et liens vers les meilleures ressources de ton domaine." },
+  // AdEspresso-inspired: clean white bg, colorful category cards, big illustrations, rounded corners
+  const L = {
+    white: "#FFFFFF", bg: "#F7F8FC", navy: "#1B2559", blue: "#3B82F6", blueLight: "#EFF6FF",
+    orange: "#F97316", orangeLight: "#FFF7ED", green: "#10B981", greenLight: "#ECFDF5",
+    purple: "#8B5CF6", purpleLight: "#F5F3FF", pink: "#EC4899", pinkLight: "#FDF2F8",
+    gray: "#64748B", grayLight: "#F1F5F9", border: "#E2E8F0", radius: 12,
+  };
+
+  const courses = [
+    { color: L.blue, bg: L.blueLight, icon: "🔗", tag: "ETAPE 1", title: "Analyse de l'offre", desc: "L'IA scrape l'offre, identifie les competences cles, analyse l'entreprise et ses attentes — tous domaines confondus.", duration: "2 min" },
+    { color: L.orange, bg: L.orangeLight, icon: "📄", tag: "ETAPE 2", title: "Matching CV", desc: "Compare ton profil a l'offre. Identifie tes forces et tes points a travailler avec un score detaille.", duration: "3 min" },
+    { color: L.green, bg: L.greenLight, icon: "🎯", tag: "ETAPE 3", title: "Plan de preparation", desc: "Plan jour par jour : cours, exercices, quiz et ressources de reference adaptees a ton metier.", duration: "14 jours" },
+  ];
+
+  const categories = [
+    { name: "Tech & Dev", count: "React, Python, Cloud...", color: L.blue, bg: L.blueLight },
+    { name: "Finance & Audit", count: "Comptabilite, Controle...", color: L.green, bg: L.greenLight },
+    { name: "Droit & Juridique", count: "Contrats, Compliance...", color: L.purple, bg: L.purpleLight },
+    { name: "Marketing & Com", count: "SEO, Branding, Growth...", color: L.pink, bg: L.pinkLight },
+    { name: "Sante & Medical", count: "Clinique, Pharma...", color: L.orange, bg: L.orangeLight },
+    { name: "RH & Management", count: "Recrutement, People...", color: L.blue, bg: L.blueLight },
   ];
 
   const highlights = [
-    { title: "Tous les metiers", desc: "Dev, finance, droit, marketing, sante, lettres, commerce..." },
-    { title: "Sources fiables", desc: "Legifrance, Investopedia, MDN, HAS, Coursera, docs officielles..." },
-    { title: "Quiz interactifs", desc: "Teste tes connaissances a chaque etape avec des QCM corriges." },
-    { title: "Veille entreprise", desc: "Actualites, concurrents, culture — tout pour briller en entretien." },
+    { icon: "📚", title: "Sources de verite", desc: "2-3 references fiables par item : Legifrance, MDN, PubMed, Investopedia, Coursera, docs officielles..." },
+    { icon: "🧠", title: "Quiz interactifs", desc: "QCM corriges a chaque etape, mini-quiz dans les cours, examen final. Tu sais exactement ou tu en es." },
+    { icon: "🏢", title: "Intel entreprise", desc: "Fiche complete : actualites, concurrents, culture d'entreprise, outils utilises. Arrive prepare." },
+    { icon: "📈", title: "Progression guidee", desc: "Deblocage sequentiel, barres de progression, scores en temps reel. Un coaching structure jusqu'au jour J." },
+  ];
+
+  const testimonials = [
+    { text: "5 jours de preparation et j'ai decroche mon poste de Data Analyst. Les quiz sont top pour consolider.", name: "Sarah M.", role: "Data Analyst — BNP Paribas", color: L.blue },
+    { text: "Parfaitement adapte au juridique. Les references Legifrance et Dalloz etaient pertinentes.", name: "Thomas L.", role: "Juriste — Groupe Renault", color: L.purple },
+    { text: "Enfin un outil pas que pour les devs ! Mon plan marketing digital etait hyper complet.", name: "Camille R.", role: "Chef de projet — Publicis", color: L.pink },
   ];
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: T.text, background: T.bg, minHeight: "100vh", lineHeight: 1.55 }}>
-      {/* Header */}
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 16px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: T.accent }}>EzInterview</span>
-          <button style={{ ...btnP, padding: "8px 16px", fontSize: 13 }} onClick={() => setShowAuth(true)}>Se connecter</button>
-        </div>
-      </div>
+    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: L.navy, background: L.bg, minHeight: "100vh", lineHeight: 1.6 }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideRight { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        .ez-card { transition: all 0.2s ease; cursor: pointer; }
+        .ez-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+        .ez-btn { transition: all 0.15s ease; }
+        .ez-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.35); }
+        .ez-cat:hover { transform: scale(1.03); }
+        .ez-cat { transition: all 0.15s ease; cursor: default; }
+      `}</style>
 
-      {/* Hero */}
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 16px 40px", textAlign: "center" }}>
-        <div style={{ display: "inline-block", padding: "4px 14px", borderRadius: 20, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontSize: 13, color: T.accent, fontWeight: 500, marginBottom: 20 }}>
-          Preparation d'entretien assistee par IA
+      {/* ─── Nav ─── */}
+      <nav style={{ background: L.white, borderBottom: `1px solid ${L.border}`, position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "0 32px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: L.blue, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
+            </div>
+            <span style={{ fontSize: 20, fontWeight: 800, color: L.navy, letterSpacing: "-0.5px" }}>EzInterview</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <button onClick={() => setShowAuth(true)} style={{ background: "transparent", border: "none", color: L.gray, fontSize: 14, fontWeight: 500, padding: "8px 16px", cursor: "pointer", fontFamily: "inherit", borderRadius: 8 }}>Se connecter</button>
+            <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: L.blue, color: "#fff", border: "none", borderRadius: 8, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>S'inscrire gratuitement</button>
+          </div>
         </div>
-        <h1 style={{ fontSize: 36, fontWeight: 800, lineHeight: 1.15, margin: "0 0 16px", letterSpacing: "-1px" }}>
-          Decroche ton prochain poste.<br />
-          <span style={{ color: T.accent }}>Prepare-toi intelligemment.</span>
-        </h1>
-        <p style={{ fontSize: 17, color: T.muted, maxWidth: 520, margin: "0 auto 28px", lineHeight: 1.6 }}>
-          Colle le lien de l'offre, upload ton CV. EzInterview cree un plan de revision personnalise avec des cours, des quiz et des exercices adaptes a ton domaine.
-        </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <button style={{ ...btnP, padding: "14px 28px", fontSize: 16, fontWeight: 600 }} onClick={() => setShowAuth(true)}>
-            Commencer gratuitement
-          </button>
-        </div>
-      </div>
+      </nav>
 
-      {/* 3 steps */}
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 16px 48px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
-          {features.map((f, i) => (
-            <div key={i} style={{ ...card, textAlign: "center", padding: 28 }}>
-              <div style={{ width: 44, height: 44, borderRadius: T.r, background: T.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, margin: "0 auto 14px" }}>{f.icon}</div>
-              <h3 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 600 }}>{f.title}</h3>
-              <p style={{ margin: 0, fontSize: 13, color: T.muted, lineHeight: 1.5 }}>{f.desc}</p>
+      {/* ─── Hero ─── */}
+      <section style={{ background: L.white, borderBottom: `1px solid ${L.border}` }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "80px 32px 64px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+          {/* Left: text */}
+          <div style={{ animation: "fadeIn 0.5s ease" }}>
+            <div style={{ display: "inline-block", padding: "5px 14px", borderRadius: 20, background: L.blueLight, fontSize: 13, fontWeight: 600, color: L.blue, marginBottom: 24 }}>Nouveau : IA adaptee a tous les metiers</div>
+            <h1 style={{ fontSize: 44, fontWeight: 900, lineHeight: 1.1, margin: "0 0 20px", letterSpacing: "-1.5px", color: L.navy }}>
+              Prepare ton entretien comme un pro.
+            </h1>
+            <p style={{ fontSize: 17, color: L.gray, margin: "0 0 32px", lineHeight: 1.7, maxWidth: 440 }}>
+              Colle le lien de l'offre, upload ton CV. Notre IA cree un plan de preparation personnalise avec des cours, des quiz et des exercices — quel que soit ton domaine.
+            </p>
+            <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+              <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: L.blue, color: "#fff", border: "none", borderRadius: 10, padding: "14px 32px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                Commencer maintenant
+              </button>
+              <span style={{ fontSize: 13, color: L.gray }}>Gratuit, sans carte bancaire</span>
+            </div>
+            <div style={{ display: "flex", gap: 24, marginTop: 36 }}>
+              {[{ n: "14 jours", l: "de plan max" }, { n: "100+", l: "sources fiables" }, { n: "Tous", l: "les metiers" }].map((s, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: L.navy }}>{s.n}</div>
+                  <div style={{ fontSize: 12, color: L.gray }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: mockup card */}
+          <div style={{ animation: "fadeIn 0.7s ease" }}>
+            <div style={{ background: L.bg, borderRadius: 16, padding: 24, border: `1px solid ${L.border}`, boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+              {/* Mini plan card */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: L.blue, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18 }}>📋</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: L.navy }}>Plan de preparation</div>
+                  <div style={{ fontSize: 12, color: L.gray }}>Genere en 30 secondes par l'IA</div>
+                </div>
+              </div>
+              {/* Day items */}
+              {["Fondamentaux du poste", "Competences techniques", "Culture d'entreprise", "Simulation d'entretien", "Revision & Quiz final"].map((day, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, background: L.white, border: `1px solid ${i <= 1 ? L.green : i === 2 ? L.blue : L.border}`, marginBottom: 8 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: i <= 1 ? L.greenLight : i === 2 ? L.blueLight : L.grayLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: i <= 1 ? L.green : i === 2 ? L.blue : L.gray }}>
+                    {i <= 1 ? "✓" : i === 2 ? "▶" : `J${i + 1}`}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: i > 2 ? L.gray : L.navy }}>Jour {i + 1} — {day}</div>
+                  </div>
+                  {i <= 1 && <span style={{ fontSize: 11, fontWeight: 600, color: L.green }}>100%</span>}
+                  {i === 2 && <span style={{ fontSize: 11, fontWeight: 600, color: L.blue }}>45%</span>}
+                </div>
+              ))}
+              {/* Progress */}
+              <div style={{ marginTop: 12, padding: "12px 14px", borderRadius: 10, background: L.greenLight, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: L.green }}>Progression globale</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: L.green }}>49%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Categories (AdEspresso style) ─── */}
+      <section style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.5px", color: L.navy }}>Adapte a tous les domaines</h2>
+          <p style={{ fontSize: 15, color: L.gray, margin: 0 }}>Nos plans s'adaptent a ton secteur avec des ressources specialisees</p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+          {categories.map((c, i) => (
+            <div key={i} className="ez-cat" style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", borderRadius: L.radius, background: L.white, border: `1px solid ${L.border}` }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: c.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 10, height: 10, borderRadius: 3, background: c.color }}></div>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: L.navy }}>{c.name}</div>
+                <div style={{ fontSize: 12, color: L.gray }}>{c.count}</div>
+              </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Highlights */}
-      <div style={{ background: T.accentLt, borderTop: `1px solid ${T.accentBd}`, borderBottom: `1px solid ${T.accentBd}` }}>
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 16px" }}>
-          <h2 style={{ textAlign: "center", fontSize: 22, fontWeight: 700, margin: "0 0 24px" }}>Pourquoi EzInterview ?</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
-            {highlights.map((h, i) => (
-              <div key={i} style={{ padding: 20, borderRadius: T.r, background: T.card, border: `1px solid ${T.border}` }}>
-                <h4 style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 600, color: T.accent }}>{h.title}</h4>
-                <p style={{ margin: 0, fontSize: 13, color: T.muted }}>{h.desc}</p>
+      {/* ─── How it works — Course cards (AdEspresso style) ─── */}
+      <section style={{ background: L.white, borderTop: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={{ display: "inline-block", padding: "5px 14px", borderRadius: 20, background: L.orangeLight, fontSize: 12, fontWeight: 700, color: L.orange, marginBottom: 12, textTransform: "uppercase", letterSpacing: "1px" }}>Comment ca marche</div>
+            <h2 style={{ fontSize: 28, fontWeight: 800, margin: 0, color: L.navy }}>3 etapes simples</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+            {courses.map((c, i) => (
+              <div key={i} className="ez-card" style={{ borderRadius: L.radius, background: L.white, border: `1px solid ${L.border}`, overflow: "hidden" }}>
+                {/* Colored top bar */}
+                <div style={{ height: 4, background: c.color }}></div>
+                <div style={{ padding: 24 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: L.radius, background: c.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>{c.icon}</div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: c.color, letterSpacing: "1px" }}>{c.tag}</span>
+                  </div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 8px", color: L.navy }}>{c.title}</h3>
+                  <p style={{ fontSize: 14, color: L.gray, margin: "0 0 16px", lineHeight: 1.6 }}>{c.desc}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c.color} strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: c.color }}>{c.duration}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* CTA bottom */}
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 16px", textAlign: "center" }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 8px" }}>Pret a decrocher ton entretien ?</h2>
-        <p style={{ fontSize: 14, color: T.muted, margin: "0 0 20px" }}>Gratuit. Sans carte bancaire. En 2 minutes.</p>
-        <button style={{ ...btnP, padding: "14px 28px", fontSize: 16, fontWeight: 600 }} onClick={() => setShowAuth(true)}>
-          Creer mon compte
-        </button>
-        <p style={{ fontSize: 12, color: T.light, marginTop: 24 }}>EzInterview est un projet open source.</p>
-      </div>
+      {/* ─── Features ─── */}
+      <section style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 8px", color: L.navy }}>Tout pour reussir ton entretien</h2>
+          <p style={{ fontSize: 15, color: L.gray, margin: 0 }}>Des outils complets pour une preparation serieuse et efficace</p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+          {highlights.map((h, i) => (
+            <div key={i} style={{ display: "flex", gap: 16, padding: 24, borderRadius: L.radius, background: L.white, border: `1px solid ${L.border}` }}>
+              <div style={{ width: 48, height: 48, borderRadius: L.radius, background: [L.blueLight, L.purpleLight, L.orangeLight, L.greenLight][i], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>{h.icon}</div>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 4px", color: L.navy }}>{h.title}</h3>
+                <p style={{ fontSize: 13, color: L.gray, margin: 0, lineHeight: 1.6 }}>{h.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      {/* Auth Modal */}
+      {/* ─── Testimonials ─── */}
+      <section style={{ background: L.white, borderTop: `1px solid ${L.border}`, borderBottom: `1px solid ${L.border}` }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "64px 32px" }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 8px", color: L.navy }}>Ils ont decroche leur poste</h2>
+            <p style={{ fontSize: 15, color: L.gray, margin: 0 }}>Rejoins des centaines de candidats satisfaits</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+            {testimonials.map((t, i) => (
+              <div key={i} style={{ padding: 24, borderRadius: L.radius, background: L.bg, border: `1px solid ${L.border}` }}>
+                <div style={{ display: "flex", gap: 3, marginBottom: 12 }}>
+                  {[1,2,3,4,5].map(s => <span key={s} style={{ color: "#FBBF24", fontSize: 16 }}>★</span>)}
+                </div>
+                <p style={{ fontSize: 14, color: L.gray, margin: "0 0 20px", lineHeight: 1.65, fontStyle: "italic" }}>"{t.text}"</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: t.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 16, fontWeight: 700 }}>{t.name[0]}</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: L.navy }}>{t.name}</div>
+                    <div style={{ fontSize: 12, color: L.gray }}>{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CTA ─── */}
+      <section style={{ maxWidth: 1080, margin: "0 auto", padding: "80px 32px", textAlign: "center" }}>
+        <div style={{ maxWidth: 600, margin: "0 auto", padding: "56px 40px", borderRadius: 20, background: L.navy, color: "#fff" }}>
+          <h2 style={{ fontSize: 32, fontWeight: 900, margin: "0 0 12px", letterSpacing: "-0.8px" }}>Pret a decrocher ton poste ?</h2>
+          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.7)", margin: "0 0 28px", lineHeight: 1.6 }}>
+            Commence ta preparation gratuitement. Sans carte bancaire, en 2 minutes.
+          </p>
+          <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: L.blue, color: "#fff", border: "none", borderRadius: 10, padding: "16px 40px", fontSize: 17, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+            Commencer maintenant
+          </button>
+        </div>
+      </section>
+
+      {/* ─── Footer ─── */}
+      <footer style={{ borderTop: `1px solid ${L.border}`, background: L.white }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", padding: "24px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: L.blue, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
+            </div>
+            <span style={{ fontSize: 15, fontWeight: 700, color: L.navy }}>EzInterview</span>
+          </div>
+          <span style={{ fontSize: 12, color: L.gray }}>Open source — 2024-2026</span>
+        </div>
+      </footer>
+
+      {/* ─── Auth Modal ─── */}
       {showAuth && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowAuth(false); }}>
-          <div style={{ maxWidth: 400, width: "100%", background: T.card, borderRadius: T.r, padding: 28, position: "relative" }}>
-            <button onClick={() => setShowAuth(false)} style={{ position: "absolute", top: 12, right: 12, background: "none", border: "none", fontSize: 18, color: T.light, cursor: "pointer", fontFamily: "inherit" }}>x</button>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,23,42,0.5)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowAuth(false); }}>
+          <div style={{ maxWidth: 420, width: "100%", background: L.white, borderRadius: 16, padding: 32, position: "relative", boxShadow: "0 24px 64px rgba(0,0,0,0.2)", animation: "fadeIn 0.25s ease" }}>
+            <button onClick={() => setShowAuth(false)} style={{ position: "absolute", top: 16, right: 16, background: L.bg, border: "none", fontSize: 16, color: L.gray, cursor: "pointer", fontFamily: "inherit", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8 }}>✕</button>
 
-            <div style={{ textAlign: "center", marginBottom: 20 }}>
-              <span style={{ fontSize: 22, fontWeight: 700, color: T.accent }}>EzInterview</span>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: L.blue, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
+              </div>
+              <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: L.navy }}>Bienvenue</h3>
+              <p style={{ margin: "4px 0 0", fontSize: 14, color: L.gray }}>Connecte-toi pour preparer ton entretien</p>
             </div>
 
             <button onClick={handleGoogle} disabled={loading}
-              style={{ ...btnS, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 20px", marginBottom: 16 }}>
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "12px 20px", marginBottom: 20, fontSize: 14, fontWeight: 600, background: L.white, color: L.navy, border: `1px solid ${L.border}`, borderRadius: 10, cursor: "pointer", fontFamily: "inherit" }}>
               <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
               Continuer avec Google
             </button>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0" }}>
-              <div style={{ flex: 1, height: 1, background: T.border }} />
-              <span style={{ fontSize: 12, color: T.light }}>ou</span>
-              <div style={{ flex: 1, height: 1, background: T.border }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "0 0 20px" }}>
+              <div style={{ flex: 1, height: 1, background: L.border }} />
+              <span style={{ fontSize: 12, color: L.gray }}>ou par email</span>
+              <div style={{ flex: 1, height: 1, background: L.border }} />
             </div>
 
-            <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, marginBottom: 16 }}>
-              <button style={tabS(mode === "login")} onClick={() => { setMode("login"); setError(""); setMessage(""); }}>Connexion</button>
-              <button style={tabS(mode === "signup")} onClick={() => { setMode("signup"); setError(""); setMessage(""); }}>Inscription</button>
+            <div style={{ display: "flex", gap: 0, marginBottom: 20, background: L.bg, borderRadius: 10, padding: 3 }}>
+              {["login", "signup"].map(m => (
+                <button key={m} onClick={() => { setMode(m); setError(""); setMessage(""); }}
+                  style={{ flex: 1, padding: "8px 0", border: "none", borderRadius: 8, background: mode === m ? L.white : "transparent", color: mode === m ? L.navy : L.gray, fontWeight: mode === m ? 600 : 400, fontSize: 13, cursor: "pointer", fontFamily: "inherit", boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.08)" : "none" }}>
+                  {m === "login" ? "Connexion" : "Inscription"}
+                </button>
+              ))}
             </div>
 
             <form onSubmit={handleEmail}>
-              <div style={{ marginBottom: 10 }}>
-                <label style={{ fontSize: 12, color: T.muted, display: "block", marginBottom: 3 }}>Email</label>
-                <input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ton@email.com" required />
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: L.gray, display: "block", marginBottom: 5 }}>Email</label>
+                <input style={{ width: "100%", padding: "11px 14px", border: `1px solid ${L.border}`, borderRadius: 8, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit", background: L.white, color: L.navy }} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ton@email.com" required />
               </div>
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 12, color: T.muted, display: "block", marginBottom: 3 }}>Mot de passe</label>
-                <input style={inp} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 caracteres" required minLength={6} />
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: L.gray, display: "block", marginBottom: 5 }}>Mot de passe</label>
+                <input style={{ width: "100%", padding: "11px 14px", border: `1px solid ${L.border}`, borderRadius: 8, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit", background: L.white, color: L.navy }} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 caracteres" required minLength={6} />
               </div>
-              {error && <div style={{ padding: "8px 12px", borderRadius: T.r, background: T.badBg, border: `1px solid ${T.badBd}`, color: T.bad, fontSize: 12, marginBottom: 12 }}>{error}</div>}
-              {message && <div style={{ padding: "8px 12px", borderRadius: T.r, background: T.mintBg, border: `1px solid ${T.mintBd}`, color: T.mint, fontSize: 12, marginBottom: 12 }}>{message}</div>}
-              <button type="submit" style={{ ...btnP, width: "100%" }} disabled={loading}>{loading ? "..." : mode === "login" ? "Se connecter" : "Creer mon compte"}</button>
+              {error && <div style={{ padding: "10px 14px", borderRadius: 8, background: "#FEF2F2", border: "1px solid #FECACA", color: "#DC2626", fontSize: 13, marginBottom: 14 }}>{error}</div>}
+              {message && <div style={{ padding: "10px 14px", borderRadius: 8, background: L.greenLight, border: `1px solid #A7F3D0`, color: L.green, fontSize: 13, marginBottom: 14 }}>{message}</div>}
+              <button type="submit" className="ez-btn" style={{ width: "100%", background: L.blue, color: "#fff", border: "none", borderRadius: 10, padding: "12px 20px", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }} disabled={loading}>{loading ? "..." : mode === "login" ? "Se connecter" : "Creer mon compte"}</button>
             </form>
           </div>
         </div>
