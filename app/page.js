@@ -258,8 +258,9 @@ function CulturePanel({ companyInfo, jobData }) {
   );
 }
 
-// ─── Auth Component ───
-function AuthScreen({ onAuth }) {
+// ─── Landing Page + Auth ───
+function LandingPage() {
+  const [showAuth, setShowAuth] = useState(false);
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -291,45 +292,129 @@ function AuthScreen({ onAuth }) {
     } catch (err) { setError(err.message); setLoading(false); }
   };
 
+  const features = [
+    { icon: "1", title: "Colle ton offre", desc: "L'IA analyse le poste, l'entreprise, et detecte les competences requises — quel que soit le domaine." },
+    { icon: "2", title: "Upload ton CV", desc: "On compare ton profil avec l'offre et on identifie tes forces et tes axes de progression." },
+    { icon: "3", title: "Suis ton plan", desc: "Un plan jour par jour avec cours, exercices, quiz et liens vers les meilleures ressources de ton domaine." },
+  ];
+
+  const highlights = [
+    { title: "Tous les metiers", desc: "Dev, finance, droit, marketing, sante, lettres, commerce..." },
+    { title: "Sources fiables", desc: "Legifrance, Investopedia, MDN, HAS, Coursera, docs officielles..." },
+    { title: "Quiz interactifs", desc: "Teste tes connaissances a chaque etape avec des QCM corriges." },
+    { title: "Veille entreprise", desc: "Actualites, concurrents, culture — tout pour briller en entretien." },
+  ];
+
   return (
-    <div style={{ maxWidth: 400, margin: "80px auto", padding: "0 16px" }}>
-      <div style={{ textAlign: "center", marginBottom: 32 }}>
-        <span style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.5px", color: T.accent }}>EzInterview</span>
-        <p style={{ margin: "8px 0 0", fontSize: 14, color: T.muted }}>Prepare ton entretien avec l'IA</p>
+    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: T.text, background: T.bg, minHeight: "100vh", lineHeight: 1.55 }}>
+      {/* Header */}
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: T.accent }}>EzInterview</span>
+          <button style={{ ...btnP, padding: "8px 16px", fontSize: 13 }} onClick={() => setShowAuth(true)}>Se connecter</button>
+        </div>
       </div>
 
-      <div style={card}>
-        <button onClick={handleGoogle} disabled={loading}
-          style={{ ...btnS, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 20px", marginBottom: 16 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-          Continuer avec Google
+      {/* Hero */}
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 16px 40px", textAlign: "center" }}>
+        <div style={{ display: "inline-block", padding: "4px 14px", borderRadius: 20, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontSize: 13, color: T.accent, fontWeight: 500, marginBottom: 20 }}>
+          Preparation d'entretien assistee par IA
+        </div>
+        <h1 style={{ fontSize: 36, fontWeight: 800, lineHeight: 1.15, margin: "0 0 16px", letterSpacing: "-1px" }}>
+          Decroche ton prochain poste.<br />
+          <span style={{ color: T.accent }}>Prepare-toi intelligemment.</span>
+        </h1>
+        <p style={{ fontSize: 17, color: T.muted, maxWidth: 520, margin: "0 auto 28px", lineHeight: 1.6 }}>
+          Colle le lien de l'offre, upload ton CV. EzInterview cree un plan de revision personnalise avec des cours, des quiz et des exercices adaptes a ton domaine.
+        </p>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <button style={{ ...btnP, padding: "14px 28px", fontSize: 16, fontWeight: 600 }} onClick={() => setShowAuth(true)}>
+            Commencer gratuitement
+          </button>
+        </div>
+      </div>
+
+      {/* 3 steps */}
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 16px 48px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+          {features.map((f, i) => (
+            <div key={i} style={{ ...card, textAlign: "center", padding: 28 }}>
+              <div style={{ width: 44, height: 44, borderRadius: T.r, background: T.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, margin: "0 auto 14px" }}>{f.icon}</div>
+              <h3 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 600 }}>{f.title}</h3>
+              <p style={{ margin: 0, fontSize: 13, color: T.muted, lineHeight: 1.5 }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Highlights */}
+      <div style={{ background: T.accentLt, borderTop: `1px solid ${T.accentBd}`, borderBottom: `1px solid ${T.accentBd}` }}>
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 16px" }}>
+          <h2 style={{ textAlign: "center", fontSize: 22, fontWeight: 700, margin: "0 0 24px" }}>Pourquoi EzInterview ?</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+            {highlights.map((h, i) => (
+              <div key={i} style={{ padding: 20, borderRadius: T.r, background: T.card, border: `1px solid ${T.border}` }}>
+                <h4 style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 600, color: T.accent }}>{h.title}</h4>
+                <p style={{ margin: 0, fontSize: 13, color: T.muted }}>{h.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* CTA bottom */}
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 16px", textAlign: "center" }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 8px" }}>Pret a decrocher ton entretien ?</h2>
+        <p style={{ fontSize: 14, color: T.muted, margin: "0 0 20px" }}>Gratuit. Sans carte bancaire. En 2 minutes.</p>
+        <button style={{ ...btnP, padding: "14px 28px", fontSize: 16, fontWeight: 600 }} onClick={() => setShowAuth(true)}>
+          Creer mon compte
         </button>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0" }}>
-          <div style={{ flex: 1, height: 1, background: T.border }} />
-          <span style={{ fontSize: 12, color: T.light }}>ou</span>
-          <div style={{ flex: 1, height: 1, background: T.border }} />
-        </div>
-
-        <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, marginBottom: 16 }}>
-          <button style={tabS(mode === "login")} onClick={() => { setMode("login"); setError(""); setMessage(""); }}>Connexion</button>
-          <button style={tabS(mode === "signup")} onClick={() => { setMode("signup"); setError(""); setMessage(""); }}>Inscription</button>
-        </div>
-
-        <form onSubmit={handleEmail}>
-          <div style={{ marginBottom: 10 }}>
-            <label style={{ fontSize: 12, color: T.muted, display: "block", marginBottom: 3 }}>Email</label>
-            <input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ton@email.com" required />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, color: T.muted, display: "block", marginBottom: 3 }}>Mot de passe</label>
-            <input style={inp} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 caracteres" required minLength={6} />
-          </div>
-          {error && <div style={{ padding: "8px 12px", borderRadius: T.r, background: T.badBg, border: `1px solid ${T.badBd}`, color: T.bad, fontSize: 12, marginBottom: 12 }}>{error}</div>}
-          {message && <div style={{ padding: "8px 12px", borderRadius: T.r, background: T.mintBg, border: `1px solid ${T.mintBd}`, color: T.mint, fontSize: 12, marginBottom: 12 }}>{message}</div>}
-          <button type="submit" style={{ ...btnP, width: "100%" }} disabled={loading}>{loading ? "..." : mode === "login" ? "Se connecter" : "Creer mon compte"}</button>
-        </form>
+        <p style={{ fontSize: 12, color: T.light, marginTop: 24 }}>EzInterview est un projet open source.</p>
       </div>
+
+      {/* Auth Modal */}
+      {showAuth && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowAuth(false); }}>
+          <div style={{ maxWidth: 400, width: "100%", background: T.card, borderRadius: T.r, padding: 28, position: "relative" }}>
+            <button onClick={() => setShowAuth(false)} style={{ position: "absolute", top: 12, right: 12, background: "none", border: "none", fontSize: 18, color: T.light, cursor: "pointer", fontFamily: "inherit" }}>x</button>
+
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <span style={{ fontSize: 22, fontWeight: 700, color: T.accent }}>EzInterview</span>
+            </div>
+
+            <button onClick={handleGoogle} disabled={loading}
+              style={{ ...btnS, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 20px", marginBottom: 16 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              Continuer avec Google
+            </button>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0" }}>
+              <div style={{ flex: 1, height: 1, background: T.border }} />
+              <span style={{ fontSize: 12, color: T.light }}>ou</span>
+              <div style={{ flex: 1, height: 1, background: T.border }} />
+            </div>
+
+            <div style={{ display: "flex", borderBottom: `1px solid ${T.border}`, marginBottom: 16 }}>
+              <button style={tabS(mode === "login")} onClick={() => { setMode("login"); setError(""); setMessage(""); }}>Connexion</button>
+              <button style={tabS(mode === "signup")} onClick={() => { setMode("signup"); setError(""); setMessage(""); }}>Inscription</button>
+            </div>
+
+            <form onSubmit={handleEmail}>
+              <div style={{ marginBottom: 10 }}>
+                <label style={{ fontSize: 12, color: T.muted, display: "block", marginBottom: 3 }}>Email</label>
+                <input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ton@email.com" required />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 12, color: T.muted, display: "block", marginBottom: 3 }}>Mot de passe</label>
+                <input style={inp} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 caracteres" required minLength={6} />
+              </div>
+              {error && <div style={{ padding: "8px 12px", borderRadius: T.r, background: T.badBg, border: `1px solid ${T.badBd}`, color: T.bad, fontSize: 12, marginBottom: 12 }}>{error}</div>}
+              {message && <div style={{ padding: "8px 12px", borderRadius: T.r, background: T.mintBg, border: `1px solid ${T.mintBd}`, color: T.mint, fontSize: 12, marginBottom: 12 }}>{message}</div>}
+              <button type="submit" style={{ ...btnP, width: "100%" }} disabled={loading}>{loading ? "..." : mode === "login" ? "Se connecter" : "Creer mon compte"}</button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -454,7 +539,7 @@ export default function EzInterview() {
       try {
         const token = (await supabase.auth.getSession()).data.session?.access_token;
         const res = await fetch("/api/plans", { headers: { Authorization: `Bearer ${token}` } });
-        if (res.ok) setSavedPlans(await res.json());
+        if (res.ok) { try { setSavedPlans(await res.json()); } catch { /* ignore parse errors */ } }
       } catch (err) { console.error("Load plans error:", err); }
     };
     loadPlans();
@@ -502,19 +587,27 @@ export default function EzInterview() {
     } catch (err) { console.error("Update progress error:", err); }
   };
 
-  // ─── API calls ───
-  const getToken = async () => (await supabase.auth.getSession()).data.session?.access_token;
+  // ─── Safe fetch helper ───
+  const safeFetch = async (url, options) => {
+    const res = await fetch(url, options);
+    let data;
+    const text = await res.text();
+    try { data = JSON.parse(text); } catch { data = { error: text || `Erreur serveur (${res.status})` }; }
+    if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+    return data;
+  };
 
+  // ─── API calls ───
   const handleFetchJob = useCallback(async () => {
     if (!jobUrl.trim()) return;
+    // Basic URL validation
+    try { new URL(jobUrl.trim()); } catch { setJobError("URL invalide"); return; }
     setJobLoading(true); setJobError("");
     try {
-      const res = await fetch("/api/scrape-job", {
+      const data = await safeFetch("/api/scrape-job", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: jobUrl.trim() }),
+        body: JSON.stringify({ url: jobUrl.trim().slice(0, 2000) }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur");
       setJobData(data);
       if (data.interviewSteps?.length > 0) {
         setInterviewSteps(data.interviewSteps);
@@ -522,12 +615,10 @@ export default function EzInterview() {
         setNextInterlocutor(data.interviewSteps[0].interlocutor || "");
       } else { setManualStepMode(true); }
       if (data.company) {
-        fetch("/api/company-intel", {
+        safeFetch("/api/company-intel", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ company: data.company, sector: data.companyInfo?.sector }),
-        }).then(r => r.json()).then(info => {
-          if (!info.error) setCompanyInfo(info);
-        }).catch(() => {});
+        }).then(info => { if (!info.error) setCompanyInfo(info); }).catch(() => {});
       }
     } catch (err) { setJobError(err.message); }
     setJobLoading(false);
@@ -541,20 +632,19 @@ export default function EzInterview() {
       if (!profileData) {
         const formData = new FormData();
         if (cvFile) formData.append("file", cvFile);
-        else formData.append("text", cvText);
-        if (linkedinUrl) formData.append("linkedin", linkedinUrl);
+        else formData.append("text", cvText.slice(0, 50000));
+        if (linkedinUrl) formData.append("linkedin", linkedinUrl.slice(0, 500));
         const cvRes = await fetch("/api/parse-cv", { method: "POST", body: formData });
-        const cvData = await cvRes.json();
+        const cvText2 = await cvRes.text();
+        let cvData; try { cvData = JSON.parse(cvText2); } catch { throw new Error("Erreur de lecture du CV. Reessaie."); }
         if (!cvRes.ok) throw new Error(cvData.error || "Erreur parsing CV");
         setProfile(cvData);
         profileData = cvData;
       }
-      const res = await fetch("/api/analyze", {
+      const data = await safeFetch("/api/analyze", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobData, profile: profileData, extras }),
+        body: JSON.stringify({ jobData, profile: profileData, extras: extras.slice(0, 5000) }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur analyse");
       setMatches(data);
     } catch (err) { setError(err.message); }
     setAnalysisLoading(false);
@@ -564,12 +654,10 @@ export default function EzInterview() {
     if (selectedPriorities.length === 0 || !interviewDate) return;
     setPlanLoading(true); setError("");
     try {
-      const res = await fetch("/api/generate-plan", {
+      const data = await safeFetch("/api/generate-plan", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobData, matches, priorities: selectedPriorities, interviewDate, nextInterlocutor, companyInfo }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur generation");
       setPrepPlan(data);
       setStep("plan");
       await savePlan(data);
@@ -644,32 +732,37 @@ export default function EzInterview() {
     </div>
   );
 
-  // ─── Not logged in ───
-  if (!user) return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: T.text, background: T.bg, minHeight: "100vh", lineHeight: 1.55 }}>
-      <AuthScreen />
-    </div>
-  );
+  // ─── Not logged in → Landing page ───
+  if (!user) return <LandingPage />;
 
-  // ─── Step indicator ───
+  const goBack = () => {
+    if (step === "analysis") { setStep("input"); setError(""); }
+    else if (step === "plan") { setStep("analysis"); setPrepPlan([]); setCompletedDays({}); setExpandedDay(null); setExpandedItems({}); }
+  };
+
+  // ─── Step indicator (cliquable) ───
   const Steps = () => (
     <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 28 }}>
       {[
         { k: "input", l: "1. Informations", d: step !== "input" },
         { k: "analysis", l: "2. Analyse", d: step === "plan" },
         { k: "plan", l: "3. Plan", d: false },
-      ].map((s, i, a) => (
-        <div key={s.k} style={{ display: "flex", alignItems: "center" }}>
-          <div style={{
-            padding: "6px 14px", borderRadius: T.r, fontSize: 13,
-            background: s.k === step ? T.accent : s.d ? T.mintBg : "#EDEAE4",
-            color: s.k === step ? "#fff" : s.d ? T.mint : T.muted,
-            fontWeight: s.k === step ? 600 : 400,
-            border: `1px solid ${s.k === step ? T.accent : s.d ? T.mintBd : T.border}`,
-          }}>{s.d ? "OK " : ""}{s.l}</div>
-          {i < a.length - 1 && <div style={{ width: 32, height: 1, background: T.border, margin: "0 4px" }} />}
-        </div>
-      ))}
+      ].map((s, i, a) => {
+        const canClick = s.d;
+        return (
+          <div key={s.k} style={{ display: "flex", alignItems: "center" }}>
+            <div onClick={() => { if (canClick) setStep(s.k); }} style={{
+              padding: "6px 14px", borderRadius: T.r, fontSize: 13,
+              background: s.k === step ? T.accent : s.d ? T.mintBg : "#EDEAE4",
+              color: s.k === step ? "#fff" : s.d ? T.mint : T.muted,
+              fontWeight: s.k === step ? 600 : 400,
+              border: `1px solid ${s.k === step ? T.accent : s.d ? T.mintBd : T.border}`,
+              cursor: canClick ? "pointer" : "default",
+            }}>{s.d ? "OK " : ""}{s.l}</div>
+            {i < a.length - 1 && <div style={{ width: 32, height: 1, background: T.border, margin: "0 4px" }} />}
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -787,7 +880,8 @@ export default function EzInterview() {
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+        <button style={btnS} onClick={() => { setView("dashboard"); resetFlow(); }}>Mes plans</button>
         <button style={isInputComplete ? btnP : btnD} onClick={handleAnalyze} disabled={!isInputComplete}>Analyser la compatibilite</button>
       </div>
     </>
@@ -863,7 +957,8 @@ export default function EzInterview() {
             {interviewDate && <p style={{ marginTop: 10, marginBottom: 0, fontSize: 13, color: T.muted }}>{daysUntil} jours de preparation{nextInterlocutor ? ` — avec ${nextInterlocutor}` : ""}</p>}
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+            <button style={btnS} onClick={goBack}>Retour</button>
             <button style={(selectedPriorities.length > 0 && interviewDate) ? btnP : btnD} onClick={handleGeneratePlan} disabled={selectedPriorities.length === 0 || !interviewDate || planLoading}>{planLoading ? "Generation du plan..." : `Generer mon plan (${selectedPriorities.length} sujets)`}</button>
           </div>
         </>
@@ -879,6 +974,7 @@ export default function EzInterview() {
           <div><h3 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Plan de preparation</h3><p style={{ margin: "2px 0 0", fontSize: 13, color: T.muted }}>{jobData?.title} chez {jobData?.company}{nextInterlocutor ? ` — prochain : ${nextInterlocutor}` : ""}</p></div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button style={btnS} onClick={() => { setView("dashboard"); resetFlow(); }}>Mes plans</button>
+            <button style={btnS} onClick={goBack}>Modifier l'analyse</button>
             <button style={notificationsEnabled ? { ...btnS, background: T.mintBg, borderColor: T.mintBd } : btnP} onClick={() => { if ("Notification" in window) Notification.requestPermission(); setNotificationsEnabled(true); }}>{notificationsEnabled ? "Rappels actifs" : "Activer rappels"}</button>
           </div>
         </div>

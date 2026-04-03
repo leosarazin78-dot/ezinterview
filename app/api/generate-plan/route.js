@@ -103,20 +103,35 @@ REGLES CRITIQUES :
 1. Chaque jour a ${planDays <= 7 ? "4-6" : "3-5"} items
 2. Chaque jour FINIT par un quiz de 5-8 questions
 3. Les "note" et "memo" ont des miniQuiz de 1-2 questions
-4. Les liens doivent etre des URLs REELLES et FONCTIONNELLES adaptees au domaine :
-   - Tech/dev : MDN, freeCodeCamp, LeetCode, HackerRank, CodeSandbox, docs officielles
-   - Finance/eco : Investopedia, Khan Academy (finance), Coursera (finance courses), Les Echos, Bloomberg
-   - Droit : Legifrance, Dalloz, cours-de-droit.net, Coursera (law courses)
-   - Marketing/commerce : HubSpot Academy, Google Digital Garage, Think with Google, Coursera
-   - Sante : OMS, HAS, Coursera (health courses), PubMed
-   - Sciences sociales/lettres : OpenClassrooms, edX, MIT OpenCourseWare, JSTOR, Cairn.info
-   - General : Khan Academy, Coursera, edX, OpenClassrooms, YouTube (videos educatives populaires)
-5. Le contenu des notes doit etre CONCRET : pas de "apprenez ceci", mais du vrai contenu avec les points cles
+4. SOURCES MULTIPLES OBLIGATOIRES — chaque item "note" ou "memo" doit avoir 2-3 liens de sources DIFFERENTES :
+   - Toujours croiser : 1 source de reference officielle/academique + 1 source pratique/video + 1 source complementaire
+   - Privilegier les sources de verite reconnues dans le domaine :
+
+   SOURCES DE REFERENCE PAR DOMAINE (utiliser en priorite) :
+   - Tech/dev : documentation officielle (docs.python.org, react.dev, developer.mozilla.org), GitHub repos de reference, StackOverflow docs
+   - Finance/eco : Investopedia, Banque de France, INSEE, OCDE, Bloomberg, Les Echos, Financial Times
+   - Droit : Legifrance.gouv.fr, Dalloz, Service-Public.fr, EUR-Lex, cours officiels des universites
+   - Marketing/commerce : HubSpot Academy, Google Skillshop, Think with Google, Statista
+   - Sante/medical : OMS (who.int), HAS (has-sante.fr), PubMed, Vidal, ANSM
+   - Sciences/recherche : Google Scholar, ArXiv, JSTOR, Cairn.info, HAL, Nature
+   - Gestion/management : Harvard Business Review, McKinsey Insights, BCG publications
+   - Comptabilite : Plan Comptable General, ANC, Ordre des Experts-Comptables
+   - RH : Code du travail (Legifrance), ANDRH, Ministere du Travail
+   - BTP/industrie : normes AFNOR, Batiactu, techniques-ingenieur.fr
+
+   SOURCES PEDAGOGIQUES (en complement) :
+   - Cours gratuits : Coursera, edX, OpenClassrooms, Khan Academy, MIT OpenCourseWare, FUN-MOOC
+   - Videos : YouTube (chaines educatives reconnues), TED Talks
+   - Exercices : LeetCode, HackerRank, exercism.io, Codecademy, Brilliant.org
+   - Generales : Wikipedia (pour les definitions), Cairn.info, Persee.fr
+
+5. Le contenu des notes doit etre CONCRET : pas de "apprenez ceci", mais du vrai contenu avec les points cles, definitions, exemples
 6. Inclure au moins 1 jour complet sur ${company} : produits, services, actualites, concurrents, culture, positionnement dans le marche
 7. Le dernier jour = revision + quiz final recapitulatif (10 questions)
 8. Les exercices doivent etre adaptes au metier : etude de cas, analyse, redaction, calcul, code, mise en situation...
 9. Concentre-toi sur les competences metier et la connaissance entreprise/secteur
 10. ${planDays} jours exactement
+11. Les URLs doivent pointer vers des pages REELLES qui existent. Utilise des URLs de domaines connus (pas d'URLs inventees). Prefere les pages principales de plateformes connues plutot que des URLs de pages specifiques qui pourraient ne pas exister.
 
 Retourne UNIQUEMENT le JSON valide.`,
         },
