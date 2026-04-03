@@ -3,7 +3,58 @@ import { extractJSONArray } from "../../lib/parse-json";
 
 const anthropic = new Anthropic();
 
-// Génère le plan avec retry automatique (max 2 tentatives)
+// URLs de reference fiables et verifiees par domaine
+const VERIFIED_SOURCES = `
+UTILISE UNIQUEMENT ces URLs racines verifiees (pas de sous-pages inventees) :
+
+COURS & FORMATION :
+- https://www.coursera.org — cours universitaires
+- https://www.edx.org — cours en ligne
+- https://openclassrooms.com — cours FR
+- https://www.khanacademy.org — fondamentaux
+- https://www.fun-mooc.fr — MOOC francais
+- https://ocw.mit.edu — MIT OpenCourseWare
+
+TECH & DEV :
+- https://developer.mozilla.org — docs web MDN
+- https://react.dev — docs React
+- https://docs.python.org — docs Python
+- https://nodejs.org/docs — docs Node.js
+- https://www.w3schools.com — tutoriels web
+- https://leetcode.com — exercices code
+- https://exercism.org — exercices code
+- https://github.com — repos de reference
+
+FINANCE & BUSINESS :
+- https://www.investopedia.com — finance
+- https://www.lesechos.fr — actualites eco FR
+- https://hbr.org — Harvard Business Review
+- https://www.banque-france.fr — Banque de France
+- https://www.insee.fr — stats France
+
+DROIT :
+- https://www.legifrance.gouv.fr — lois FR
+- https://www.service-public.fr — demarches FR
+- https://eur-lex.europa.eu — droit europeen
+- https://www.dalloz.fr — droit FR
+
+SANTE :
+- https://www.who.int — OMS
+- https://www.has-sante.fr — HAS France
+- https://pubmed.ncbi.nlm.nih.gov — articles medicaux
+- https://www.vidal.fr — medicaments
+
+MARKETING :
+- https://academy.hubspot.com — marketing
+- https://skillshop.withgoogle.com — Google certs
+- https://www.statista.com — statistiques
+
+GENERAL :
+- https://www.youtube.com — videos educatives
+- https://fr.wikipedia.org — definitions
+- https://scholar.google.com — articles academiques
+`;
+
 async function generateWithRetry(prompt, maxRetries = 2) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -17,14 +68,15 @@ async function generateWithRetry(prompt, maxRetries = 2) {
       const parsed = extractJSONArray(text);
 
       if (parsed && Array.isArray(parsed) && parsed.length > 0) {
-        // Valider la structure basique
         const valid = parsed.every(
           (d) => d.day && d.title && Array.isArray(d.items)
         );
         if (valid) return parsed;
       }
 
-      console.warn(`Attempt ${attempt + 1}: invalid JSON structure, retrying...`);
+      console.warn(
+        `Attempt ${attempt + 1}: invalid JSON structure, retrying...`
+      );
     } catch (err) {
       console.error(`Attempt ${attempt + 1} error:`, err.message);
       if (attempt === maxRetries - 1) throw err;
@@ -64,7 +116,7 @@ export async function POST(request) {
       companyInfo?.sector || jobData?.companyInfo?.sector || "non precise";
     const company = jobData?.company || "l'entreprise";
 
-    const prompt = `Tu es un expert en preparation d'entretien professionnel. Genere un plan de ${planDays} jours en JSON.
+    const prompt = `Tu es un expert en preparation d'entretien. Genere un plan de ${planDays} jours en JSON valide.
 
 CONTEXTE :
 - Poste : ${jobData?.title} chez ${company}
@@ -74,38 +126,39 @@ CONTEXTE :
 ${companyInfo?.competitors?.length ? `- Concurrents : ${companyInfo.competitors.join(", ")}` : ""}
 ${companyInfo?.techStack?.length ? `- Outils : ${companyInfo.techStack.join(", ")}` : ""}
 
-FORMAT JSON STRICT — retourne UNIQUEMENT un tableau JSON valide, rien d'autre :
+${VERIFIED_SOURCES}
 
+FORMAT JSON — retourne UNIQUEMENT ce tableau :
 [
   {
     "day": 1,
     "title": "Titre du jour",
-    "focus": "Mot-cle court",
+    "focus": "Mot-cle",
     "items": [
       {
         "type": "note",
-        "title": "Titre clair",
+        "title": "Titre",
         "duration": "20 min",
         "content": {
-          "summary": "Resume en 3 phrases",
+          "summary": "Resume concret en 3 phrases",
           "keyPoints": ["Point 1", "Point 2", "Point 3"],
-          "tips": ["Astuce 1"],
+          "tips": ["Astuce"],
           "links": [
-            {"label": "Nom ressource", "url": "https://domaine-connu.com/page", "type": "article"},
-            {"label": "Video", "url": "https://youtube.com/watch?v=...", "type": "video"}
+            {"label": "Nom", "url": "URL de la liste ci-dessus", "type": "article"},
+            {"label": "Video", "url": "https://www.youtube.com", "type": "video"}
           ]
         },
         "miniQuiz": [{"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0}]
       },
       {
         "type": "exercise",
-        "title": "Exercice pratique",
+        "title": "Exercice",
         "duration": "30 min",
         "content": {
-          "objective": "Ce que ca permet de pratiquer",
+          "objective": "Objectif",
           "steps": ["Etape 1", "Etape 2"],
           "tips": ["Conseil"],
-          "links": [{"label": "Ressource", "url": "https://...", "type": "lab"}]
+          "links": [{"label": "Nom", "url": "URL", "type": "lab"}]
         }
       },
       {
@@ -114,7 +167,7 @@ FORMAT JSON STRICT — retourne UNIQUEMENT un tableau JSON valide, rien d'autre 
         "duration": "10 min",
         "content": {
           "questions": [
-            {"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "Explication"}
+            {"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "Pourquoi"}
           ]
         }
       }
@@ -123,20 +176,18 @@ FORMAT JSON STRICT — retourne UNIQUEMENT un tableau JSON valide, rien d'autre 
 ]
 
 REGLES :
-1. Exactement ${planDays} jours, chacun avec 3-5 items
-2. Chaque jour finit par un quiz de 5-8 questions
-3. Les "note" ont des miniQuiz de 1-2 questions
-4. Chaque note a 2-3 liens de sources REELLES et DIFFERENTES (pas d'URLs inventees)
-5. Adapte au domaine : tech=code/system design, finance=cas/modelisation, droit=jurisprudence, marketing=KPIs/campagnes, sante=protocoles, etc.
-6. Un jour complet sur ${company} : produits, actualites, concurrents, culture
-7. Dernier jour = revision + quiz final de 10 questions
-8. Contenu CONCRET : vrais points cles, definitions, exemples
-9. Sources de reference : docs officielles, Coursera, YouTube educatif, Legifrance, Investopedia, MDN, PubMed selon le domaine
-10. Les URLs doivent utiliser des domaines connus (coursera.org, youtube.com, developer.mozilla.org, legifrance.gouv.fr, etc.)
-11. Pas de caracteres speciaux dans les strings JSON (pas de guillemets courbes, pas de retours a la ligne)
-12. IMPORTANT : le JSON doit etre COMPLET et VALIDE. Ne pas tronquer.
+1. ${planDays} jours, 3-5 items chacun
+2. Chaque jour finit par un quiz (5-8 questions)
+3. Les notes ont des miniQuiz (1-2 questions)
+4. URLS : utilise UNIQUEMENT les URLs racines de la liste ci-dessus. NE PAS inventer de sous-pages.
+5. Adapte au domaine du poste
+6. Un jour sur ${company} : produits, actualites, culture
+7. Dernier jour = revision + quiz final 10 questions
+8. Contenu concret avec vrais exemples
+9. JSON COMPLET et VALIDE, pas de troncature
+10. Pas de guillemets courbes ni retours a la ligne dans les strings
 
-Retourne UNIQUEMENT le tableau JSON, sans aucun texte avant ou apres.`;
+JSON uniquement :`;
 
     const parsed = await generateWithRetry(prompt);
 

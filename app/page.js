@@ -940,8 +940,9 @@ export default function EzInterview() {
     </div>
   );
 
-  // ─── Not logged in → Landing page ───
+  // ─── Not logged in OR on landing view → Landing page ───
   if (!user) return <LandingPage />;
+  if (view === "landing") return <LandingPage />;
 
   const goBack = () => {
     if (step === "analysis") { setStep("input"); setError(""); }
@@ -1239,108 +1240,186 @@ export default function EzInterview() {
     );
   };
 
-  // ─── STEP 3 ───
-  const step3 = () => (
-    <>
-      <div style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
-          <div><h3 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>Plan de preparation</h3><p style={{ margin: "2px 0 0", fontSize: 13, color: T.muted }}>{jobData?.title} chez {jobData?.company}{nextInterlocutor ? ` — prochain : ${nextInterlocutor}` : ""}</p></div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button style={btnS} onClick={() => { setView("dashboard"); resetFlow(); }}>Mes plans</button>
-            <button style={btnS} onClick={goBack}>Modifier l'analyse</button>
-            <button style={notificationsEnabled ? { ...btnS, background: T.mintBg, borderColor: T.mintBd } : btnP} onClick={() => { if ("Notification" in window) Notification.requestPermission(); setNotificationsEnabled(true); }}>{notificationsEnabled ? "Rappels actifs" : "Activer rappels"}</button>
+  // ─── STEP 3 — Plan view redesigned with sidebar ───
+  const step3 = () => {
+    const activeDay = expandedDay || (prepPlan.length > 0 ? prepPlan.find(d => !completedDays[d.day] && (d.day === 1 || completedDays[d.day - 1]))?.day || 1 : 1);
+    const activeDayData = prepPlan.find(d => d.day === activeDay);
+    const activeDayIdx = prepPlan.findIndex(d => d.day === activeDay);
+    const activeDt = getPlanDate(activeDayIdx);
+    const activeLocked = activeDay > 1 && !completedDays[activeDay - 1];
+    const activeDone = !!completedDays[activeDay];
+    const pct = prepPlan.length > 0 ? Math.round((completedCount / prepPlan.length) * 100) : 0;
+
+    return (
+    <div style={{ display: "flex", gap: 0, minHeight: "calc(100vh - 80px)", margin: "-24px -16px", background: T.bg }}>
+      {/* ─── Sidebar ─── */}
+      <div style={{ width: 260, flexShrink: 0, background: T.card, borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* Header sidebar */}
+        <div style={{ padding: "20px 16px 16px", borderBottom: `1px solid ${T.border}` }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: T.text }}>{jobData?.title}</h3>
+          <p style={{ margin: "2px 0 12px", fontSize: 12, color: T.muted }}>{jobData?.company}{nextInterlocutor ? ` — ${nextInterlocutor}` : ""}</p>
+          {/* Progress */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <span style={{ fontSize: 12, color: T.muted }}>{completedCount}/{prepPlan.length} jours</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: pct >= 100 ? T.mint : T.accent }}>{pct}%</span>
           </div>
+          <Bar value={completedCount} max={prepPlan.length} color={pct >= 100 ? T.mint : T.accent} h={6} />
+          {daysUntil > 0 && <p style={{ margin: "8px 0 0", fontSize: 11, color: daysUntil <= 2 ? T.coral : T.light }}>{daysUntil} jours avant l'entretien</p>}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, padding: 16, borderRadius: T.r, background: T.accentLt, border: `1px solid ${T.accentBd}` }}>
-          <div style={{ textAlign: "center" }}><div style={{ fontSize: 24, fontWeight: 700, color: T.accent }}>{completedCount}/{prepPlan.length}</div><div style={{ fontSize: 12, color: T.muted }}>sessions</div></div>
-          <div style={{ textAlign: "center" }}><div style={{ fontSize: 24, fontWeight: 700, color: T.accent }}>{prepPlan.length > 0 ? Math.round((completedCount / prepPlan.length) * 100) : 0}%</div><div style={{ fontSize: 12, color: T.muted }}>realise</div></div>
-          <div style={{ textAlign: "center" }}><div style={{ fontSize: 24, fontWeight: 700, color: daysUntil <= 2 ? T.coral : T.accent }}>{daysUntil}j</div><div style={{ fontSize: 12, color: T.muted }}>restants</div></div>
-        </div>
-        <div style={{ marginTop: 10 }}><Bar value={completedCount} max={prepPlan.length} color={T.accent} h={8} /></div>
-      </div>
 
-      {/* Culture & Company Panel */}
-      <CulturePanel companyInfo={companyInfo} jobData={jobData} />
-
-      {/* Day grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 6, marginBottom: 16 }}>
-        {prepPlan.map((day, idx) => {
-          const dt = getPlanDate(idx); const isT = dt === today(); const locked = day.day > 1 && !completedDays[day.day - 1]; const done = !!completedDays[day.day];
-          return (
-            <div key={day.day} onClick={() => !locked && setExpandedDay(expandedDay === day.day ? null : day.day)}
-              style={{ padding: "10px 8px", borderRadius: T.r, border: `${expandedDay === day.day ? 2 : 1}px solid ${done ? T.mintBd : locked ? T.locked : expandedDay === day.day ? T.accent : isT ? T.accentBd : T.border}`, background: done ? T.mintBg : locked ? T.locked : expandedDay === day.day ? T.accentLt : isT ? T.accentLt : T.card, cursor: locked ? "not-allowed" : "pointer", textAlign: "center", opacity: locked ? 0.5 : 1, transition: "all .15s" }}>
-              <div style={{ fontSize: 11, marginBottom: 2, fontWeight: isT ? 600 : 400, color: done ? T.mint : locked ? T.lockedTxt : isT ? T.accent : T.light }}>{done ? "OK" : isT ? "Auj." : locked ? "---" : formatDateFr(dt)}</div>
-              <div style={{ fontSize: 12, fontWeight: 500, lineHeight: 1.3, color: locked ? T.lockedTxt : T.text }}>{day.focus}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Day details */}
-      {prepPlan.map((day, idx) => {
-        const dt = getPlanDate(idx); const isT = dt === today(); const locked = day.day > 1 && !completedDays[day.day - 1]; const done = !!completedDays[day.day];
-        if (locked && expandedDay !== day.day) return null;
-        return (
-          <div key={day.day} style={{ ...card, display: expandedDay === null || expandedDay === day.day ? "block" : "none", borderColor: done ? T.mintBd : locked ? T.locked : isT ? T.accentBd : T.border, opacity: locked ? 0.5 : 1 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: locked ? "not-allowed" : "pointer" }} onClick={() => !locked && setExpandedDay(expandedDay === day.day ? null : day.day)}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ minWidth: 52, padding: "6px 8px", borderRadius: T.r, background: done ? T.mint : locked ? T.locked : T.accent, color: done ? "#fff" : locked ? T.lockedTxt : "#fff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ fontSize: 11, lineHeight: 1 }}>{done ? "OK" : formatDateFr(dt).split(" ")[0]}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.2 }}>{new Date(dt).getDate()}</div>
+        {/* Day list */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+          {prepPlan.map((day, idx) => {
+            const dt = getPlanDate(idx);
+            const locked = day.day > 1 && !completedDays[day.day - 1];
+            const done = !!completedDays[day.day];
+            const isActive = day.day === activeDay;
+            const isT = dt === today();
+            return (
+              <div key={day.day}
+                onClick={() => !locked && setExpandedDay(day.day)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "10px 16px", cursor: locked ? "not-allowed" : "pointer",
+                  background: isActive ? T.accentLt : "transparent",
+                  borderLeft: isActive ? `3px solid ${T.accent}` : "3px solid transparent",
+                  opacity: locked ? 0.4 : 1,
+                  transition: "all .12s",
+                }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+                  background: done ? T.mint : isActive ? T.accent : locked ? T.locked : T.bg,
+                  color: done || isActive ? "#fff" : locked ? T.lockedTxt : T.muted,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, fontWeight: 700,
+                }}>{done ? "✓" : `J${day.day}`}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: locked ? T.lockedTxt : T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{day.title}</div>
+                  <div style={{ fontSize: 11, color: locked ? T.lockedTxt : T.light }}>{isT ? "Aujourd'hui" : formatDateFr(dt)}{day.items ? ` — ${day.items.length} act.` : ""}</div>
                 </div>
-                <div><h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: locked ? T.lockedTxt : T.text }}>{day.title}</h4><p style={{ margin: 0, fontSize: 12, color: locked ? T.lockedTxt : T.muted }}>{day.focus}</p></div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {!locked && <button onClick={e => { e.stopPropagation(); toggleDayComplete(day.day); }} style={{ ...btnS, padding: "6px 12px", fontSize: 12, background: done ? T.mintBg : T.card, borderColor: done ? T.mintBd : T.border, color: done ? T.mint : T.text }}>{done ? "Fait" : "Marquer fait"}</button>}
-                <span style={{ fontSize: 12, color: T.light }}>{day.items?.length} act.</span>
+            );
+          })}
+        </div>
+
+        {/* Sidebar footer */}
+        <div style={{ padding: "12px 16px", borderTop: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 6 }}>
+          <button style={{ ...btnS, width: "100%", fontSize: 12, padding: "7px 12px" }} onClick={() => { setView("dashboard"); resetFlow(); }}>Mes plans</button>
+          <button style={{ ...btnS, width: "100%", fontSize: 12, padding: "7px 12px" }} onClick={goBack}>Modifier l'analyse</button>
+        </div>
+      </div>
+
+      {/* ─── Main content ─── */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "24px 32px", minWidth: 0 }}>
+        {activeDayData && !activeLocked ? (
+          <>
+            {/* Day header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.accent, letterSpacing: "1px" }}>JOUR {activeDay}</span>
+                  {activeDone && <Badge v="strong">Termine</Badge>}
+                </div>
+                <h2 style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 700, color: T.text }}>{activeDayData.title}</h2>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: T.muted }}>{activeDayData.focus} — {formatDateFr(activeDt)}</p>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {activeDay > 1 && completedDays[activeDay - 1] && (
+                  <button style={{ ...btnS, padding: "8px 14px", fontSize: 13 }} onClick={() => setExpandedDay(activeDay - 1)}>← Jour {activeDay - 1}</button>
+                )}
+                <button onClick={() => toggleDayComplete(activeDay)}
+                  style={{ ...btnP, padding: "8px 16px", fontSize: 13, background: activeDone ? T.mint : T.accent }}>
+                  {activeDone ? "✓ Termine" : "Marquer termine"}
+                </button>
+                {activeDay < prepPlan.length && (completedDays[activeDay] || activeDay === 1) && (
+                  <button style={{ ...btnS, padding: "8px 14px", fontSize: 13 }} onClick={() => setExpandedDay(activeDay + 1)}>Jour {activeDay + 1} →</button>
+                )}
               </div>
             </div>
-            {!locked && (expandedDay === null || expandedDay === day.day) && (
-              <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-                {day.items?.map((it, i) => {
-                  const isExpanded = expandedItems[`${day.day}-${i}`];
-                  return (
-                    <div key={i} style={{ borderRadius: T.r, background: done ? T.mintBg : it.type === "quiz" ? T.quizBg : "#FAFAF6", border: `1px solid ${done ? T.mintBd : it.type === "quiz" ? T.quizBd : "#EDE9E3"}`, opacity: done ? 0.7 : 1, overflow: "hidden" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", cursor: "pointer" }} onClick={() => toggleItemExpand(day.day, i)}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 14, fontWeight: 500, textDecoration: done ? "line-through" : "none", color: done ? T.muted : T.text }}>{it.title}</div>
-                          <div style={{ fontSize: 12, color: T.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
-                            <Badge v={done ? "default" : typeV[it.type] || "default"}>{typeL[it.type] || it.type}</Badge>
-                            <span>{it.duration}</span>
-                          </div>
-                        </div>
-                        {!done && (
-                          <button style={{ ...btnS, padding: "6px 12px", fontSize: 12, background: isExpanded ? T.accentLt : T.card, borderColor: isExpanded ? T.accentBd : T.border }}
-                            onClick={e => { e.stopPropagation(); toggleItemExpand(day.day, i); }}>
-                            {isExpanded ? "Fermer" : it.type === "exercise" ? "Commencer" : it.type === "video" ? "Regarder" : it.type === "quiz" ? "Lancer" : "Lire"}
-                          </button>
-                        )}
-                      </div>
-                      {isExpanded && !done && (
-                        <div style={{ padding: "0 12px 12px" }}>
-                          <div style={{ height: 1, background: "#EDE9E3", marginBottom: 8 }} />
-                          <ItemContent item={it} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
 
-      {notificationsEnabled && <div style={{ padding: "12px 16px", borderRadius: T.r, background: T.mintBg, border: `1px solid ${T.mintBd}`, fontSize: 13, color: T.mint }}>Rappel quotidien active</div>}
-    </>
-  );
+            {/* Company info panel inline */}
+            {activeDay === 1 && (companyInfo || jobData?.companyInfo) && (
+              <CulturePanel companyInfo={companyInfo} jobData={jobData} />
+            )}
+
+            {/* Items */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {activeDayData.items?.map((it, i) => {
+                const isExpanded = expandedItems[`${activeDay}-${i}`];
+                const isQuiz = it.type === "quiz";
+                const isExercise = it.type === "exercise";
+                return (
+                  <div key={i} style={{
+                    borderRadius: 8, overflow: "hidden",
+                    background: activeDone ? "#F9F8F5" : T.card,
+                    border: `1px solid ${isExpanded ? T.accent : isQuiz ? T.quizBd : T.border}`,
+                    opacity: activeDone ? 0.6 : 1,
+                    boxShadow: isExpanded ? `0 2px 12px ${T.accent}15` : "none",
+                    transition: "all .15s",
+                  }}>
+                    {/* Item header */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", cursor: "pointer" }} onClick={() => toggleItemExpand(activeDay, i)}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                        background: isQuiz ? T.quizBg : isExercise ? T.techBg : T.accentLt,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 16,
+                      }}>
+                        {isQuiz ? "🧠" : isExercise ? "💻" : it.type === "video" ? "▶" : "📖"}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: activeDone ? T.muted : T.text, textDecoration: activeDone ? "line-through" : "none" }}>{it.title}</div>
+                        <div style={{ fontSize: 12, color: T.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 8 }}>
+                          <Badge v={activeDone ? "default" : typeV[it.type] || "default"}>{typeL[it.type] || it.type}</Badge>
+                          <span>{it.duration}</span>
+                        </div>
+                      </div>
+                      <div style={{
+                        width: 28, height: 28, borderRadius: 6,
+                        background: isExpanded ? T.accent : T.bg,
+                        color: isExpanded ? "#fff" : T.muted,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 14, fontWeight: 600, transition: "all .15s",
+                      }}>{isExpanded ? "−" : "+"}</div>
+                    </div>
+                    {/* Item content */}
+                    {isExpanded && !activeDone && (
+                      <div style={{ padding: "0 18px 18px" }}>
+                        <div style={{ height: 1, background: T.border, marginBottom: 14 }} />
+                        <ItemContent item={it} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : activeLocked ? (
+          <div style={{ textAlign: "center", padding: 60, color: T.muted }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+            <h3 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 8px" }}>Jour {activeDay} verrouille</h3>
+            <p style={{ fontSize: 14, margin: 0 }}>Termine le jour {activeDay - 1} pour debloquer cette session.</p>
+          </div>
+        ) : null}
+      </div>
+    </div>
+    );
+  };
+
+  const isPlanView = view === "editor" && step === "plan";
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", maxWidth: 740, margin: "0 auto", padding: "24px 16px", color: T.text, lineHeight: 1.55, background: T.bg, minHeight: "100vh" }}>
-      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: T.accent, cursor: "pointer" }} onClick={() => { if (step === "plan") { setView("dashboard"); resetFlow(); } }}>EzInterview</span>
-        <span style={{ fontSize: 11, color: T.light, background: T.accentLt, padding: "2px 8px", borderRadius: T.r, border: `1px solid ${T.accentBd}` }}>beta</span>
-      </div>
+    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", maxWidth: isPlanView ? "100%" : 800, margin: "0 auto", padding: isPlanView ? "0" : "24px 16px", color: T.text, lineHeight: 1.55, background: T.bg, minHeight: "100vh" }}>
+      {/* Header — always visible except in plan view */}
+      {!isPlanView && (
+        <div style={{ marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: T.accent, cursor: "pointer" }} onClick={() => { setView("dashboard"); resetFlow(); }}>EzInterview</span>
+            <span style={{ fontSize: 11, color: T.light, background: T.accentLt, padding: "2px 8px", borderRadius: T.r, border: `1px solid ${T.accentBd}` }}>beta</span>
+          </div>
+          <button style={{ background: "none", border: "none", color: T.muted, fontSize: 13, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline" }} onClick={() => setView("landing")}>Accueil</button>
+        </div>
+      )}
 
       {view === "dashboard" ? (
         <PlansDashboard plans={savedPlans} onSelect={loadSavedPlan} onNew={() => { resetFlow(); setView("editor"); }} user={user} onLogout={handleLogout} />
