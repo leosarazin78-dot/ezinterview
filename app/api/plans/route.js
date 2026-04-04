@@ -59,6 +59,33 @@ export async function POST(request) {
   }
 }
 
+// DELETE : supprimer un plan
+export async function DELETE(request) {
+  try {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) return Response.json({ error: "Non authentifié" }, { status: 401 });
+
+    const token = authHeader.replace("Bearer ", "");
+    const supabase = createServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) return Response.json({ error: "Non authentifié" }, { status: 401 });
+
+    const { id } = await request.json();
+    if (!id) return Response.json({ error: "ID manquant" }, { status: 400 });
+
+    const { error } = await supabase
+      .from("plans")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (error) throw error;
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json({ error: err.message }, { status: 500 });
+  }
+}
+
 // PATCH : mettre à jour la progression
 export async function PATCH(request) {
   try {

@@ -593,7 +593,9 @@ function LandingPage({ user, onLogin }) {
 }
 
 // ─── Plans Dashboard ───
-function PlansDashboard({ plans, onSelect, onNew, user, onLogout }) {
+function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, user, onLogout }) {
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
   return (
     <div style={{ ...card, background: T.accentLt, borderColor: T.accentBd }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -612,11 +614,29 @@ function PlansDashboard({ plans, onSelect, onNew, user, onLogout }) {
             const done = Object.keys(plan.completed_days || {}).length;
             const daysLeft = plan.interview_date ? Math.max(0, Math.ceil((new Date(plan.interview_date) - new Date()) / 86400000)) : null;
             return (
-              <div key={plan.id} onClick={() => onSelect(plan.id)} style={{ padding: 16, borderRadius: T.r, background: T.card, border: `1px solid ${T.border}`, cursor: "pointer", transition: "all .2s" }}>
-                <h3 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: T.text }}>{plan.job_title}</h3>
-                <p style={{ margin: "0 0 12px", fontSize: 12, color: T.muted }}>{plan.company}</p>
-                {daysLeft !== null && <p style={{ fontSize: 11, color: T.warn, fontWeight: 600, margin: "0 0 8px" }}>J-{daysLeft}</p>}
-                <div style={{ fontSize: 11, color: T.muted }}>Jour {done + 1} / {plan.duration || 7}</div>
+              <div key={plan.id} style={{ padding: 16, borderRadius: T.r, background: T.card, border: `1px solid ${T.border}`, cursor: "pointer", transition: "all .2s", position: "relative" }}>
+                <div onClick={() => onSelect(plan.id)}>
+                  <h3 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: T.text }}>{plan.job_title}</h3>
+                  <p style={{ margin: "0 0 4px", fontSize: 12, color: T.muted }}>{plan.company}</p>
+                  {plan.next_interlocutor && <p style={{ margin: "0 0 4px", fontSize: 11, color: T.accent }}>Face à : {plan.next_interlocutor}</p>}
+                  {daysLeft !== null && <p style={{ fontSize: 11, color: T.warn, fontWeight: 600, margin: "0 0 8px" }}>J-{daysLeft}</p>}
+                  <div style={{ fontSize: 11, color: T.muted }}>Jour {done + 1} / {plan.duration || 7}</div>
+                </div>
+                {confirmDelete === plan.id ? (
+                  <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+                    <button onClick={(e) => { e.stopPropagation(); onDelete(plan.id); setConfirmDelete(null); }}
+                      disabled={deletingPlan === plan.id}
+                      style={{ ...btnP, padding: "4px 10px", fontSize: 11, background: T.red }}>
+                      {deletingPlan === plan.id ? "..." : "Confirmer"}
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(null); }}
+                      style={{ ...btnS, padding: "4px 10px", fontSize: 11 }}>Annuler</button>
+                  </div>
+                ) : (
+                  <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(plan.id); }}
+                    style={{ position: "absolute", top: 10, right: 10, background: "transparent", border: "none", cursor: "pointer", fontSize: 14, color: T.muted, padding: 4 }}
+                    title="Supprimer ce plan">🗑</button>
+                )}
               </div>
             );
           })}
@@ -652,10 +672,12 @@ export default function EzInterview() {
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState("");
 
+  const [interviewerRole, setInterviewerRole] = useState("");
   const [intensity, setIntensity] = useState("Standard");
   const [generating, setGenerating] = useState(false);
   const [plan, setPlan] = useState(null);
   const [planError, setPlanError] = useState("");
+  const [deletingPlan, setDeletingPlan] = useState(null);
 
   const [expandedDay, setExpandedDay] = useState(0);
   const [expandedItems, setExpandedItems] = useState({});
@@ -756,7 +778,7 @@ export default function EzInterview() {
       const res = await safeFetch("/api/generate-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobData, stats, intensity, experienceLevel }),
+        body: JSON.stringify({ jobData, stats, intensity, experienceLevel, interviewerRole }),
       });
       setPlan(res);
       setStep("plan");
@@ -773,9 +795,10 @@ export default function EzInterview() {
               company: jobData?.company || "",
               job_url: jobUrl,
               job_data: jobData,
-              profile: { cvText, linkedinUrl, experienceLevel },
+              profile: { cvText, linkedinUrl, experienceLevel, interviewerRole },
               matches: stats?.matches || [],
               plan_data: res,
+              next_interlocutor: interviewerRole || null,
             }),
           });
           // Refresh saved plans
@@ -789,6 +812,25 @@ export default function EzInterview() {
       setPlanError(err.message);
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleDeletePlan = async (planId) => {
+    setDeletingPlan(planId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        await safeFetch("/api/plans", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+          body: JSON.stringify({ id: planId }),
+        });
+        setSavedPlans(prev => prev.filter(p => p.id !== planId));
+      }
+    } catch (err) {
+      console.error("Delete plan error:", err);
+    } finally {
+      setDeletingPlan(null);
     }
   };
 
@@ -855,7 +897,9 @@ export default function EzInterview() {
                 setStep("plan");
               }
             }}
-            onNew={() => { setStep("input"); setActiveTab("offer"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setCvFile(null); setJobUrl(""); setExperienceLevel(""); }}
+            onNew={() => { setStep("input"); setActiveTab("offer"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setCvFile(null); setJobUrl(""); setExperienceLevel(""); setInterviewerRole(""); }}
+            onDelete={handleDeletePlan}
+            deletingPlan={deletingPlan}
             user={user}
             onLogout={handleLogout}
           />
@@ -1018,6 +1062,12 @@ export default function EzInterview() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              <div style={card}>
+                <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Qui sera en face de toi ? (optionnel)</label>
+                <input type="text" placeholder="Ex : CTO, DRH, Manager technique, Lead Developer..." value={interviewerRole} onChange={(e) => setInterviewerRole(e.target.value)} style={inp} />
+                <p style={{ margin: "6px 0 0", fontSize: 11, color: T.muted }}>Précise le poste de ton interlocuteur pour adapter la préparation</p>
               </div>
 
               <div style={card}>

@@ -172,6 +172,7 @@ export async function POST(request) {
       stats,
       intensity,
       experienceLevel,
+      interviewerRole,
     } = await request.json();
 
     if (!jobData)
@@ -210,6 +211,7 @@ CONTEXTE :
 - Toutes les competences requises : ${allSkills.join(", ")}
 ${jobData?.companyInfo?.competitors?.length ? `- Concurrents : ${jobData.companyInfo.competitors.join(", ")}` : ""}
 ${jobData?.companyInfo?.techStack?.length ? `- Outils du poste : ${jobData.companyInfo.techStack.join(", ")}` : ""}
+${interviewerRole ? `- Interlocuteur : ${interviewerRole} — adapte les exercices et questions d'entretien pour correspondre aux attentes de ce profil. Un CTO posera des questions techniques stratégiques, un DRH des questions comportementales, un Manager des mises en situation, etc.` : ""}
 
 ADAPTATION AU NIVEAU (${levelKey}) :
 ${lc.focus}
