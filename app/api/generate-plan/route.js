@@ -71,42 +71,42 @@ GENERAL :
 
 // Configuration d'intensite
 const INTENSITY_CONFIG = {
-  "Leger": {
+  "Léger": {
     dailyTime: "30 min",
     itemsPerDay: "2-3",
     quizQuestions: "3-5",
-    description: "plan leger adapte a un emploi du temps charge"
+    description: "plan léger adapté à un emploi du temps chargé"
   },
   "Standard": {
     dailyTime: "1h",
     itemsPerDay: "3-5",
     quizQuestions: "5-8",
-    description: "plan equilibre entre effort et efficacite"
+    description: "plan équilibré entre effort et efficacité"
   },
   "Intensif": {
     dailyTime: "2h+",
     itemsPerDay: "5-7",
     quizQuestions: "8-10",
-    description: "plan intensif pour une preparation en profondeur"
+    description: "plan intensif pour une préparation en profondeur"
   }
 };
 
 // Configuration niveau d'experience
 const LEVEL_CONFIG = {
   "Junior (0-2 ans)": {
-    resourceLevel: "debutant/intermediaire",
-    focus: "Privilegie les tutoriels pas-a-pas, cours d'introduction, exercices guides. Explique les concepts de base. Recommande des formations structurees (Coursera, OpenClassrooms, edX).",
-    quizDifficulty: "Questions de comprehension et de definition, pas de pieges."
+    resourceLevel: "débutant/intermédiaire",
+    focus: "Privilégie les tutoriels pas-à-pas, cours d'introduction, exercices guidés. Explique les concepts de base. Recommande des formations structurées (Coursera, OpenClassrooms, edX).",
+    quizDifficulty: "Questions de compréhension et de définition, pas de pièges."
   },
-  "Confirme (3-7 ans)": {
-    resourceLevel: "intermediaire/avance",
-    focus: "Privilegie les etudes de cas, articles approfondis, exercices pratiques realistes. Moins d'explications basiques, plus de mise en situation.",
-    quizDifficulty: "Questions de mise en situation et d'analyse, quelques questions avancees."
+  "Confirmé (3-7 ans)": {
+    resourceLevel: "intermédiaire/avancé",
+    focus: "Privilégie les études de cas, articles approfondis, exercices pratiques réalistes. Moins d'explications basiques, plus de mise en situation.",
+    quizDifficulty: "Questions de mise en situation et d'analyse, quelques questions avancées."
   },
   "Senior (8+ ans)": {
-    resourceLevel: "avance/expert",
-    focus: "Privilegie les articles de fond (HBR, publications specialisees), cas complexes, vision strategique. Focus sur le leadership, la prise de decision, les tendances du secteur.",
-    quizDifficulty: "Questions strategiques, de jugement et de leadership. Pas de questions basiques."
+    resourceLevel: "avancé/expert",
+    focus: "Privilégie les articles de fond (HBR, publications spécialisées), cas complexes, vision stratégique. Focus sur le leadership, la prise de décision, les tendances du secteur.",
+    quizDifficulty: "Questions stratégiques, de jugement et de leadership. Pas de questions basiques."
   }
 };
 
@@ -155,7 +155,7 @@ export async function POST(request) {
     // Determiner le nombre de jours (7 par defaut, adapte a l'intensite)
     const intensityKey = intensity || "Standard";
     const ic = INTENSITY_CONFIG[intensityKey] || INTENSITY_CONFIG["Standard"];
-    const planDays = intensityKey === "Leger" ? 10 : intensityKey === "Intensif" ? 5 : 7;
+    const planDays = intensityKey === "Léger" ? 10 : intensityKey === "Intensif" ? 5 : 7;
 
     // Extraire les competences a travailler depuis stats
     const matches = stats?.matches || [];
@@ -167,8 +167,8 @@ export async function POST(request) {
       .map((m) => m.label);
     const allSkills = matches.map((m) => m.label);
 
-    const levelKey = experienceLevel || "Confirme (3-7 ans)";
-    const lc = LEVEL_CONFIG[levelKey] || LEVEL_CONFIG["Confirme (3-7 ans)"];
+    const levelKey = experienceLevel || "Confirmé (3-7 ans)";
+    const lc = LEVEL_CONFIG[levelKey] || LEVEL_CONFIG["Confirmé (3-7 ans)"];
 
     const sector = jobData?.companyInfo?.sector || "non precise";
     const company = jobData?.company || "l'entreprise";

@@ -9,7 +9,7 @@ const supabase = typeof window !== "undefined"
 
 // ─── UNIFIED THEME ───
 const T = {
-  bg: "#F7F8FC", card: "#FFFFFF", border: "#E2E8F0", text: "#1B2559",
+  bg: "#FAF8F5", card: "#FFFFFF", border: "#E8E2D9", text: "#1B2559",
   muted: "#64748B", light: "#94A3B8",
   accent: "#3B82F6", accentLt: "#EFF6FF", accentBd: "#BFDBFE",
   green: "#10B981", greenLt: "#ECFDF5", greenBd: "#A7F3D0",
@@ -24,7 +24,7 @@ const T = {
 // ─── Utilities ───
 const formatDateFr = (d) => {
   const dt = new Date(d);
-  return `${["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"][dt.getDay()]} ${dt.getDate()} ${["jan","fev","mar","avr","mai","jun","jul","aou","sep","oct","nov","dec"][dt.getMonth()]}`;
+  return `${["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"][dt.getDay()]} ${dt.getDate()} ${["jan","fév","mar","avr","mai","jun","jul","aoû","sep","oct","nov","déc"][dt.getMonth()]}`;
 };
 const addDays = (s, n) => { const d = new Date(s); d.setDate(d.getDate() + n); return d.toISOString().split("T")[0]; };
 const today = () => new Date().toISOString().split("T")[0];
@@ -77,7 +77,7 @@ const btnP = { background: T.accent, color: "#fff", border: "none", borderRadius
 const btnS = { background: T.card, color: T.text, border: `1px solid ${T.border}`, borderRadius: T.r, padding: "10px 20px", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" };
 const btnD = { ...btnP, background: "#B5B0A8", cursor: "not-allowed" };
 const tabS = (a) => ({ padding: "8px 20px", border: "none", borderBottom: a ? `2px solid ${T.accent}` : "2px solid transparent", background: "transparent", color: a ? T.text : T.muted, fontWeight: a ? 600 : 400, fontSize: 14, cursor: "pointer", fontFamily: "inherit" });
-const typeL = { memo: "Memo", video: "Video", exercise: "Lab", note: "Note", quiz: "Quiz" };
+const typeL = { memo: "Memo", video: "Vidéo", exercise: "Labo", note: "Note", quiz: "Quiz" };
 const typeV = { memo: "default", video: "info", exercise: "tech", note: "default", quiz: "warn" };
 
 // ─── Quiz Component ───
@@ -109,7 +109,7 @@ function QuizBlock({ questions, title }) {
         <button style={{ ...btnP, marginTop: 12, fontSize: 13 }} onClick={() => setSubmitted(true)} disabled={Object.keys(answers).length < questions.length}>Valider ({Object.keys(answers).length}/{questions.length})</button>
       ) : (
         <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: T.r, background: score >= questions.length * 0.7 ? T.greenLt : T.warnLt, border: `1px solid ${score >= questions.length * 0.7 ? T.greenBd : T.warnBd}` }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: score >= questions.length * 0.7 ? T.green : T.warn }}>{score}/{questions.length} — {score >= questions.length * 0.7 ? "Bien joue !" : "A revoir"}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: score >= questions.length * 0.7 ? T.green : T.warn }}>{score}/{questions.length} — {score >= questions.length * 0.7 ? "Bien joué !" : "À revoir"}</span>
           <button style={{ ...btnS, marginLeft: 12, padding: "4px 12px", fontSize: 12 }} onClick={() => { setAnswers({}); setSubmitted(false); }}>Refaire</button>
         </div>
       )}
@@ -148,7 +148,7 @@ function MiniQuiz({ questions }) {
 // ─── Item Expanded Content ───
 function ItemContent({ item }) {
   const c = item.content;
-  if (!c) return <p style={{ fontSize: 13, color: T.muted, margin: "8px 0 0" }}>Pas de contenu detaille.</p>;
+  if (!c) return <p style={{ fontSize: 13, color: T.muted, margin: "8px 0 0" }}>Pas de contenu détaillé.</p>;
 
   return (
     <div style={{ marginTop: 12 }}>
@@ -157,7 +157,7 @@ function ItemContent({ item }) {
           {c.summary && <p style={{ margin: "0 0 10px", fontSize: 13, lineHeight: 1.6 }}>{c.summary}</p>}
           {c.keyPoints?.length > 0 && (
             <div style={{ marginBottom: 10 }}>
-              <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: T.accent }}>Points cles</p>
+              <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: T.accent }}>Points clés</p>
               {c.keyPoints.map((pt, i) => <p key={i} style={{ margin: "0 0 4px", fontSize: 13, paddingLeft: 10 }}>- {pt}</p>)}
             </div>
           )}
@@ -177,7 +177,7 @@ function ItemContent({ item }) {
           {c.objective && <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 500 }}>{c.objective}</p>}
           {c.steps?.length > 0 && (
             <div style={{ marginBottom: 10 }}>
-              <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: T.purple }}>Etapes</p>
+              <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: T.purple }}>Étapes</p>
               {c.steps.map((s, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4, fontSize: 13 }}>
                   <span style={{ color: T.purple, fontWeight: 600, flexShrink: 0 }}>{i + 1}.</span>
@@ -227,7 +227,7 @@ function CulturePanel({ companyInfo, jobData }) {
     <div style={{ ...card, background: T.accentLt, borderColor: T.accentBd }}>
       <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 600, color: T.accent }}>Culture & Veille — {jobData?.company}</h3>
 
-      {ci.founded && <p style={{ margin: "0 0 8px", fontSize: 13, color: T.muted }}>Fondee en {ci.founded} · {ci.hq} · {ci.employees} employes · {ci.sector}</p>}
+      {ci.founded && <p style={{ margin: "0 0 8px", fontSize: 13, color: T.muted }}>Fondée en {ci.founded} · {ci.hq} · {ci.employees} employés · {ci.sector}</p>}
 
       {ci.businessModel && (
         <div style={{ marginBottom: 10 }}>
@@ -245,7 +245,7 @@ function CulturePanel({ companyInfo, jobData }) {
 
       {ci.recentNews?.length > 0 && (
         <div style={{ marginBottom: 10 }}>
-          <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600 }}>Actualites</p>
+          <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600 }}>Actualités</p>
           {ci.recentNews.map((n, i) => <p key={i} style={{ margin: "0 0 3px", fontSize: 12, paddingLeft: 8 }}>— {n}</p>)}
         </div>
       )}
@@ -259,7 +259,7 @@ function CulturePanel({ companyInfo, jobData }) {
 
       {ci.techStack?.length > 0 && (
         <div>
-          <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600 }}>Outils & methodes</p>
+          <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600 }}>Outils & méthodes</p>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{ci.techStack.map(t => <Badge key={t} v="tech">{t}</Badge>)}</div>
         </div>
       )}
@@ -288,7 +288,7 @@ function LandingPage({ user, onLogin }) {
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        setMessage("Verifie tes emails pour confirmer ton compte !");
+        setMessage("Vérifie tes emails pour confirmer ton compte !");
       }
     } catch (err) { setError(err.message); }
     setLoading(false);
@@ -302,22 +302,11 @@ function LandingPage({ user, onLogin }) {
     } catch (err) { setError(err.message); setLoading(false); }
   };
 
-  const categories = [
-    "Tech & Dev", "Finance & Audit", "Droit & Juridique", "Marketing & Com",
-    "Sante & Medical", "Architecture", "Ingenierie", "Commerce", "Education", "Artisanat"
-  ];
-
   const features = [
-    { icon: "📚", title: "Sources fiables, vraiment", desc: "Legifrance, MDN, PubMed, Investopedia, Coursera, docs officielles." },
-    { icon: "🎯", title: "Fini le hors-sujet", desc: "Chaque ressource est adaptee a l'offre que TU as fournie." },
-    { icon: "🧠", title: "Ton copilote, pas ton remplacant", desc: "Des quiz, des exercices, des rappels — tu travailles vraiment." },
-    { icon: "📈", title: "Progression en temps reel", desc: "Vois exactement ou tu en es. Aucune surprise le jour J." },
-  ];
-
-  const testimonials = [
-    { text: "5 jours de preparation et j'ai decroche mon poste de Data Analyst.", name: "Sarah M.", role: "Data Analyst — BNP Paribas", color: T.accent },
-    { text: "Parfaitement adapte au juridique. Les references etaient pertinentes.", name: "Thomas L.", role: "Juriste — Groupe Renault", color: T.purple },
-    { text: "Enfin un outil pour les non-devs ! Mon plan marketing etait complet.", name: "Camille R.", role: "Chef de projet — Publicis", color: T.pink },
+    { icon: "📚", title: "Sources fiables, vraiment", desc: "Légifrance, MDN, PubMed, Investopedia, Coursera, docs officielles." },
+    { icon: "🎯", title: "Fini le hors-sujet", desc: "Chaque ressource est adaptée à l'offre que TU as fournie." },
+    { icon: "🧠", title: "Ton copilote, pas ton remplaçant", desc: "Des quiz, des exercices, des rappels — tu travailles vraiment." },
+    { icon: "📈", title: "Progression en temps réel", desc: "Vois exactement où tu en es. Aucune surprise le jour J." },
   ];
 
   return (
@@ -335,16 +324,13 @@ function LandingPage({ user, onLogin }) {
           .ez-hero-text p { font-size: 15px !important; }
           .ez-hero-mockup { display: none !important; }
           .ez-courses-grid { grid-template-columns: 1fr !important; }
-          .ez-cat-grid { grid-template-columns: 2fr !important; }
           .ez-features-grid { grid-template-columns: 1fr !important; }
-          .ez-testimonials-grid { grid-template-columns: 1fr !important; }
           .ez-section { padding-left: 16px !important; padding-right: 16px !important; }
           .ez-nav-inner { padding: 0 16px !important; }
           .ez-cta-box { padding: 40px 24px !important; }
           .ez-cta-box h2 { font-size: 24px !important; }
         }
         @media (max-width: 480px) {
-          .ez-cat-grid { grid-template-columns: 1fr !important; }
           .ez-hero-text h1 { font-size: 26px !important; }
         }
       `}</style>
@@ -360,7 +346,7 @@ function LandingPage({ user, onLogin }) {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {user ? (
-              <button onClick={() => {}} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 14, fontWeight: 500, padding: "8px 16px", cursor: "pointer", fontFamily: "inherit", borderRadius: 8 }}>Mon espace</button>
+              <button onClick={() => onLogin?.()} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 14, fontWeight: 500, padding: "8px 16px", cursor: "pointer", fontFamily: "inherit", borderRadius: 8 }}>Mon espace</button>
             ) : (
               <>
                 <button onClick={() => setShowAuth(true)} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 14, fontWeight: 500, padding: "8px 16px", cursor: "pointer", fontFamily: "inherit", borderRadius: 8 }}>Se connecter</button>
@@ -375,20 +361,19 @@ function LandingPage({ user, onLogin }) {
       <section style={{ background: T.card, borderBottom: `1px solid ${T.border}` }}>
         <div className="ez-hero-grid ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "120px 32px 80px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
           <div className="ez-hero-text" style={{ animation: "fadeIn 0.5s ease" }}>
-            <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.accentLt, fontSize: 13, fontWeight: 600, color: T.accent, marginBottom: 32 }}>Nouveau : tous les metiers</div>
+            <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.accentLt, fontSize: 13, fontWeight: 600, color: T.accent, marginBottom: 32 }}>Nouveau : tous les métiers</div>
             <h1 style={{ fontSize: 48, fontWeight: 900, lineHeight: 1.1, margin: "0 0 24px", letterSpacing: "-1.5px", color: T.text }}>
-              Arrive en entretien avec l'assurance de celui qui a deja les reponses.
+              Arrive en entretien avec l'assurance de celui qui a déjà les réponses.
             </h1>
             <p style={{ fontSize: 18, color: T.muted, margin: "0 0 40px", lineHeight: 1.8, maxWidth: 550 }}>
-              La plupart des candidats ne savent pas par ou commencer. EzInterview cree un plan de preparation personnalise, jour par jour, avec sources fiables et quiz adaptes a ton secteur.
+              La plupart des candidats ne savent pas par où commencer. EzInterview crée un plan de préparation personnalisé, jour par jour, avec sources fiables et quiz adaptés à ton secteur.
             </p>
             <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 48 }}>
               <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: T.r, padding: "14px 32px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                Preparer mon entretien gratuitement
+                Préparer mon entretien gratuitement
               </button>
               <span style={{ fontSize: 13, color: T.muted }}>Sans carte bancaire</span>
             </div>
-            <p style={{ fontSize: 14, color: T.muted, fontStyle: "italic", margin: 0 }}>Deja +500 candidats ont transforme leur stress en proposition d'embauche.</p>
           </div>
 
           <div className="ez-hero-mockup" style={{ animation: "fadeIn 0.7s ease" }}>
@@ -396,11 +381,11 @@ function LandingPage({ user, onLogin }) {
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20 }}>📋</div>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Plan de preparation</div>
-                  <div style={{ fontSize: 12, color: T.muted }}>Genere en 30 secondes</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Plan de préparation</div>
+                  <div style={{ fontSize: 12, color: T.muted }}>Généré en 30 secondes</div>
                 </div>
               </div>
-              {["Fondamentaux du poste", "Competences techniques", "Culture d'entreprise", "Simulation d'entretien", "Revision & Quiz final"].map((day, i) => (
+              {["Fondamentaux du poste", "Compétences techniques", "Culture d'entreprise", "Simulation d'entretien", "Révision & Quiz final"].map((day, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: T.r, background: T.card, border: `1px solid ${i <= 1 ? T.greenBd : i === 2 ? T.accentBd : T.border}`, marginBottom: 10 }}>
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: i <= 1 ? T.greenLt : i === 2 ? T.accentLt : "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: i <= 1 ? T.green : i === 2 ? T.accent : T.muted, flexShrink: 0 }}>
                     {i <= 1 ? "✓" : i === 2 ? "▶" : `J${i + 1}`}
@@ -422,38 +407,23 @@ function LandingPage({ user, onLogin }) {
         </div>
       </section>
 
-      {/* ─── Categories ─── */}
-      <section className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "160px 32px" }}>
-        <div style={{ textAlign: "center", marginBottom: 60 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.5px", color: T.text }}>Adapte a tous les domaines</h2>
-          <p style={{ fontSize: 16, color: T.muted, margin: 0 }}>Tech, finance, droit, marketing, sante, architecture, et plus</p>
-        </div>
-        <div className="ez-cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 20 }}>
-          {categories.map((c, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px", borderRadius: T.r, background: T.card, border: `1px solid ${T.border}`, textAlign: "center" }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{c}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* ─── How it works ─── */}
       <section style={{ background: T.card, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
         <div className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "160px 32px" }}>
           <div style={{ textAlign: "center", marginBottom: 60 }}>
-            <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.orangeLt, fontSize: 12, fontWeight: 700, color: T.orange, marginBottom: 16, textTransform: "uppercase", letterSpacing: "1px" }}>Comment ca marche</div>
-            <h2 style={{ fontSize: 32, fontWeight: 800, margin: 0, color: T.text }}>3 etapes simples</h2>
+            <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.orangeLt, fontSize: 12, fontWeight: 700, color: T.orange, marginBottom: 16, textTransform: "uppercase", letterSpacing: "1px" }}>Comment ça marche</div>
+            <h2 style={{ fontSize: 32, fontWeight: 800, margin: 0, color: T.text }}>3 étapes simples</h2>
           </div>
           <div className="ez-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28 }}>
             {[
-              { title: "Analyse de l'offre", desc: "L'IA identifie les competences cles, analyse l'entreprise et ses attentes.", icon: "🔗", n: 1 },
-              { title: "Matching CV", desc: "Compare ton profil a l'offre. On identifie tes forces et tes points a travailler.", icon: "📄", n: 2 },
-              { title: "Plan de preparation", desc: "Plan jour par jour : cours, exercices, quiz et ressources adaptees a ton metier.", icon: "🎯", n: 3 },
+              { title: "Analyse de l'offre", desc: "L'IA identifie les compétences clés, analyse l'entreprise et ses attentes.", icon: "🔗", n: 1 },
+              { title: "Matching CV", desc: "Compare ton profil à l'offre. On identifie tes forces et tes points à travailler.", icon: "📄", n: 2 },
+              { title: "Plan de préparation", desc: "Plan jour par jour : cours, exercices, quiz et ressources adaptées à ton métier.", icon: "🎯", n: 3 },
             ].map((c, i) => (
               <div key={i} className="ez-card" style={{ borderRadius: T.r, background: T.bg, border: `1px solid ${T.border}`, padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ width: 56, height: 56, borderRadius: T.r, background: T.accentLt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>{c.icon}</div>
                 <div>
-                  <div style={{ display: "inline-block", padding: "4px 12px", borderRadius: 20, background: T.accentLt, fontSize: 11, fontWeight: 700, color: T.accent, marginBottom: 8, textTransform: "uppercase" }}>Etape {c.n}</div>
+                  <div style={{ display: "inline-block", padding: "4px 12px", borderRadius: 20, background: T.accentLt, fontSize: 11, fontWeight: 700, color: T.accent, marginBottom: 8, textTransform: "uppercase" }}>Étape {c.n}</div>
                   <h3 style={{ fontSize: 19, fontWeight: 700, margin: "0 0 10px", color: T.text }}>{c.title}</h3>
                   <p style={{ fontSize: 14, color: T.muted, margin: 0, lineHeight: 1.6 }}>{c.desc}</p>
                 </div>
@@ -466,8 +436,8 @@ function LandingPage({ user, onLogin }) {
       {/* ─── Features ─── */}
       <section className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "160px 32px" }}>
         <div style={{ textAlign: "center", marginBottom: 60 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 12px", color: T.text }}>Tout pour reussir ton entretien</h2>
-          <p style={{ fontSize: 16, color: T.muted, margin: 0, maxWidth: 650, marginLeft: "auto", marginRight: "auto" }}>Des outils complets et une preparation serieuse, pas des promesses creuses</p>
+          <h2 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 12px", color: T.text }}>Tout pour réussir ton entretien</h2>
+          <p style={{ fontSize: 16, color: T.muted, margin: 0, maxWidth: 650, marginLeft: "auto", marginRight: "auto" }}>Des outils complets et une préparation sérieuse, pas des promesses creuses</p>
         </div>
         <div className="ez-features-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 28 }}>
           {features.map((h, i) => (
@@ -482,39 +452,12 @@ function LandingPage({ user, onLogin }) {
         </div>
       </section>
 
-      {/* ─── Testimonials ─── */}
-      <section style={{ background: T.card, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
-        <div className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "160px 32px" }}>
-          <div style={{ textAlign: "center", marginBottom: 60 }}>
-            <h2 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 12px", color: T.text }}>Ils ont decroche leur poste</h2>
-            <p style={{ fontSize: 16, color: T.muted, margin: 0 }}>+500 candidats ont transforme leur stress en proposition d'embauche</p>
-          </div>
-          <div className="ez-testimonials-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28 }}>
-            {testimonials.map((t, i) => (
-              <div key={i} style={{ padding: 32, borderRadius: T.r, background: T.bg, border: `1px solid ${T.border}` }}>
-                <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
-                  {[1,2,3,4,5].map(s => <span key={s} style={{ color: "#FBBF24", fontSize: 18 }}>★</span>)}
-                </div>
-                <p style={{ fontSize: 15, color: T.muted, margin: "0 0 24px", lineHeight: 1.7, fontStyle: "italic" }}>"{t.text}"</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: t.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 700 }}>{t.name[0]}</div>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{t.name}</div>
-                    <div style={{ fontSize: 13, color: T.muted }}>{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ─── CTA ─── */}
       <section className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "160px 32px" }}>
         <div className="ez-cta-box" style={{ maxWidth: 700, margin: "0 auto", padding: "64px 48px", borderRadius: 24, background: T.text, color: "#fff", textAlign: "center" }}>
-          <h2 style={{ fontSize: 36, fontWeight: 900, margin: "0 0 16px", letterSpacing: "-0.8px" }}>Pret a decrocher ton poste ?</h2>
+          <h2 style={{ fontSize: 36, fontWeight: 900, margin: "0 0 16px", letterSpacing: "-0.8px" }}>Prêt à décrocher ton poste ?</h2>
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.8)", margin: "0 0 32px", lineHeight: 1.7 }}>
-            Commence ta preparation gratuitement. Sans carte bancaire, en 2 minutes.
+            Commence ta préparation gratuitement. Sans carte bancaire, en 2 minutes.
           </p>
           <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: T.r, padding: "16px 40px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
             Commencer maintenant
@@ -546,7 +489,7 @@ function LandingPage({ user, onLogin }) {
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
               </div>
               <h3 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: T.text }}>Bienvenue</h3>
-              <p style={{ margin: "6px 0 0", fontSize: 14, color: T.muted }}>Connecte-toi pour preparer ton entretien</p>
+              <p style={{ margin: "6px 0 0", fontSize: 14, color: T.muted }}>Connecte-toi pour préparer ton entretien</p>
             </div>
 
             <button onClick={handleGoogle} disabled={loading}
@@ -593,14 +536,14 @@ function PlansDashboard({ plans, onSelect, onNew, user, onLogout }) {
     <div style={{ ...card, background: T.accentLt, borderColor: T.accentBd }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.text }}>Mes preparations</h2>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: T.muted }}>Continues ou cree une nouvelle</p>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.text }}>Mes préparations</h2>
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: T.muted }}>Continue ou crée une nouvelle</p>
         </div>
         <button onClick={onNew} style={btnP}>Nouveau plan</button>
       </div>
 
       {!plans?.length ? (
-        <p style={{ fontSize: 13, color: T.muted, textAlign: "center", padding: 32 }}>Aucun plan encore. Cree-en un pour commencer!</p>
+        <p style={{ fontSize: 13, color: T.muted, textAlign: "center", padding: 32 }}>Aucun plan encore. Crée-en un pour commencer !</p>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {plans.map((plan) => {
@@ -618,7 +561,7 @@ function PlansDashboard({ plans, onSelect, onNew, user, onLogout }) {
         </div>
       )}
 
-      <button onClick={onLogout} style={{ ...btnS, marginTop: 16, width: "100%" }}>Deconnexion</button>
+      <button onClick={onLogout} style={{ ...btnS, marginTop: 16, width: "100%" }}>Déconnexion</button>
     </div>
   );
 }
@@ -632,7 +575,6 @@ export default function EzInterview() {
   const [view, setView] = useState("landing");
 
   const [step, setStep] = useState("input");
-  const [activeTab, setActiveTab] = useState("offer");
   const [jobUrl, setJobUrl] = useState("");
   const [jobData, setJobData] = useState(null);
   const [jobLoading, setJobLoading] = useState(false);
@@ -654,7 +596,6 @@ export default function EzInterview() {
   const [expandedDay, setExpandedDay] = useState(0);
   const [expandedItems, setExpandedItems] = useState({});
   const [completedDays, setCompletedDays] = useState({});
-  const [interviewSteps, setInterviewSteps] = useState([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -682,7 +623,7 @@ export default function EzInterview() {
         body: JSON.stringify({ jobUrl, experienceLevel }),
       });
       setJobData(res);
-      setStep("analysis");
+      setStep("cv");
     } catch (err) {
       setJobError(err.message);
     } finally {
@@ -700,6 +641,7 @@ export default function EzInterview() {
         body: JSON.stringify({ jobData, cvText, linkedinUrl, experienceLevel }),
       });
       setStats(res);
+      setStep("analysis");
     } catch (err) {
       setStatsError(err.message);
     } finally {
@@ -757,116 +699,98 @@ export default function EzInterview() {
         <button onClick={() => setView("dashboard")} style={btnS}>Mon espace</button>
       </nav>
 
-      {step === "input" && (
-        <div className="ez-step" style={{ maxWidth: 900, margin: "0 auto", padding: 32 }}>
-          <h1 style={{ margin: "0 0 24px", fontSize: 32, fontWeight: 700, color: T.text }}>Preparer mon entretien</h1>
-
-          <div style={{ display: "flex", gap: 0, marginBottom: 32, background: T.bg, borderRadius: 12, padding: 4 }}>
-            {["offer", "cv"].map(t => (
-              <button key={t} onClick={() => setActiveTab(t)}
-                style={{ flex: 1, padding: "10px 0", border: "none", borderRadius: 10, background: activeTab === t ? T.card : "transparent", color: activeTab === t ? T.text : T.muted, fontWeight: activeTab === t ? 600 : 400, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
-                {t === "offer" ? "Lien de l'offre" : "Votre CV"}
-              </button>
-            ))}
-          </div>
-
-          {activeTab === "offer" && (
-            <div style={card}>
-              <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Lien de l'offre <span style={{ color: T.red }}>*</span></label>
-              <input type="url" placeholder="https://linkedin.com/jobs/..." value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} style={inp} />
-
-              <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Niveau d'experience</label>
-              <select value={experienceLevel} onChange={(e) => setExperienceLevel(e.target.value)} style={inp}>
-                <option value="">Selectionner...</option>
-                <option value="Junior (0-2 ans)">Junior (0-2 ans)</option>
-                <option value="Confirme (3-7 ans)">Confirme (3-7 ans)</option>
-                <option value="Senior (8+ ans)">Senior (8+ ans)</option>
-              </select>
-
-              {jobError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{jobError}</p>}
-
-              <button onClick={fetchJobData} disabled={jobLoading || !jobUrl || !experienceLevel} style={{ ...(!jobUrl || !experienceLevel ? btnD : btnP), marginTop: 16, width: "100%" }}>
-                {jobLoading ? "Analyse en cours..." : "Analyser l'offre"}
-              </button>
-            </div>
-          )}
-
-          {activeTab === "cv" && (
-            <div style={card}>
-              <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Votre CV (optionnel)</label>
-              <textarea placeholder="Collez votre CV ou LinkedIn profil..." value={cvText} onChange={(e) => setCvText(e.target.value)} style={{ ...inp, minHeight: 120, fontFamily: "monospace", fontSize: 12 }} />
-
-              <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>LinkedIn (optionnel)</label>
-              <input type="url" placeholder="https://linkedin.com/in/..." value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} style={inp} />
-
-              <button onClick={() => setStep("input")} style={{ ...btnS, marginTop: 16, width: "100%" }}>Retour a l'offre</button>
-            </div>
-          )}
+      {step === "dashboard" && (
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
+          <PlansDashboard plans={savedPlans} onSelect={(id) => { setCurrentPlanId(id); setStep("plan"); }} onNew={() => { setStep("input"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setJobUrl(""); }} user={user} onLogout={handleLogout} />
         </div>
       )}
 
-      {step === "analysis" && jobData && (
-        <div className="ez-step" style={{ maxWidth: 900, margin: "0 auto", padding: 32 }}>
+      {step === "input" && (
+        <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
+          <h1 style={{ margin: "0 0 24px", fontSize: 32, fontWeight: 700, color: T.text }}>Préparer mon entretien</h1>
+
+          <div style={card}>
+            <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Lien de l'offre <span style={{ color: T.red }}>*</span></label>
+            <input type="url" placeholder="https://linkedin.com/jobs/..." value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} style={inp} />
+
+            <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Niveau d'expérience</label>
+            <select value={experienceLevel} onChange={(e) => setExperienceLevel(e.target.value)} style={inp}>
+              <option value="">Sélectionner...</option>
+              <option value="Junior (0-2 ans)">Junior (0-2 ans)</option>
+              <option value="Confirmé (3-7 ans)">Confirmé (3-7 ans)</option>
+              <option value="Senior (8+ ans)">Senior (8+ ans)</option>
+            </select>
+
+            {jobError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{jobError}</p>}
+
+            <button onClick={fetchJobData} disabled={jobLoading || !jobUrl || !experienceLevel} style={{ ...(!jobUrl || !experienceLevel ? btnD : btnP), marginTop: 16, width: "100%" }}>
+              {jobLoading ? "Analyse en cours..." : "Analyser l'offre"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === "cv" && jobData && (
+        <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
+          <h1 style={{ margin: "0 0 24px", fontSize: 32, fontWeight: 700, color: T.text }}>Votre profil</h1>
+
+          <div style={card}>
+            <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 700, color: T.text }}>{jobData.job_title} — {jobData.company}</h2>
+            <p style={{ margin: "0 0 12px", fontSize: 13, color: T.muted }}>{jobData.description?.substring(0, 300)}...</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              {jobData.key_skills?.slice(0, 3).map((s, i) => <Badge key={i} v="strong">{s}</Badge>)}
+            </div>
+          </div>
+
+          <div style={card}>
+            <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Votre CV (optionnel)</label>
+            <textarea placeholder="Collez votre CV ou profil LinkedIn..." value={cvText} onChange={(e) => setCvText(e.target.value)} style={{ ...inp, minHeight: 120, fontFamily: "monospace", fontSize: 12 }} />
+
+            <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>LinkedIn (optionnel)</label>
+            <input type="url" placeholder="https://linkedin.com/in/..." value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} style={inp} />
+          </div>
+
+          <button onClick={analyzeProfile} disabled={statsLoading} style={{ ...btnP, width: "100%", marginTop: 16 }}>
+            {statsLoading ? "Analyse en cours..." : "Analyser mon profil"}
+          </button>
+          {statsError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{statsError}</p>}
+        </div>
+      )}
+
+      {step === "analysis" && stats && (
+        <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
           <h1 style={{ margin: "0 0 24px", fontSize: 32, fontWeight: 700, color: T.text }}>Analyse du matching</h1>
 
-          {!stats ? (
-            <>
-              <div style={card}>
-                <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 700, color: T.text }}>{jobData.job_title} — {jobData.company}</h2>
-                <p style={{ margin: "0 0 12px", fontSize: 13, color: T.muted }}>{jobData.description?.substring(0, 200)}...</p>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {jobData.key_skills?.slice(0, 3).map((s, i) => <Badge key={i} v="strong">{s}</Badge>)}
-                </div>
-              </div>
+          <div style={card}>
+            <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 700, color: T.text }}>Résultat du matching</h2>
+            <div style={{ fontSize: 16, fontWeight: 700, color: stats.overallScore > 70 ? T.green : stats.overallScore > 50 ? T.warn : T.red, margin: "12px 0" }}>
+              {stats.overallScore > 70 ? "Ton profil correspond bien à ce poste ! Quelques ajustements et tu es prêt." : stats.overallScore > 50 ? "Tu as de bonnes bases. Avec une préparation ciblée, tu vas cartonner." : "C'est le moment de progresser ! Chaque expert a commencé quelque part."}
+            </div>
+            {stats.topStrength && <p style={{ fontSize: 13, color: T.green, margin: "8px 0 0" }}>Force principale : {stats.topStrength}</p>}
+          </div>
 
-              <div style={card}>
-                <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: T.text }}>Prochaines etapes</h3>
-                <ol style={{ margin: 0, paddingLeft: 20, color: T.muted, fontSize: 13 }}>
-                  <li>Collez votre CV ou profil LinkedIn</li>
-                  <li>On identifie vos forces et vos gaps</li>
-                  <li>On genere un plan de preparation personnalise</li>
-                </ol>
-              </div>
+          <div style={card}>
+            <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: T.text }}>Intensité de préparation</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+              {["Léger", "Standard", "Intensif"].map((i) => (
+                <button key={i} onClick={() => setIntensity(i)} style={{ padding: 12, borderRadius: T.r, border: `2px solid ${intensity === i ? T.accent : T.border}`, background: intensity === i ? T.accentLt : T.card, color: T.text, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                  {i}<br/><span style={{ fontSize: 11, fontWeight: 400, color: T.muted }}>{i === "Léger" ? "30 min/j" : i === "Standard" ? "1h/j" : "2h+/j"}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-              <button onClick={analyzeProfile} disabled={statsLoading || !cvText} style={{ ...(!cvText ? btnD : btnP), width: "100%", marginTop: 16 }}>
-                {statsLoading ? "Analyse en cours..." : "Analyser mon profil"}
-              </button>
-              {statsError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{statsError}</p>}
-            </>
-          ) : (
-            <>
-              <div style={card}>
-                <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 700, color: T.text }}>Resultat du matching</h2>
-                <div style={{ fontSize: 16, fontWeight: 700, color: stats.overallScore > 70 ? T.green : stats.overallScore > 50 ? T.warn : T.red, margin: "12px 0" }}>
-                  {stats.overallScore > 70 ? "Ton profil correspond bien a ce poste ! Quelques ajustements et tu es pret." : stats.overallScore > 50 ? "Tu as de bonnes bases. Avec une preparation ciblee, tu vas cartonner." : "C'est le moment de progresser ! Chaque expert a commence quelque part."}
-                </div>
-                {stats.topStrength && <p style={{ fontSize: 13, color: T.green, margin: "8px 0 0" }}>Force principale : {stats.topStrength}</p>}
-              </div>
-
-              <div style={card}>
-                <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: T.text }}>Intensite de preparation</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-                  {["Leger", "Standard", "Intensif"].map((i) => (
-                    <button key={i} onClick={() => setIntensity(i)} style={{ padding: 12, borderRadius: T.r, border: `2px solid ${intensity === i ? T.accent : T.border}`, background: intensity === i ? T.accentLt : T.card, color: T.text, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                      {i}<br/><span style={{ fontSize: 11, fontWeight: 400, color: T.muted }}>{i === "Leger" ? "30 min/j" : i === "Standard" ? "1h/j" : "2h+/j"}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button onClick={generatePlan} disabled={generating} style={{ ...btnP, width: "100%", marginTop: 16 }}>
-                {generating ? "Generation en cours..." : "Preparer mon plan"}
-              </button>
-              {planError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{planError}</p>}
-            </>
-          )}
+          <button onClick={generatePlan} disabled={generating} style={{ ...btnP, width: "100%", marginTop: 16 }}>
+            {generating ? "Génération en cours..." : "Préparer mon plan"}
+          </button>
+          {planError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{planError}</p>}
         </div>
       )}
 
       {step === "plan" && plan && (
-        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 24, padding: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 24, padding: 24, maxWidth: "100%", margin: "0 auto" }}>
           <div className="ez-plan-sidebar" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {plan.days?.map((day, i) => (
+            {plan.map((day, i) => (
               <button key={i} onClick={() => setExpandedDay(i)} style={{ padding: "12px 16px", borderRadius: T.r, border: `1px solid ${expandedDay === i ? T.accent : T.border}`, background: expandedDay === i ? T.accentLt : T.card, color: T.text, textAlign: "left", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>
                 Jour {i + 1}
               </button>
@@ -874,16 +798,16 @@ export default function EzInterview() {
           </div>
 
           <div className="ez-plan-main" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
-            {plan.days?.[expandedDay] && (
+            {plan[expandedDay] && (
               <>
                 <div style={card}>
                   <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 700, color: T.text }}>Jour {expandedDay + 1}</h2>
-                  <p style={{ margin: "0 0 16px", fontSize: 13, color: T.muted }}>{plan.days[expandedDay].theme}</p>
-                  <p style={{ margin: 0, fontSize: 13, color: T.text }}>{plan.days[expandedDay].description}</p>
+                  <p style={{ margin: "0 0 16px", fontSize: 13, color: T.muted }}>{plan[expandedDay].title}</p>
+                  <p style={{ margin: 0, fontSize: 13, color: T.text }}>{plan[expandedDay].focus}</p>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {plan.days[expandedDay].items?.map((item, i) => (
+                  {plan[expandedDay].items?.map((item, i) => (
                     <div key={i} style={card}>
                       <div onClick={() => setExpandedItems(p => ({ ...p, [i]: !p[i] }))} style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>

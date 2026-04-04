@@ -16,9 +16,9 @@ export async function POST(request) {
 
     const levelLabel = experienceLevel || "non precise";
     const levelGuidance = {
-      "Junior (0-2 ans)": "Ce candidat debute. Valorise les formations, stages, projets personnels et la motivation. Sois particulierement encourageant sur les competences emergentes.",
-      "Confirme (3-7 ans)": "Ce candidat a de l'experience. Valorise les realisations concretes, les responsabilites prises et la progression. Sois equilibre et constructif.",
-      "Senior (8+ ans)": "Ce candidat est experimente. Valorise le leadership, l'expertise approfondie, les contributions strategiques. Sois exigeant mais juste."
+      "Junior (0-2 ans)": "Ce candidat débute. Valorise les formations, stages, projets personnels et la motivation. Sois particulièrement encourageant sur les compétences émergentes.",
+      "Confirmé (3-7 ans)": "Ce candidat a de l'expérience. Valorise les réalisations concrètes, les responsabilités prises et la progression. Sois équilibré et constructif.",
+      "Senior (8+ ans)": "Ce candidat est expérimenté. Valorise le leadership, l'expertise approfondie, les contributions stratégiques. Sois exigeant mais juste."
     };
 
     const guidance = levelGuidance[levelLabel] || "Evalue le profil de maniere equilibree.";
