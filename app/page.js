@@ -575,6 +575,7 @@ export default function EzInterview() {
   const [view, setView] = useState("landing");
 
   const [step, setStep] = useState("input");
+  const [activeTab, setActiveTab] = useState("offer");
   const [jobUrl, setJobUrl] = useState("");
   const [jobData, setJobData] = useState(null);
   const [jobLoading, setJobLoading] = useState(false);
@@ -583,6 +584,7 @@ export default function EzInterview() {
   const [experienceLevel, setExperienceLevel] = useState("");
   const [cvFile, setCvFile] = useState(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [dragOver, setDragOver] = useState(false);
 
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -604,6 +606,7 @@ export default function EzInterview() {
         if (user) {
           setUser(user);
           setView("dashboard");
+          setStep("dashboard");
         }
       } catch (err) {
         console.error("Auth error:", err);
@@ -623,7 +626,7 @@ export default function EzInterview() {
         body: JSON.stringify({ jobUrl, experienceLevel }),
       });
       setJobData(res);
-      setStep("cv");
+      setActiveTab("cv");
     } catch (err) {
       setJobError(err.message);
     } finally {
@@ -641,7 +644,7 @@ export default function EzInterview() {
         body: JSON.stringify({ jobData, cvText, linkedinUrl, experienceLevel }),
       });
       setStats(res);
-      setStep("analysis");
+      setActiveTab("matching");
     } catch (err) {
       setStatsError(err.message);
     } finally {
@@ -677,7 +680,7 @@ export default function EzInterview() {
   if (authLoading) return <Spin text="Chargement..." />;
 
   if (view === "landing") {
-    return <LandingPage user={user} onLogin={() => setView("dashboard")} />;
+    return <LandingPage user={user} onLogin={() => { setView("dashboard"); setStep("dashboard"); }} />;
   }
 
   if (!user) return <LandingPage />;
@@ -691,99 +694,197 @@ export default function EzInterview() {
           .ez-plan-main { grid-template-columns: 1fr !important; }
           .ez-step { padding: 16px !important; }
           .ez-input-grid { grid-template-columns: 1fr !important; }
+          .ez-stepper { font-size: 12px !important; }
+          .ez-stepper button { padding: 10px 4px !important; font-size: 12px !important; }
         }
       `}</style>
 
       <nav style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: 18, fontWeight: 700, color: T.text }}>EzInterview</span>
-        <button onClick={() => setView("dashboard")} style={btnS}>Mon espace</button>
+        <button onClick={() => setStep("dashboard")} style={btnS}>Mon espace</button>
       </nav>
 
       {step === "dashboard" && (
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
-          <PlansDashboard plans={savedPlans} onSelect={(id) => { setCurrentPlanId(id); setStep("plan"); }} onNew={() => { setStep("input"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setJobUrl(""); }} user={user} onLogout={handleLogout} />
+          <PlansDashboard plans={savedPlans} onSelect={(id) => { setCurrentPlanId(id); setStep("plan"); }} onNew={() => { setStep("input"); setActiveTab("offer"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setCvFile(null); setJobUrl(""); setExperienceLevel(""); }} user={user} onLogout={handleLogout} />
         </div>
       )}
 
       {step === "input" && (
         <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
-          <h1 style={{ margin: "0 0 24px", fontSize: 32, fontWeight: 700, color: T.text }}>Préparer mon entretien</h1>
+          <h1 style={{ margin: "0 0 28px", fontSize: 32, fontWeight: 700, color: T.text }}>Préparer mon entretien</h1>
 
-          <div style={card}>
-            <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Lien de l'offre <span style={{ color: T.red }}>*</span></label>
-            <input type="url" placeholder="https://linkedin.com/jobs/..." value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} style={inp} />
-
-            <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Niveau d'expérience</label>
-            <select value={experienceLevel} onChange={(e) => setExperienceLevel(e.target.value)} style={inp}>
-              <option value="">Sélectionner...</option>
-              <option value="Junior (0-2 ans)">Junior (0-2 ans)</option>
-              <option value="Confirmé (3-7 ans)">Confirmé (3-7 ans)</option>
-              <option value="Senior (8+ ans)">Senior (8+ ans)</option>
-            </select>
-
-            {jobError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{jobError}</p>}
-
-            <button onClick={fetchJobData} disabled={jobLoading || !jobUrl || !experienceLevel} style={{ ...(!jobUrl || !experienceLevel ? btnD : btnP), marginTop: 16, width: "100%" }}>
-              {jobLoading ? "Analyse en cours..." : "Analyser l'offre"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {step === "cv" && jobData && (
-        <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
-          <h1 style={{ margin: "0 0 24px", fontSize: 32, fontWeight: 700, color: T.text }}>Votre profil</h1>
-
-          <div style={card}>
-            <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 700, color: T.text }}>{jobData.job_title} — {jobData.company}</h2>
-            <p style={{ margin: "0 0 12px", fontSize: 13, color: T.muted }}>{jobData.description?.substring(0, 300)}...</p>
-            <div style={{ display: "flex", gap: 8 }}>
-              {jobData.key_skills?.slice(0, 3).map((s, i) => <Badge key={i} v="strong">{s}</Badge>)}
-            </div>
-          </div>
-
-          <div style={card}>
-            <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Votre CV (optionnel)</label>
-            <textarea placeholder="Collez votre CV ou profil LinkedIn..." value={cvText} onChange={(e) => setCvText(e.target.value)} style={{ ...inp, minHeight: 120, fontFamily: "monospace", fontSize: 12 }} />
-
-            <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>LinkedIn (optionnel)</label>
-            <input type="url" placeholder="https://linkedin.com/in/..." value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} style={inp} />
-          </div>
-
-          <button onClick={analyzeProfile} disabled={statsLoading} style={{ ...btnP, width: "100%", marginTop: 16 }}>
-            {statsLoading ? "Analyse en cours..." : "Analyser mon profil"}
-          </button>
-          {statsError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{statsError}</p>}
-        </div>
-      )}
-
-      {step === "analysis" && stats && (
-        <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
-          <h1 style={{ margin: "0 0 24px", fontSize: 32, fontWeight: 700, color: T.text }}>Analyse du matching</h1>
-
-          <div style={card}>
-            <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 700, color: T.text }}>Résultat du matching</h2>
-            <div style={{ fontSize: 16, fontWeight: 700, color: stats.overallScore > 70 ? T.green : stats.overallScore > 50 ? T.warn : T.red, margin: "12px 0" }}>
-              {stats.overallScore > 70 ? "Ton profil correspond bien à ce poste ! Quelques ajustements et tu es prêt." : stats.overallScore > 50 ? "Tu as de bonnes bases. Avec une préparation ciblée, tu vas cartonner." : "C'est le moment de progresser ! Chaque expert a commencé quelque part."}
-            </div>
-            {stats.topStrength && <p style={{ fontSize: 13, color: T.green, margin: "8px 0 0" }}>Force principale : {stats.topStrength}</p>}
-          </div>
-
-          <div style={card}>
-            <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: T.text }}>Intensité de préparation</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-              {["Léger", "Standard", "Intensif"].map((i) => (
-                <button key={i} onClick={() => setIntensity(i)} style={{ padding: 12, borderRadius: T.r, border: `2px solid ${intensity === i ? T.accent : T.border}`, background: intensity === i ? T.accentLt : T.card, color: T.text, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                  {i}<br/><span style={{ fontSize: 11, fontWeight: 400, color: T.muted }}>{i === "Léger" ? "30 min/j" : i === "Standard" ? "1h/j" : "2h+/j"}</span>
+          {/* ─── Stepper tabs ─── */}
+          <div style={{ display: "flex", gap: 0, marginBottom: 32, background: T.card, borderRadius: 14, padding: 4, border: `1px solid ${T.border}` }}>
+            {[
+              { key: "offer", label: "① Offre", done: !!jobData },
+              { key: "cv", label: "② CV", done: !!cvText || !!cvFile },
+              { key: "matching", label: "③ Matching", done: !!stats },
+            ].map((tab) => {
+              const isActive = activeTab === tab.key;
+              const isLocked = (tab.key === "cv" && !jobData) || (tab.key === "matching" && (!jobData || (!cvText && !cvFile)));
+              return (
+                <button key={tab.key}
+                  onClick={() => !isLocked && setActiveTab(tab.key)}
+                  style={{
+                    flex: 1, padding: "12px 0", border: "none", borderRadius: 10,
+                    background: isActive ? T.accent : "transparent",
+                    color: isActive ? "#fff" : isLocked ? T.light : T.text,
+                    fontWeight: isActive ? 700 : 500, fontSize: 14,
+                    cursor: isLocked ? "not-allowed" : "pointer",
+                    fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    opacity: isLocked ? 0.5 : 1,
+                  }}>
+                  {tab.label}
+                  <span style={{ color: isActive ? "rgba(255,255,255,0.7)" : T.red, fontSize: 11, fontWeight: 700 }}>*</span>
+                  {tab.done && <span style={{ fontSize: 14, color: isActive ? "#fff" : T.green }}>✓</span>}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
-          <button onClick={generatePlan} disabled={generating} style={{ ...btnP, width: "100%", marginTop: 16 }}>
-            {generating ? "Génération en cours..." : "Préparer mon plan"}
-          </button>
-          {planError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{planError}</p>}
+          {/* ─── Tab: Offre ─── */}
+          {activeTab === "offer" && (
+            <div style={card}>
+              <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Lien de l'offre <span style={{ color: T.red }}>*</span></label>
+              <input type="url" placeholder="https://linkedin.com/jobs/..." value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} style={inp} />
+
+              <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Votre niveau d'expérience dans ce domaine <span style={{ color: T.red }}>*</span></label>
+              <select value={experienceLevel} onChange={(e) => setExperienceLevel(e.target.value)} style={inp}>
+                <option value="">Sélectionner...</option>
+                <option value="Junior (0-2 ans)">Junior (0-2 ans)</option>
+                <option value="Confirmé (3-7 ans)">Confirmé (3-7 ans)</option>
+                <option value="Senior (8+ ans)">Senior (8+ ans)</option>
+              </select>
+
+              {jobError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{jobError}</p>}
+
+              <button onClick={fetchJobData} disabled={jobLoading || !jobUrl || !experienceLevel} style={{ ...(!jobUrl || !experienceLevel ? btnD : btnP), marginTop: 16, width: "100%" }}>
+                {jobLoading ? "Analyse en cours..." : "Analyser l'offre"}
+              </button>
+
+              {jobData && (
+                <div style={{ marginTop: 16, padding: 14, borderRadius: T.r, background: T.greenLt, border: `1px solid ${T.greenBd}`, display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ color: T.green, fontSize: 18 }}>✓</span>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.green }}>Offre analysée : {jobData.title || jobData.job_title}</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, color: T.muted }}>{jobData.company} — Passe à l'onglet CV pour continuer</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── Tab: CV ─── */}
+          {activeTab === "cv" && (
+            <div style={card}>
+              <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Votre CV <span style={{ color: T.red }}>*</span></label>
+
+              {/* ─── Drag & drop zone ─── */}
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault(); setDragOver(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) {
+                    setCvFile(file);
+                    const reader = new FileReader();
+                    reader.onload = (ev) => setCvText(ev.target.result);
+                    if (file.name.endsWith(".txt") || file.name.endsWith(".md")) {
+                      reader.readAsText(file);
+                    } else {
+                      setCvText(`[Fichier : ${file.name}]`);
+                    }
+                  }
+                }}
+                style={{
+                  border: `2px dashed ${dragOver ? T.accent : T.border}`,
+                  borderRadius: T.r, padding: 32, textAlign: "center",
+                  background: dragOver ? T.accentLt : T.bg,
+                  cursor: "pointer", transition: "all 0.2s ease", marginBottom: 16,
+                }}
+                onClick={() => document.getElementById("cv-file-input")?.click()}
+              >
+                <input id="cv-file-input" type="file" accept=".pdf,.doc,.docx,.txt,.rtf" style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setCvFile(file);
+                      if (file.name.endsWith(".txt") || file.name.endsWith(".md")) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setCvText(ev.target.result);
+                        reader.readAsText(file);
+                      } else {
+                        setCvText(`[Fichier : ${file.name}]`);
+                      }
+                    }
+                  }}
+                />
+                <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>📄</div>
+                {cvFile ? (
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.green }}>{cvFile.name} — Fichier sélectionné ✓</p>
+                ) : (
+                  <>
+                    <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: T.text }}>Glissez votre CV ici ou cliquez pour parcourir</p>
+                    <p style={{ margin: 0, fontSize: 12, color: T.muted }}>PDF, Word, TXT — 10 Mo max</p>
+                  </>
+                )}
+              </div>
+
+              <label style={{ display: "block", marginBottom: 8, fontSize: 13, fontWeight: 500, color: T.muted }}>Ou collez le texte directement</label>
+              <textarea placeholder="Collez le contenu de votre CV ici..." value={cvText} onChange={(e) => setCvText(e.target.value)} style={{ ...inp, minHeight: 100, fontFamily: "monospace", fontSize: 12 }} />
+
+              <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Profil LinkedIn (optionnel)</label>
+              <input type="url" placeholder="https://linkedin.com/in/..." value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} style={inp} />
+
+              <button onClick={analyzeProfile} disabled={statsLoading || (!cvText && !cvFile)} style={{ ...((!cvText && !cvFile) ? btnD : btnP), width: "100%", marginTop: 16 }}>
+                {statsLoading ? "Analyse en cours..." : "Analyser mon profil"}
+              </button>
+              {statsError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{statsError}</p>}
+            </div>
+          )}
+
+          {/* ─── Tab: Matching ─── */}
+          {activeTab === "matching" && stats && (
+            <>
+              <div style={card}>
+                <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 700, color: T.text }}>Résultat du matching</h2>
+                <div style={{ fontSize: 16, fontWeight: 700, color: stats.overallScore > 70 ? T.green : stats.overallScore > 50 ? T.warn : T.red, margin: "12px 0" }}>
+                  {stats.overallScore > 70 ? "Ton profil correspond bien à ce poste ! Quelques ajustements et tu es prêt." : stats.overallScore > 50 ? "Tu as de bonnes bases. Avec une préparation ciblée, tu vas cartonner." : "C'est le moment de progresser ! Chaque expert a commencé quelque part."}
+                </div>
+                {stats.topStrength && <p style={{ fontSize: 13, color: T.green, margin: "8px 0 0" }}>Force principale : {stats.topStrength}</p>}
+                {stats.stats?.improvementTip && <p style={{ fontSize: 13, color: T.accent, margin: "6px 0 0" }}>{stats.stats.improvementTip}</p>}
+
+                {stats.matches?.length > 0 && (
+                  <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                    {stats.matches.map((m, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: T.r, background: m.match === "strong" ? T.greenLt : m.match === "partial" ? T.warnLt : T.redLt, border: `1px solid ${m.match === "strong" ? T.greenBd : m.match === "partial" ? T.warnBd : T.redBd}` }}>
+                        <Badge v={m.match}>{m.match === "strong" ? "Acquis" : m.match === "partial" ? "Partiel" : "À travailler"}</Badge>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{m.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div style={card}>
+                <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: T.text }}>Intensité de préparation</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                  {["Léger", "Standard", "Intensif"].map((i) => (
+                    <button key={i} onClick={() => setIntensity(i)} style={{ padding: 12, borderRadius: T.r, border: `2px solid ${intensity === i ? T.accent : T.border}`, background: intensity === i ? T.accentLt : T.card, color: T.text, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                      {i}<br/><span style={{ fontSize: 11, fontWeight: 400, color: T.muted }}>{i === "Léger" ? "30 min/j" : i === "Standard" ? "1h/j" : "2h+/j"}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button onClick={generatePlan} disabled={generating} style={{ ...btnP, width: "100%", marginTop: 16 }}>
+                {generating ? "Génération en cours..." : "Préparer mon plan"}
+              </button>
+              {planError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{planError}</p>}
+            </>
+          )}
         </div>
       )}
 
