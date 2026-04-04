@@ -276,7 +276,7 @@ function LandingPage({ user, onLogin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [currentDay, setCurrentDay] = useState(0);
+  const [demoDay, setDemoDay] = useState(null);
 
   const handleEmail = async (e) => {
     e.preventDefault();
@@ -303,21 +303,30 @@ function LandingPage({ user, onLogin }) {
     } catch (err) { setError(err.message); setLoading(false); }
   };
 
-  // Auto-advance mockup days every 2 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentDay(d => (d + 1) % 6);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
   const mockupDays = [
-    { day: 1, title: "Fondamentaux React & Hooks", status: "completed", progress: 100 },
-    { day: 2, title: "State Management avancé", status: "completed", progress: 100 },
-    { day: 3, title: "Tests & Qualité de code", status: "progress", progress: 60 },
-    { day: 4, title: "Architecture & Patterns", status: "locked", progress: 0 },
-    { day: 5, title: "Culture d'entreprise & Entretien", status: "locked", progress: 0 },
-    { day: 6, title: "Révision & Quiz final", status: "locked", progress: 0 },
+    { day: 1, title: "Fondamentaux React & Hooks", status: "completed", items: [
+      { t: "Les Hooks essentiels", type: "Note", done: true },
+      { t: "Exercice : mini-app useState", type: "Labo", done: true },
+      { t: "Quiz — Hooks & cycle de vie", type: "Quiz", done: true, score: "4/5" },
+    ]},
+    { day: 2, title: "State Management avancé", status: "completed", items: [
+      { t: "useReducer vs useState", type: "Note", done: true },
+      { t: "Context API en pratique", type: "Note", done: true },
+      { t: "Quiz — Gestion d'état", type: "Quiz", done: true, score: "5/5" },
+    ]},
+    { day: 3, title: "Tests & Qualité de code", status: "progress", items: [
+      { t: "Testing Library & Jest", type: "Note", done: true },
+      { t: "Exercice : tester un composant", type: "Labo", done: false },
+      { t: "Quiz — Bonnes pratiques", type: "Quiz", done: false },
+    ]},
+    { day: 4, title: "Architecture & Patterns", status: "locked", items: [
+      { t: "Atomic Design & structure projet", type: "Note", done: false },
+      { t: "Performance & React.memo", type: "Note", done: false },
+    ]},
+    { day: 5, title: "Culture d'entreprise & Entretien", status: "locked", items: [
+      { t: "Recherche sur l'entreprise", type: "Note", done: false },
+      { t: "Simulation d'entretien", type: "Labo", done: false },
+    ]},
   ];
 
   const features = [
@@ -332,14 +341,12 @@ function LandingPage({ user, onLogin }) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
         .ez-card { transition: all 0.2s ease; cursor: pointer; }
         .ez-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
         .ez-btn { transition: all 0.15s ease; }
         .ez-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.35); }
-        .ez-mockup-day { animation: slideIn 0.5s ease; }
-        .ez-mockup-current { animation: pulse 1s ease-in-out infinite; }
         @media (max-width: 768px) {
           .ez-hero-grid { grid-template-columns: 1fr !important; }
           .ez-hero-text h1 { font-size: 32px !important; }
@@ -360,7 +367,7 @@ function LandingPage({ user, onLogin }) {
       {/* ─── Nav ─── */}
       <nav style={{ background: T.card, borderBottom: `1px solid ${T.border}`, position: "sticky", top: 0, zIndex: 100 }}>
         <div className="ez-nav-inner" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
             </div>
@@ -399,91 +406,63 @@ function LandingPage({ user, onLogin }) {
           </div>
 
           <div className="ez-hero-mockup" style={{ animation: "fadeIn 0.7s ease" }}>
-            <div style={{ background: T.card, borderRadius: 24, padding: 32, border: `1px solid ${T.border}`, boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20 }}>📋</div>
+            <div style={{ background: T.card, borderRadius: 24, padding: 24, border: `1px solid ${T.border}`, boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18 }}>📋</div>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Plan de préparation</div>
-                  <div style={{ fontSize: 12, color: T.muted }}>Développeur Frontend React</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Développeur Frontend React</div>
+                  <div style={{ fontSize: 11, color: T.muted }}>Exemple interactif — clique pour explorer</div>
                 </div>
               </div>
               {mockupDays.map((d, i) => (
-                <div
-                  key={i}
-                  className={`ez-mockup-day ${i === currentDay ? "ez-mockup-current" : ""}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "12px 14px",
-                    borderRadius: T.r,
-                    background: T.card,
-                    border: `1px solid ${
-                      d.status === "completed"
-                        ? T.greenBd
-                        : d.status === "progress"
-                        ? T.accentBd
-                        : T.border
-                    }`,
-                    marginBottom: 10,
-                    opacity: i <= currentDay ? 1 : 0.6,
-                    transition: "all 0.4s ease",
-                  }}
-                >
+                <div key={i} style={{ marginBottom: 6 }}>
                   <div
+                    onClick={() => setDemoDay(demoDay === i ? null : i)}
                     style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      background:
-                        d.status === "completed"
-                          ? T.greenLt
-                          : d.status === "progress"
-                          ? T.accentLt
-                          : "#F1F5F9",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color:
-                        d.status === "completed"
-                          ? T.green
-                          : d.status === "progress"
-                          ? T.accent
-                          : T.muted,
-                      flexShrink: 0,
+                      display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                      borderRadius: demoDay === i ? `${T.r}px ${T.r}px 0 0` : T.r,
+                      background: T.card, cursor: "pointer",
+                      border: `1px solid ${d.status === "completed" ? T.greenBd : d.status === "progress" ? T.accentBd : T.border}`,
+                      borderBottom: demoDay === i ? "none" : undefined,
+                      transition: "all 0.2s ease",
                     }}
                   >
-                    {d.status === "completed" ? "✓" : d.status === "progress" ? "▶" : `J${d.day}`}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: d.status === "locked" ? T.muted : T.text,
-                      }}
-                    >
-                      Jour {d.day}
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 7,
+                      background: d.status === "completed" ? T.greenLt : d.status === "progress" ? T.accentLt : "#F1F5F9",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 12, fontWeight: 700, flexShrink: 0,
+                      color: d.status === "completed" ? T.green : d.status === "progress" ? T.accent : T.muted,
+                    }}>
+                      {d.status === "completed" ? "✓" : d.status === "progress" ? "▶" : `J${d.day}`}
                     </div>
-                    <div style={{ fontSize: 12, color: T.muted }}>{d.title}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: d.status === "locked" ? T.muted : T.text }}>Jour {d.day} — {d.title}</div>
+                    </div>
+                    <span style={{ fontSize: 11, color: T.muted }}>{demoDay === i ? "▼" : "▶"}</span>
                   </div>
-                  {d.status === "completed" && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.green }}>
-                      100%
-                    </span>
-                  )}
-                  {d.status === "progress" && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.accent }}>
-                      {d.progress}%
-                    </span>
+                  {demoDay === i && (
+                    <div style={{
+                      padding: "8px 12px", background: d.status === "completed" ? T.greenLt : d.status === "progress" ? T.accentLt : T.bg,
+                      border: `1px solid ${d.status === "completed" ? T.greenBd : d.status === "progress" ? T.accentBd : T.border}`,
+                      borderTop: "none", borderRadius: `0 0 ${T.r}px ${T.r}px`,
+                      animation: "fadeIn 0.2s ease",
+                    }}>
+                      {d.items.map((it, j) => (
+                        <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: j < d.items.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                          <span style={{ fontSize: 13, width: 18, textAlign: "center" }}>{it.done ? "✅" : "⬜"}</span>
+                          <span style={{ fontSize: 11, fontWeight: 500, color: it.done ? T.text : T.muted, flex: 1 }}>{it.t}</span>
+                          <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 6, background: it.type === "Quiz" ? T.warnLt : it.type === "Labo" ? T.purpleLt : T.accentLt, color: it.type === "Quiz" ? T.warn : it.type === "Labo" ? T.purple : T.accent, fontWeight: 600 }}>{it.type}</span>
+                          {it.score && <span style={{ fontSize: 10, fontWeight: 700, color: T.green }}>{it.score}</span>}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               ))}
-              <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: T.r, background: T.greenLt, display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${T.greenBd}` }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: T.green }}>Progression globale</span>
-                <span style={{ fontSize: 20, fontWeight: 800, color: T.green }}>49%</span>
+              <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: T.r, background: T.greenLt, display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${T.greenBd}` }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: T.green }}>Progression globale</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: T.green }}>49%</span>
               </div>
             </div>
           </div>
@@ -816,7 +795,7 @@ export default function EzInterview() {
       `}</style>
 
       <nav style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 18, fontWeight: 700, color: T.text }}>EntretienZen</span>
+        <span onClick={() => setView("landing")} style={{ fontSize: 18, fontWeight: 700, color: T.text, cursor: "pointer" }}>EntretienZen</span>
         <button onClick={() => setStep("dashboard")} style={btnS}>Mon espace</button>
       </nav>
 

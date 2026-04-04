@@ -3,70 +3,46 @@ import { extractJSONArray } from "../../lib/parse-json";
 
 const anthropic = new Anthropic();
 
-// URLs de reference fiables et verifiees par domaine
-const VERIFIED_SOURCES = `
-UTILISE UNIQUEMENT ces URLs racines verifiees (pas de sous-pages inventees) :
+// Instructions pour les liens et le contenu du plan
+const SOURCES_INSTRUCTIONS = `
+RÈGLES POUR LES LIENS ET LE CONTENU :
 
-COURS & FORMATION :
-- https://www.coursera.org — cours universitaires
-- https://www.edx.org — cours en ligne
-- https://openclassrooms.com — cours FR
-- https://www.fun-mooc.fr — MOOC francais
-- https://www.khanacademy.org — fondamentaux
-- https://ocw.mit.edu — MIT OpenCourseWare
+1. CONTENU AUTONOME : Chaque note doit être suffisamment détaillée pour que l'utilisateur puisse apprendre SANS cliquer sur les liens. Le summary doit faire 5-8 phrases, les keyPoints doivent être des explications complètes (pas juste des titres). Les liens sont un COMPLÉMENT, pas le contenu principal.
 
-TECH & DEV :
-- https://developer.mozilla.org — docs web MDN
-- https://react.dev — docs React
-- https://docs.python.org — docs Python
-- https://nodejs.org/docs — docs Node.js
-- https://www.w3schools.com — tutoriels web
-- https://leetcode.com — exercices code
-- https://exercism.org — exercices code
-- https://github.com — repos de reference
+2. LIENS SPÉCIFIQUES : Utilise des URLs qui pointent vers des pages PRÉCISES, pas des pages d'accueil.
 
-FINANCE & BUSINESS :
-- https://www.investopedia.com — finance
-- https://www.lesechos.fr — actualites eco FR
-- https://hbr.org — Harvard Business Review
-- https://www.banque-france.fr — Banque de France
-- https://www.insee.fr — stats France
+EXEMPLES DE BONS LIENS (spécifiques) :
+- https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
+- https://react.dev/learn/state-a-components-memory
+- https://docs.python.org/3/tutorial/datastructures.html
+- https://www.coursera.org/learn/machine-learning
+- https://openclassrooms.com/fr/courses/7150606-creez-une-application-react-complete
+- https://www.w3schools.com/js/js_async.asp
+- https://www.investopedia.com/terms/d/dcf.asp
+- https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006900847
+- https://leetcode.com/problems/two-sum/
+- https://exercism.org/tracks/javascript/exercises/hello-world
+- https://academy.hubspot.com/courses/inbound-marketing
+- https://www.youtube.com/watch?v=dQw4w9WgXcQ (un VRAI ID vidéo)
 
-DROIT :
-- https://www.legifrance.gouv.fr — lois FR
-- https://www.service-public.fr — demarches FR
-- https://eur-lex.europa.eu — droit europeen
-- https://www.dalloz.fr — droit FR
+EXEMPLES DE MAUVAIS LIENS (trop génériques) :
+- https://www.youtube.com (page d'accueil)
+- https://www.coursera.org (page d'accueil)
+- https://github.com (page d'accueil)
 
-SANTE :
-- https://www.who.int — OMS
-- https://www.has-sante.fr — HAS France
-- https://pubmed.ncbi.nlm.nih.gov — articles medicaux
-- https://www.vidal.fr — medicaments
+3. DOMAINES AUTORISÉS pour les liens :
+coursera.org, edx.org, openclassrooms.com, fun-mooc.fr, khanacademy.org, ocw.mit.edu,
+developer.mozilla.org, react.dev, docs.python.org, nodejs.org, w3schools.com, leetcode.com, exercism.org, github.com,
+investopedia.com, lesechos.fr, hbr.org, banque-france.fr, insee.fr,
+legifrance.gouv.fr, service-public.fr, eur-lex.europa.eu, dalloz.fr,
+who.int, has-sante.fr, pubmed.ncbi.nlm.nih.gov, vidal.fr,
+academy.hubspot.com, skillshop.withgoogle.com, statista.com,
+architectes.org, batiactu.com, eduscol.education.fr, education.gouv.fr, reseau-canope.fr,
+artisanat.fr, compagnons-du-devoir.com, youtube.com, fr.wikipedia.org, scholar.google.com
 
-MARKETING :
-- https://academy.hubspot.com — marketing
-- https://skillshop.withgoogle.com — Google certs
-- https://www.statista.com — statistiques
+4. Pour YouTube : utilise de VRAIS identifiants de vidéos que tu connais. Si tu n'es pas sûr qu'une vidéo existe, ne mets PAS de lien YouTube. Mieux vaut pas de lien qu'un lien mort.
 
-ARCHITECTURE & BTP :
-- https://www.architectes.org — Ordre des architectes FR
-- https://www.batiactu.com — actualites BTP
-- https://www.legifrance.gouv.fr — reglementations construction
-
-EDUCATION :
-- https://eduscol.education.fr — ressources pedagogiques FR
-- https://www.education.gouv.fr — Education nationale
-- https://www.reseau-canope.fr — ressources enseignants
-
-ARTISANAT & METIERS MANUELS :
-- https://www.artisanat.fr — Chambre des Metiers
-- https://www.compagnons-du-devoir.com — formation compagnons
-
-GENERAL :
-- https://www.youtube.com — videos educatives
-- https://fr.wikipedia.org — definitions
-- https://scholar.google.com — articles academiques
+5. Si tu ne connais pas d'URL spécifique pour un sujet, NE METS PAS de lien. Mets plus de contenu dans le summary et les keyPoints à la place.
 `;
 
 // Configuration d'intensite
@@ -122,12 +98,21 @@ function validatePlanDeep(parsed) {
       if (!item.title || !item.type) {
         return { ok: false, reason: `day ${day.day}: item missing title or type` };
       }
-      // Vérifier que les liens utilisent les domaines autorisés
+      // Vérifier que les liens utilisent les domaines autorisés et ne sont pas des pages d'accueil
       const links = item.content?.links || [];
       for (const link of links) {
-        if (link.url && !VERIFIED_DOMAINS.some(d => link.url.includes(d))) {
+        if (!link.url) continue;
+        const domainOk = VERIFIED_DOMAINS.some(d => link.url.includes(d));
+        if (!domainOk) {
           return { ok: false, reason: `day ${day.day}: URL non vérifiée: ${link.url}` };
         }
+        // Rejeter les liens trop génériques (page d'accueil sans path)
+        try {
+          const u = new URL(link.url);
+          if (u.pathname === "/" && !u.search && !u.hash) {
+            return { ok: false, reason: `day ${day.day}: URL trop générique (page d'accueil): ${link.url}` };
+          }
+        } catch {}
       }
     }
   }
@@ -231,7 +216,7 @@ ${lc.focus}
 Niveau des ressources : ${lc.resourceLevel}
 Quiz : ${lc.quizDifficulty}
 
-${VERIFIED_SOURCES}
+${SOURCES_INSTRUCTIONS}
 
 FORMAT JSON — retourne UNIQUEMENT ce tableau :
 [
@@ -242,28 +227,27 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
     "items": [
       {
         "type": "note",
-        "title": "Titre",
+        "title": "Titre précis de la leçon",
         "duration": "20 min",
         "content": {
-          "summary": "Resume concret en 3 phrases",
-          "keyPoints": ["Point 1", "Point 2", "Point 3"],
-          "tips": ["Astuce"],
+          "summary": "Explication DÉTAILLÉE en 5-8 phrases. L'utilisateur doit pouvoir apprendre le sujet rien qu'en lisant ce texte. Donne des exemples concrets, des définitions, des cas d'usage. Ne dis pas juste 'React utilise des hooks' — explique COMMENT et POURQUOI avec un mini-exemple.",
+          "keyPoints": ["Point détaillé avec explication complète, pas juste un titre", "Deuxième point avec contexte et exemple", "Troisième point actionnable"],
+          "tips": ["Astuce concrète et applicable immédiatement"],
           "links": [
-            {"label": "Nom", "url": "URL de la liste ci-dessus", "type": "article"},
-            {"label": "Video", "url": "https://www.youtube.com", "type": "video"}
+            {"label": "Nom descriptif du cours/article", "url": "URL SPÉCIFIQUE vers la page du cours (pas la page d'accueil)", "type": "article"}
           ]
         },
         "miniQuiz": [{"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0}]
       },
       {
         "type": "exercise",
-        "title": "Exercice",
+        "title": "Exercice pratique",
         "duration": "30 min",
         "content": {
-          "objective": "Objectif",
-          "steps": ["Etape 1", "Etape 2"],
-          "tips": ["Conseil"],
-          "links": [{"label": "Nom", "url": "URL", "type": "lab"}]
+          "objective": "Objectif précis et mesurable",
+          "steps": ["Étape détaillée avec instructions claires", "Deuxième étape avec critères de réussite"],
+          "tips": ["Conseil pratique"],
+          "links": [{"label": "Nom", "url": "URL spécifique", "type": "lab"}]
         }
       },
       {
