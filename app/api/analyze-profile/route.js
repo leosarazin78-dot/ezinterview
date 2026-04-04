@@ -7,21 +7,21 @@ export async function POST(request) {
   try {
     const { jobData, cvText, linkedinUrl, experienceLevel } = await request.json();
     if (!jobData || !cvText)
-      return Response.json({ error: "Donnees manquantes" }, { status: 400 });
+      return Response.json({ error: "Données manquantes" }, { status: 400 });
 
     let profileContent = cvText.slice(0, 6000);
     if (linkedinUrl) {
       profileContent += `\n\nProfil LinkedIn : ${linkedinUrl}`;
     }
 
-    const levelLabel = experienceLevel || "non precise";
+    const levelLabel = experienceLevel || "non précisé";
     const levelGuidance = {
       "Junior (0-2 ans)": "Ce candidat débute. Valorise les formations, stages, projets personnels et la motivation. Sois particulièrement encourageant sur les compétences émergentes.",
       "Confirmé (3-7 ans)": "Ce candidat a de l'expérience. Valorise les réalisations concrètes, les responsabilités prises et la progression. Sois équilibré et constructif.",
       "Senior (8+ ans)": "Ce candidat est expérimenté. Valorise le leadership, l'expertise approfondie, les contributions stratégiques. Sois exigeant mais juste."
     };
 
-    const guidance = levelGuidance[levelLabel] || "Evalue le profil de maniere equilibree.";
+    const guidance = levelGuidance[levelLabel] || "Évalue le profil de manière équilibrée.";
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
@@ -29,54 +29,59 @@ export async function POST(request) {
       messages: [
         {
           role: "user",
-          content: `Compare ce profil candidat avec cette offre d'emploi. Sois ENCOURAGEANT et CONSTRUCTIF.
+          content: `Compare ce profil candidat avec cette offre d'emploi.
 
-NIVEAU D'EXPERIENCE : ${levelLabel}
+REGLE ABSOLUE : Sois HONNÊTE et PRÉCIS. NE MENS PAS sur les compétences du candidat.
+- Si une compétence n'apparaît NULLE PART dans le CV, elle est "weak". Point final.
+- N'invente JAMAIS d'expérience que le CV ne mentionne pas.
+- Si le CV ne mentionne pas du tout React, ne dis pas "partial" — c'est "weak".
+- Si le CV mentionne JavaScript mais pas React spécifiquement, c'est "partial" pour React (expérience connexe).
+- Mieux vaut dire honnêtement "tu n'as pas cette compétence, mais tu peux l'acquérir" que mentir.
+- C'est OK d'avoir beaucoup de "weak" — l'objectif est de BIEN PRÉPARER, pas de flatter.
+
+NIVEAU D'EXPÉRIENCE : ${levelLabel}
 ${guidance}
 
 OFFRE :
 Poste : ${jobData.title} chez ${jobData.company}
-Competences requises : ${jobData.requirements?.map((r) => r.label).join(", ")}
+Compétences requises : ${jobData.requirements?.map((r) => r.label).join(", ")}
 
 PROFIL DU CANDIDAT :
 ${profileContent}
 
-Retourne UNIQUEMENT du JSON strict, un objet avec cette structure :
+Retourne UNIQUEMENT du JSON strict :
 
 {
-  "overallScore": 72,
-  "summary": "Resume encourageant en 2-3 phrases. Souligne les points forts et le potentiel. Ex: Ton profil montre de solides bases en X et Y. Avec une preparation ciblee sur Z, tu as toutes les chances de reussir.",
+  "overallScore": 45,
+  "summary": "Résumé HONNÊTE en 2-3 phrases. Commence par les vrais points forts, puis indique clairement les lacunes. Termine par une note encourageante sur la préparation possible. Exemple : Tu as de solides bases en X. En revanche, Y et Z ne figurent pas dans ton parcours actuel. La bonne nouvelle : ces compétences s'acquièrent avec une préparation ciblée.",
   "stats": {
-    "strongCount": 3,
+    "strongCount": 1,
     "partialCount": 2,
-    "weakCount": 1,
-    "topStrength": "Nom de la competence la plus forte",
-    "improvementTip": "Un conseil motivant et actionnable pour progresser rapidement"
+    "weakCount": 4,
+    "topStrength": "La compétence la plus forte du candidat (ou vide si aucune)",
+    "improvementTip": "Conseil concret et actionnable pour la lacune la plus critique"
   },
   "matches": [
     {
       "reqId": 1,
-      "label": "Nom de la competence requise",
+      "label": "Nom de la compétence requise",
       "match": "strong",
-      "profileEvidence": "Explication courte et POSITIVE. Pour strong: valorise l'experience. Pour partial: souligne ce qui est deja acquis et ce qui manque. Pour weak: reste encourageant, indique que c'est faisable a preparer."
+      "profileEvidence": "Pour strong : cite la preuve EXACTE du CV. Pour partial : explique ce qui est acquis et ce qui manque. Pour weak : dis clairement que ce n'est pas dans le CV, et donne une piste pour l'apprendre."
     }
   ]
 }
 
-REGLES :
-- overallScore : score de 0 a 100 representant la compatibilite globale
-- Adapte ton evaluation au niveau d'experience : un junior n'a pas besoin de maitriser autant qu'un senior
-- Pour un junior, valorise les formations recentes, projets perso, stages, motivation
-- Pour un confirme, valorise les realisations concretes et l'experience terrain
-- Pour un senior, valorise l'expertise et le leadership
-- Sois genereux mais realiste : valorise les experiences connexes, les transferable skills
-- Pour chaque match, donne une evidence CONCRETE basee sur le CV
-- summary : TOUJOURS positif et motivant, meme si le score est bas
-- stats.improvementTip : conseil actionnable et motivant
-- "strong" = maitrise directe ou experience significative
-- "partial" = bases solides ou experience connexe
-- "weak" = peu de couverture mais preparable
-- Pas de caracteres speciaux, guillemets courbes ou retours a la ligne dans les strings
+RÈGLES DE CLASSEMENT :
+- "strong" = le CV mentionne EXPLICITEMENT cette compétence avec de l'expérience concrète
+- "partial" = le CV mentionne une compétence CONNEXE ou un domaine proche (ex: JavaScript → TypeScript est partial)
+- "weak" = RIEN dans le CV ne couvre cette compétence, même de loin. C'est le classement par défaut si tu n'es pas sûr.
+
+RÈGLES GÉNÉRALES :
+- overallScore : reflète VRAIMENT la couverture. 3 strong sur 8 requirements = ~35-40%, pas 70%
+- Ne gonfle PAS le score pour faire plaisir. Un score bas + un bon plan = meilleur résultat qu'un faux score élevé
+- Pour chaque match, la profileEvidence doit citer un élément RÉEL du CV ou dire clairement "Non mentionné dans votre CV"
+- summary : TOUJOURS encourageant sur la possibilité de progresser, mais HONNÊTE sur l'état actuel
+- Pas de caractères spéciaux, guillemets courbes ou retours à la ligne dans les strings
 
 Retourne UNIQUEMENT le JSON valide, rien d'autre.`,
         },
@@ -87,15 +92,14 @@ Retourne UNIQUEMENT le JSON valide, rien d'autre.`,
     const parsed = extractJSONObject(text);
     if (!parsed)
       return Response.json(
-        { error: "Erreur d'analyse. Reessaie." },
+        { error: "Erreur d'analyse. Réessaie." },
         { status: 500 }
       );
 
-    // Compatibilite : si l'ancien format (tableau) est retourne, convertir
     if (Array.isArray(parsed)) {
       return Response.json({
-        overallScore: 65,
-        summary: "Analyse terminee. Selectionne tes priorites pour generer ton plan.",
+        overallScore: 40,
+        summary: "Analyse terminée. Ton plan de préparation sera adapté à tes lacunes.",
         stats: { strongCount: 0, partialCount: 0, weakCount: 0, topStrength: "", improvementTip: "" },
         matches: parsed,
       });

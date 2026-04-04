@@ -276,6 +276,7 @@ function LandingPage({ user, onLogin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [currentDay, setCurrentDay] = useState(0);
 
   const handleEmail = async (e) => {
     e.preventDefault();
@@ -302,6 +303,23 @@ function LandingPage({ user, onLogin }) {
     } catch (err) { setError(err.message); setLoading(false); }
   };
 
+  // Auto-advance mockup days every 2 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDay(d => (d + 1) % 6);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const mockupDays = [
+    { day: 1, title: "Fondamentaux React & Hooks", status: "completed", progress: 100 },
+    { day: 2, title: "State Management avancé", status: "completed", progress: 100 },
+    { day: 3, title: "Tests & Qualité de code", status: "progress", progress: 60 },
+    { day: 4, title: "Architecture & Patterns", status: "locked", progress: 0 },
+    { day: 5, title: "Culture d'entreprise & Entretien", status: "locked", progress: 0 },
+    { day: 6, title: "Révision & Quiz final", status: "locked", progress: 0 },
+  ];
+
   const features = [
     { icon: "📚", title: "Sources fiables, vraiment", desc: "Légifrance, MDN, PubMed, Investopedia, Coursera, docs officielles." },
     { icon: "🎯", title: "Fini le hors-sujet", desc: "Chaque ressource est adaptée à l'offre que TU as fournie." },
@@ -314,10 +332,14 @@ function LandingPage({ user, onLogin }) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
         .ez-card { transition: all 0.2s ease; cursor: pointer; }
         .ez-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
         .ez-btn { transition: all 0.15s ease; }
         .ez-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.35); }
+        .ez-mockup-day { animation: slideIn 0.5s ease; }
+        .ez-mockup-current { animation: pulse 1s ease-in-out infinite; }
         @media (max-width: 768px) {
           .ez-hero-grid { grid-template-columns: 1fr !important; }
           .ez-hero-text h1 { font-size: 32px !important; }
@@ -342,7 +364,7 @@ function LandingPage({ user, onLogin }) {
             <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
             </div>
-            <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}>EzInterview</span>
+            <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}>EntretienZen</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {user ? (
@@ -358,15 +380,15 @@ function LandingPage({ user, onLogin }) {
       </nav>
 
       {/* ─── Hero ─── */}
-      <section style={{ background: T.card, borderBottom: `1px solid ${T.border}` }}>
-        <div className="ez-hero-grid ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "120px 32px 80px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+      <section style={{ background: T.bg, borderBottom: `1px solid ${T.border}` }}>
+        <div className="ez-hero-grid ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
           <div className="ez-hero-text" style={{ animation: "fadeIn 0.5s ease" }}>
             <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.accentLt, fontSize: 13, fontWeight: 600, color: T.accent, marginBottom: 32 }}>Nouveau : tous les métiers</div>
             <h1 style={{ fontSize: 48, fontWeight: 900, lineHeight: 1.1, margin: "0 0 24px", letterSpacing: "-1.5px", color: T.text }}>
               Arrive en entretien avec l'assurance de celui qui a déjà les réponses.
             </h1>
             <p style={{ fontSize: 18, color: T.muted, margin: "0 0 40px", lineHeight: 1.8, maxWidth: 550 }}>
-              La plupart des candidats ne savent pas par où commencer. EzInterview crée un plan de préparation personnalisé, jour par jour, avec sources fiables et quiz adaptés à ton secteur.
+              La plupart des candidats ne savent pas par où commencer. EntretienZen crée un plan de préparation personnalisé, jour par jour, avec sources fiables et quiz adaptés à ton secteur.
             </p>
             <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 48 }}>
               <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: T.r, padding: "14px 32px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
@@ -377,25 +399,86 @@ function LandingPage({ user, onLogin }) {
           </div>
 
           <div className="ez-hero-mockup" style={{ animation: "fadeIn 0.7s ease" }}>
-            <div style={{ background: T.bg, borderRadius: 24, padding: 32, border: `1px solid ${T.border}`, boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+            <div style={{ background: T.card, borderRadius: 24, padding: 32, border: `1px solid ${T.border}`, boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20 }}>📋</div>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Plan de préparation</div>
-                  <div style={{ fontSize: 12, color: T.muted }}>Généré en 30 secondes</div>
+                  <div style={{ fontSize: 12, color: T.muted }}>Développeur Frontend React</div>
                 </div>
               </div>
-              {["Fondamentaux du poste", "Compétences techniques", "Culture d'entreprise", "Simulation d'entretien", "Révision & Quiz final"].map((day, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: T.r, background: T.card, border: `1px solid ${i <= 1 ? T.greenBd : i === 2 ? T.accentBd : T.border}`, marginBottom: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: i <= 1 ? T.greenLt : i === 2 ? T.accentLt : "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: i <= 1 ? T.green : i === 2 ? T.accent : T.muted, flexShrink: 0 }}>
-                    {i <= 1 ? "✓" : i === 2 ? "▶" : `J${i + 1}`}
+              {mockupDays.map((d, i) => (
+                <div
+                  key={i}
+                  className={`ez-mockup-day ${i === currentDay ? "ez-mockup-current" : ""}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "12px 14px",
+                    borderRadius: T.r,
+                    background: T.card,
+                    border: `1px solid ${
+                      d.status === "completed"
+                        ? T.greenBd
+                        : d.status === "progress"
+                        ? T.accentBd
+                        : T.border
+                    }`,
+                    marginBottom: 10,
+                    opacity: i <= currentDay ? 1 : 0.6,
+                    transition: "all 0.4s ease",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      background:
+                        d.status === "completed"
+                          ? T.greenLt
+                          : d.status === "progress"
+                          ? T.accentLt
+                          : "#F1F5F9",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color:
+                        d.status === "completed"
+                          ? T.green
+                          : d.status === "progress"
+                          ? T.accent
+                          : T.muted,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {d.status === "completed" ? "✓" : d.status === "progress" ? "▶" : `J${d.day}`}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: i > 2 ? T.muted : T.text }}>Jour {i + 1}</div>
-                    <div style={{ fontSize: 12, color: T.muted }}>{day}</div>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: d.status === "locked" ? T.muted : T.text,
+                      }}
+                    >
+                      Jour {d.day}
+                    </div>
+                    <div style={{ fontSize: 12, color: T.muted }}>{d.title}</div>
                   </div>
-                  {i <= 1 && <span style={{ fontSize: 11, fontWeight: 700, color: T.green }}>100%</span>}
-                  {i === 2 && <span style={{ fontSize: 11, fontWeight: 700, color: T.accent }}>45%</span>}
+                  {d.status === "completed" && (
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.green }}>
+                      100%
+                    </span>
+                  )}
+                  {d.status === "progress" && (
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.accent }}>
+                      {d.progress}%
+                    </span>
+                  )}
                 </div>
               ))}
               <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: T.r, background: T.greenLt, display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${T.greenBd}` }}>
@@ -408,8 +491,8 @@ function LandingPage({ user, onLogin }) {
       </section>
 
       {/* ─── How it works ─── */}
-      <section style={{ background: T.card, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
-        <div className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "160px 32px" }}>
+      <section style={{ background: T.bg, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+        <div className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px" }}>
           <div style={{ textAlign: "center", marginBottom: 60 }}>
             <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.orangeLt, fontSize: 12, fontWeight: 700, color: T.orange, marginBottom: 16, textTransform: "uppercase", letterSpacing: "1px" }}>Comment ça marche</div>
             <h2 style={{ fontSize: 32, fontWeight: 800, margin: 0, color: T.text }}>3 étapes simples</h2>
@@ -420,7 +503,7 @@ function LandingPage({ user, onLogin }) {
               { title: "Matching CV", desc: "Compare ton profil à l'offre. On identifie tes forces et tes points à travailler.", icon: "📄", n: 2 },
               { title: "Plan de préparation", desc: "Plan jour par jour : cours, exercices, quiz et ressources adaptées à ton métier.", icon: "🎯", n: 3 },
             ].map((c, i) => (
-              <div key={i} className="ez-card" style={{ borderRadius: T.r, background: T.bg, border: `1px solid ${T.border}`, padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
+              <div key={i} className="ez-card" style={{ borderRadius: T.r, background: T.card, border: `1px solid ${T.border}`, padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ width: 56, height: 56, borderRadius: T.r, background: T.accentLt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>{c.icon}</div>
                 <div>
                   <div style={{ display: "inline-block", padding: "4px 12px", borderRadius: 20, background: T.accentLt, fontSize: 11, fontWeight: 700, color: T.accent, marginBottom: 8, textTransform: "uppercase" }}>Étape {c.n}</div>
@@ -434,7 +517,7 @@ function LandingPage({ user, onLogin }) {
       </section>
 
       {/* ─── Features ─── */}
-      <section className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "160px 32px" }}>
+      <section className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px" }}>
         <div style={{ textAlign: "center", marginBottom: 60 }}>
           <h2 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 12px", color: T.text }}>Tout pour réussir ton entretien</h2>
           <p style={{ fontSize: 16, color: T.muted, margin: 0, maxWidth: 650, marginLeft: "auto", marginRight: "auto" }}>Des outils complets et une préparation sérieuse, pas des promesses creuses</p>
@@ -453,7 +536,7 @@ function LandingPage({ user, onLogin }) {
       </section>
 
       {/* ─── CTA ─── */}
-      <section className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "160px 32px" }}>
+      <section className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px" }}>
         <div className="ez-cta-box" style={{ maxWidth: 700, margin: "0 auto", padding: "64px 48px", borderRadius: 24, background: T.text, color: "#fff", textAlign: "center" }}>
           <h2 style={{ fontSize: 36, fontWeight: 900, margin: "0 0 16px", letterSpacing: "-0.8px" }}>Prêt à décrocher ton poste ?</h2>
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.8)", margin: "0 0 32px", lineHeight: 1.7 }}>
@@ -472,7 +555,7 @@ function LandingPage({ user, onLogin }) {
             <div style={{ width: 32, height: 32, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
             </div>
-            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}>EzInterview</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}>EntretienZen</span>
           </div>
           <span style={{ fontSize: 13, color: T.muted }}>Open source — 2024-2026</span>
         </div>
@@ -607,6 +690,14 @@ export default function EzInterview() {
           setUser(user);
           setView("dashboard");
           setStep("dashboard");
+          // Load saved plans
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+              const plans = await safeFetch("/api/plans", { headers: { "Authorization": `Bearer ${session.access_token}` } });
+              setSavedPlans(plans);
+            }
+          } catch (e) { console.error("Load plans error:", e); }
         }
       } catch (err) {
         console.error("Auth error:", err);
@@ -663,6 +754,31 @@ export default function EzInterview() {
       });
       setPlan(res);
       setStep("plan");
+
+      // Auto-save to Supabase
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          await safeFetch("/api/plans", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+            body: JSON.stringify({
+              job_title: jobData?.title || jobData?.job_title || "Sans titre",
+              company: jobData?.company || "",
+              job_url: jobUrl,
+              job_data: jobData,
+              profile: { cvText, linkedinUrl, experienceLevel },
+              matches: stats?.matches || [],
+              plan_data: res,
+            }),
+          });
+          // Refresh saved plans
+          const plans = await safeFetch("/api/plans", { headers: { "Authorization": `Bearer ${session.access_token}` } });
+          setSavedPlans(plans);
+        }
+      } catch (saveErr) {
+        console.error("Auto-save error:", saveErr);
+      }
     } catch (err) {
       setPlanError(err.message);
     } finally {
@@ -700,13 +816,26 @@ export default function EzInterview() {
       `}</style>
 
       <nav style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 18, fontWeight: 700, color: T.text }}>EzInterview</span>
+        <span style={{ fontSize: 18, fontWeight: 700, color: T.text }}>EntretienZen</span>
         <button onClick={() => setStep("dashboard")} style={btnS}>Mon espace</button>
       </nav>
 
       {step === "dashboard" && (
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
-          <PlansDashboard plans={savedPlans} onSelect={(id) => { setCurrentPlanId(id); setStep("plan"); }} onNew={() => { setStep("input"); setActiveTab("offer"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setCvFile(null); setJobUrl(""); setExperienceLevel(""); }} user={user} onLogout={handleLogout} />
+          <PlansDashboard
+            plans={savedPlans}
+            onSelect={(id) => {
+              const found = savedPlans.find(p => p.id === id);
+              if (found?.plan_data) {
+                setPlan(found.plan_data);
+                setJobData(found.job_data);
+                setStep("plan");
+              }
+            }}
+            onNew={() => { setStep("input"); setActiveTab("offer"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setCvFile(null); setJobUrl(""); setExperienceLevel(""); }}
+            user={user}
+            onLogout={handleLogout}
+          />
         </div>
       )}
 
@@ -879,9 +1008,24 @@ export default function EzInterview() {
                 </div>
               </div>
 
-              <button onClick={generatePlan} disabled={generating} style={{ ...btnP, width: "100%", marginTop: 16 }}>
-                {generating ? "Génération en cours..." : "Préparer mon plan"}
-              </button>
+              {generating ? (
+                <div style={{ textAlign: "center", padding: 48 }}>
+                  <Spin text="" />
+                  <h2 style={{ margin: "24px 0 8px", fontSize: 20, fontWeight: 700, color: T.text }}>Création de ton plan personnalisé...</h2>
+                  <p style={{ fontSize: 14, color: T.muted, maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>
+                    L'IA analyse les meilleures ressources pour ton profil. Cela peut prendre 1 à 2 minutes.
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 24 }}>
+                    {["Analyse des compétences", "Recherche de ressources", "Construction du plan"].map((s, i) => (
+                      <span key={i} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: T.accentLt, color: T.accent, border: `1px solid ${T.accentBd}`, animation: `fadeIn ${0.5 + i * 0.3}s ease` }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <button onClick={generatePlan} disabled={generating} style={{ ...btnP, width: "100%", marginTop: 16 }}>
+                  {generating ? "Génération en cours..." : "Préparer mon plan"}
+                </button>
+              )}
               {planError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{planError}</p>}
             </>
           )}

@@ -110,9 +110,48 @@ const LEVEL_CONFIG = {
   }
 };
 
-async function generateWithRetry(prompt, maxRetries = 2) {
+// Triple validation : structure JSON + cohérence contenu + URLs valides
+function validatePlanDeep(parsed) {
+  if (!Array.isArray(parsed) || parsed.length === 0) return { ok: false, reason: "not an array" };
+
+  for (const day of parsed) {
+    if (!day.day || !day.title || !Array.isArray(day.items) || day.items.length === 0) {
+      return { ok: false, reason: `day ${day.day}: missing day/title/items` };
+    }
+    for (const item of day.items) {
+      if (!item.title || !item.type) {
+        return { ok: false, reason: `day ${day.day}: item missing title or type` };
+      }
+      // Vérifier que les liens utilisent les domaines autorisés
+      const links = item.content?.links || [];
+      for (const link of links) {
+        if (link.url && !VERIFIED_DOMAINS.some(d => link.url.includes(d))) {
+          return { ok: false, reason: `day ${day.day}: URL non vérifiée: ${link.url}` };
+        }
+      }
+    }
+  }
+  return { ok: true };
+}
+
+// Liste des domaines autorisés pour validation des URLs
+const VERIFIED_DOMAINS = [
+  "coursera.org", "edx.org", "openclassrooms.com", "fun-mooc.fr", "khanacademy.org", "ocw.mit.edu",
+  "developer.mozilla.org", "react.dev", "docs.python.org", "nodejs.org", "w3schools.com", "leetcode.com", "exercism.org", "github.com",
+  "investopedia.com", "lesechos.fr", "hbr.org", "banque-france.fr", "insee.fr",
+  "legifrance.gouv.fr", "service-public.fr", "eur-lex.europa.eu", "dalloz.fr",
+  "who.int", "has-sante.fr", "pubmed.ncbi.nlm.nih.gov", "vidal.fr",
+  "academy.hubspot.com", "skillshop.withgoogle.com", "statista.com",
+  "architectes.org", "batiactu.com",
+  "eduscol.education.fr", "education.gouv.fr", "reseau-canope.fr",
+  "artisanat.fr", "compagnons-du-devoir.com",
+  "youtube.com", "fr.wikipedia.org", "scholar.google.com",
+];
+
+async function generateWithRetry(prompt, maxRetries = 3) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      console.log(`Tentative ${attempt + 1}/${maxRetries} de génération du plan...`);
       const message = await anthropic.messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 8192,
@@ -123,17 +162,18 @@ async function generateWithRetry(prompt, maxRetries = 2) {
       const parsed = extractJSONArray(text);
 
       if (parsed && Array.isArray(parsed) && parsed.length > 0) {
-        const valid = parsed.every(
-          (d) => d.day && d.title && Array.isArray(d.items)
-        );
-        if (valid) return parsed;
+        // Triple check : structure + contenu + URLs
+        const validation = validatePlanDeep(parsed);
+        if (validation.ok) {
+          console.log(`Plan validé à la tentative ${attempt + 1}`);
+          return parsed;
+        }
+        console.warn(`Tentative ${attempt + 1}: validation échouée — ${validation.reason}`);
+      } else {
+        console.warn(`Tentative ${attempt + 1}: JSON invalide, nouvelle tentative...`);
       }
-
-      console.warn(
-        `Attempt ${attempt + 1}: invalid JSON structure, retrying...`
-      );
     } catch (err) {
-      console.error(`Attempt ${attempt + 1} error:`, err.message);
+      console.error(`Tentative ${attempt + 1} erreur:`, err.message);
       if (attempt === maxRetries - 1) throw err;
     }
   }
