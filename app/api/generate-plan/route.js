@@ -11,8 +11,8 @@ COURS & FORMATION :
 - https://www.coursera.org — cours universitaires
 - https://www.edx.org — cours en ligne
 - https://openclassrooms.com — cours FR
-- https://www.khanacademy.org — fondamentaux
 - https://www.fun-mooc.fr — MOOC francais
+- https://www.khanacademy.org — fondamentaux
 - https://ocw.mit.edu — MIT OpenCourseWare
 
 TECH & DEV :
@@ -49,11 +49,66 @@ MARKETING :
 - https://skillshop.withgoogle.com — Google certs
 - https://www.statista.com — statistiques
 
+ARCHITECTURE & BTP :
+- https://www.architectes.org — Ordre des architectes FR
+- https://www.batiactu.com — actualites BTP
+- https://www.legifrance.gouv.fr — reglementations construction
+
+EDUCATION :
+- https://eduscol.education.fr — ressources pedagogiques FR
+- https://www.education.gouv.fr — Education nationale
+- https://www.reseau-canope.fr — ressources enseignants
+
+ARTISANAT & METIERS MANUELS :
+- https://www.artisanat.fr — Chambre des Metiers
+- https://www.compagnons-du-devoir.com — formation compagnons
+
 GENERAL :
 - https://www.youtube.com — videos educatives
 - https://fr.wikipedia.org — definitions
 - https://scholar.google.com — articles academiques
 `;
+
+// Configuration d'intensite
+const INTENSITY_CONFIG = {
+  "Leger": {
+    dailyTime: "30 min",
+    itemsPerDay: "2-3",
+    quizQuestions: "3-5",
+    description: "plan leger adapte a un emploi du temps charge"
+  },
+  "Standard": {
+    dailyTime: "1h",
+    itemsPerDay: "3-5",
+    quizQuestions: "5-8",
+    description: "plan equilibre entre effort et efficacite"
+  },
+  "Intensif": {
+    dailyTime: "2h+",
+    itemsPerDay: "5-7",
+    quizQuestions: "8-10",
+    description: "plan intensif pour une preparation en profondeur"
+  }
+};
+
+// Configuration niveau d'experience
+const LEVEL_CONFIG = {
+  "Junior (0-2 ans)": {
+    resourceLevel: "debutant/intermediaire",
+    focus: "Privilegie les tutoriels pas-a-pas, cours d'introduction, exercices guides. Explique les concepts de base. Recommande des formations structurees (Coursera, OpenClassrooms, edX).",
+    quizDifficulty: "Questions de comprehension et de definition, pas de pieges."
+  },
+  "Confirme (3-7 ans)": {
+    resourceLevel: "intermediaire/avance",
+    focus: "Privilegie les etudes de cas, articles approfondis, exercices pratiques realistes. Moins d'explications basiques, plus de mise en situation.",
+    quizDifficulty: "Questions de mise en situation et d'analyse, quelques questions avancees."
+  },
+  "Senior (8+ ans)": {
+    resourceLevel: "avance/expert",
+    focus: "Privilegie les articles de fond (HBR, publications specialisees), cas complexes, vision strategique. Focus sur le leadership, la prise de decision, les tendances du secteur.",
+    quizDifficulty: "Questions strategiques, de jugement et de leadership. Pas de questions basiques."
+  }
+};
 
 async function generateWithRetry(prompt, maxRetries = 2) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -89,31 +144,33 @@ export async function POST(request) {
   try {
     const {
       jobData,
-      matches,
-      priorities,
-      interviewDate,
-      nextInterlocutor,
-      companyInfo,
+      stats,
+      intensity,
+      experienceLevel,
     } = await request.json();
 
-    if (!priorities?.length || !interviewDate)
+    if (!jobData)
       return Response.json({ error: "Donnees manquantes" }, { status: 400 });
 
-    const daysAvailable = Math.max(
-      1,
-      Math.ceil((new Date(interviewDate) - new Date()) / 86400000)
-    );
-    const planDays = Math.min(daysAvailable, 14);
+    // Determiner le nombre de jours (7 par defaut, adapte a l'intensite)
+    const intensityKey = intensity || "Standard";
+    const ic = INTENSITY_CONFIG[intensityKey] || INTENSITY_CONFIG["Standard"];
+    const planDays = intensityKey === "Leger" ? 10 : intensityKey === "Intensif" ? 5 : 7;
 
-    const priorityLabels = priorities
-      .map(
-        (id) =>
-          matches?.find((m) => m.reqId === id || m.reqId === String(id))?.label
-      )
-      .filter(Boolean);
+    // Extraire les competences a travailler depuis stats
+    const matches = stats?.matches || [];
+    const weakAndPartial = matches
+      .filter((m) => m.match === "weak" || m.match === "partial")
+      .map((m) => m.label);
+    const strong = matches
+      .filter((m) => m.match === "strong")
+      .map((m) => m.label);
+    const allSkills = matches.map((m) => m.label);
 
-    const sector =
-      companyInfo?.sector || jobData?.companyInfo?.sector || "non precise";
+    const levelKey = experienceLevel || "Confirme (3-7 ans)";
+    const lc = LEVEL_CONFIG[levelKey] || LEVEL_CONFIG["Confirme (3-7 ans)"];
+
+    const sector = jobData?.companyInfo?.sector || "non precise";
     const company = jobData?.company || "l'entreprise";
 
     const prompt = `Tu es un expert en preparation d'entretien. Genere un plan de ${planDays} jours en JSON valide.
@@ -121,10 +178,18 @@ export async function POST(request) {
 CONTEXTE :
 - Poste : ${jobData?.title} chez ${company}
 - Secteur : ${sector}
-- Entretien dans ${daysAvailable} jours${nextInterlocutor ? ` avec ${nextInterlocutor}` : ""}
-- Priorites : ${priorityLabels.join(", ")}
-${companyInfo?.competitors?.length ? `- Concurrents : ${companyInfo.competitors.join(", ")}` : ""}
-${companyInfo?.techStack?.length ? `- Outils : ${companyInfo.techStack.join(", ")}` : ""}
+- Intensite : ${ic.description} (${ic.dailyTime} par jour)
+- Niveau d'experience : ${levelKey}
+- Competences a renforcer : ${weakAndPartial.length > 0 ? weakAndPartial.join(", ") : "aucune faiblesse identifiee"}
+- Points forts a consolider : ${strong.length > 0 ? strong.join(", ") : "a evaluer"}
+- Toutes les competences requises : ${allSkills.join(", ")}
+${jobData?.companyInfo?.competitors?.length ? `- Concurrents : ${jobData.companyInfo.competitors.join(", ")}` : ""}
+${jobData?.companyInfo?.techStack?.length ? `- Outils du poste : ${jobData.companyInfo.techStack.join(", ")}` : ""}
+
+ADAPTATION AU NIVEAU (${levelKey}) :
+${lc.focus}
+Niveau des ressources : ${lc.resourceLevel}
+Quiz : ${lc.quizDifficulty}
 
 ${VERIFIED_SOURCES}
 
@@ -176,16 +241,18 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
 ]
 
 REGLES :
-1. ${planDays} jours, 3-5 items chacun
-2. Chaque jour finit par un quiz (5-8 questions)
+1. ${planDays} jours, ${ic.itemsPerDay} items chacun
+2. Chaque jour finit par un quiz (${ic.quizQuestions} questions)
 3. Les notes ont des miniQuiz (1-2 questions)
 4. URLS : utilise UNIQUEMENT les URLs racines de la liste ci-dessus. NE PAS inventer de sous-pages.
-5. Adapte au domaine du poste
+5. Adapte au domaine du poste (${sector}). Exemples de domaines : developpeur, architecte, juriste, comptable, marketeur, enseignant, artisan, medecin, commercial, RH, data analyst, designer, chef de projet...
 6. Un jour sur ${company} : produits, actualites, culture
 7. Dernier jour = revision + quiz final 10 questions
-8. Contenu concret avec vrais exemples
+8. Contenu concret avec vrais exemples adaptes au secteur
 9. JSON COMPLET et VALIDE, pas de troncature
 10. Pas de guillemets courbes ni retours a la ligne dans les strings
+11. Concentre les premiers jours sur les competences faibles/partielles, les derniers jours sur la consolidation des points forts
+12. Adapte la difficulte au niveau ${levelKey} : ${lc.quizDifficulty}
 
 JSON uniquement :`;
 
@@ -195,7 +262,7 @@ JSON uniquement :`;
       return Response.json(
         {
           error:
-            "Impossible de generer le plan. Reessaie ou reduis le nombre de jours.",
+            "Impossible de generer le plan. Reessaie.",
         },
         { status: 500 }
       );
