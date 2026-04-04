@@ -398,8 +398,8 @@ function LandingPage({ user, onLogin }) {
               La plupart des candidats ne savent pas par où commencer. EntretienZen crée un plan de préparation personnalisé, jour par jour, avec sources fiables et quiz adaptés à ton secteur.
             </p>
             <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 48 }}>
-              <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: T.r, padding: "14px 32px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                Préparer mon entretien gratuitement
+              <button className="ez-btn" onClick={() => user ? onLogin?.() : setShowAuth(true)} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: T.r, padding: "14px 32px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                {user ? "Accéder à mon espace" : "Préparer mon entretien gratuitement"}
               </button>
               <span style={{ fontSize: 13, color: T.muted }}>Sans carte bancaire</span>
             </div>
@@ -521,8 +521,8 @@ function LandingPage({ user, onLogin }) {
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.8)", margin: "0 0 32px", lineHeight: 1.7 }}>
             Commence ta préparation gratuitement. Sans carte bancaire, en 2 minutes.
           </p>
-          <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: T.r, padding: "16px 40px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-            Commencer maintenant
+          <button className="ez-btn" onClick={() => user ? onLogin?.() : setShowAuth(true)} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: T.r, padding: "16px 40px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+            {user ? "Accéder à mon espace" : "Commencer maintenant"}
           </button>
         </div>
       </section>
@@ -661,14 +661,41 @@ export default function EzInterview() {
   const [expandedItems, setExpandedItems] = useState({});
   const [completedDays, setCompletedDays] = useState({});
 
+  // ─── Hash-based routing ───
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (hash === "dashboard" && user) { setView("dashboard"); setStep("dashboard"); }
+      else if (hash === "prepare" && user) { setView("dashboard"); setStep("input"); }
+      else if (hash === "plan" && user && plan) { setView("dashboard"); setStep("plan"); }
+      else if (hash === "" || hash === "home") { setView("landing"); }
+    };
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, [user, plan]);
+
+  // Update hash when view/step changes + track in analytics
+  useEffect(() => {
+    let newPath = window.location.pathname;
+    if (view === "landing") { if (window.location.hash !== "") window.history.replaceState(null, "", window.location.pathname); }
+    else if (step === "dashboard") { window.history.replaceState(null, "", "#dashboard"); newPath += "#dashboard"; }
+    else if (step === "input") { window.history.replaceState(null, "", "#prepare"); newPath += "#prepare"; }
+    else if (step === "plan") { window.history.replaceState(null, "", "#plan"); newPath += "#plan"; }
+    // Track page view in GA if available
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("config", window.__GA_ID || "", { page_path: newPath });
+    }
+  }, [view, step]);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setUser(user);
-          setView("dashboard");
-          setStep("dashboard");
+          const hash = window.location.hash.replace("#", "");
+          if (hash === "prepare") { setView("dashboard"); setStep("input"); }
+          else { setView("dashboard"); setStep("dashboard"); }
           // Load saved plans
           try {
             const { data: { session } } = await supabase.auth.getSession();
@@ -787,10 +814,27 @@ export default function EzInterview() {
         @media (max-width: 768px) {
           .ez-plan-sidebar { display: none !important; }
           .ez-plan-main { grid-template-columns: 1fr !important; }
-          .ez-step { padding: 16px !important; }
+          .ez-plan-container { grid-template-columns: 1fr !important; padding: 8px !important; gap: 8px !important; }
+          .ez-step { padding: 12px !important; }
           .ez-input-grid { grid-template-columns: 1fr !important; }
           .ez-stepper { font-size: 12px !important; }
           .ez-stepper button { padding: 10px 4px !important; font-size: 12px !important; }
+          .ez-plan-day-header { padding: 12px !important; }
+          .ez-plan-day-header h2 { font-size: 16px !important; margin-bottom: 4px !important; }
+          .ez-plan-day-header p { font-size: 11px !important; }
+          .ez-plan-item { padding: 12px !important; margin-bottom: 8px !important; }
+          .ez-plan-item h3 { font-size: 13px !important; }
+          .ez-plan-item-content p { font-size: 12px !important; line-height: 1.5 !important; }
+          .ez-plan-item-content .ez-key-point { font-size: 12px !important; padding-left: 6px !important; }
+          .ez-plan-mobile-days { display: flex !important; }
+          .ez-plan-nav-top { padding: 8px 12px !important; }
+        }
+        @media (max-width: 480px) {
+          .ez-plan-container { padding: 4px !important; }
+          .ez-plan-day-header { padding: 10px !important; }
+          .ez-plan-day-header h2 { font-size: 15px !important; }
+          .ez-plan-item { padding: 10px !important; }
+          .ez-plan-item h3 { font-size: 12px !important; }
         }
       `}</style>
 
@@ -1012,35 +1056,60 @@ export default function EzInterview() {
       )}
 
       {step === "plan" && plan && (
-        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 24, padding: 24, maxWidth: "100%", margin: "0 auto" }}>
-          <div className="ez-plan-sidebar" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="ez-plan-container" style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 24, padding: 24, maxWidth: "100%", margin: "0 auto" }}>
+          {/* Desktop sidebar */}
+          <div className="ez-plan-sidebar" style={{ display: "flex", flexDirection: "column", gap: 8, position: "sticky", top: 80, alignSelf: "start" }}>
+            <button onClick={() => { setStep("dashboard"); setExpandedItems({}); }} style={{ ...btnS, marginBottom: 8, fontSize: 12 }}>← Mes préparations</button>
             {plan.map((day, i) => (
-              <button key={i} onClick={() => setExpandedDay(i)} style={{ padding: "12px 16px", borderRadius: T.r, border: `1px solid ${expandedDay === i ? T.accent : T.border}`, background: expandedDay === i ? T.accentLt : T.card, color: T.text, textAlign: "left", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>
-                Jour {i + 1}
+              <button key={i} onClick={() => { setExpandedDay(i); setExpandedItems({}); }} style={{ padding: "10px 14px", borderRadius: T.r, border: `1px solid ${expandedDay === i ? T.accent : T.border}`, background: expandedDay === i ? T.accentLt : T.card, color: T.text, textAlign: "left", cursor: "pointer", fontFamily: "inherit", fontWeight: expandedDay === i ? 700 : 500, fontSize: 13 }}>
+                <span style={{ fontWeight: 700 }}>J{i + 1}</span> — {day.title?.slice(0, 25)}{day.title?.length > 25 ? "…" : ""}
               </button>
             ))}
           </div>
 
-          <div className="ez-plan-main" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
+          {/* Mobile horizontal day selector */}
+          <div className="ez-plan-mobile-days" style={{ display: "none", overflowX: "auto", gap: 6, paddingBottom: 8, WebkitOverflowScrolling: "touch", gridColumn: "1 / -1" }}>
+            <button onClick={() => { setStep("dashboard"); setExpandedItems({}); }} style={{ ...btnS, padding: "6px 10px", fontSize: 11, flexShrink: 0, whiteSpace: "nowrap" }}>←</button>
+            {plan.map((day, i) => (
+              <button key={i} onClick={() => { setExpandedDay(i); setExpandedItems({}); }}
+                style={{
+                  padding: "8px 14px", borderRadius: 20, border: `1px solid ${expandedDay === i ? T.accent : T.border}`,
+                  background: expandedDay === i ? T.accent : T.card, color: expandedDay === i ? "#fff" : T.text,
+                  fontWeight: expandedDay === i ? 700 : 500, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                  flexShrink: 0, whiteSpace: "nowrap",
+                }}>
+                J{i + 1}
+              </button>
+            ))}
+          </div>
+
+          <div className="ez-plan-main" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
             {plan[expandedDay] && (
               <>
-                <div style={card}>
-                  <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 700, color: T.text }}>Jour {expandedDay + 1}</h2>
-                  <p style={{ margin: "0 0 16px", fontSize: 13, color: T.muted }}>{plan[expandedDay].title}</p>
-                  <p style={{ margin: 0, fontSize: 13, color: T.text }}>{plan[expandedDay].focus}</p>
+                <div className="ez-plan-day-header" style={{ ...card, padding: 20 }}>
+                  <h2 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: T.text }}>Jour {expandedDay + 1} — {plan[expandedDay].title}</h2>
+                  <p style={{ margin: 0, fontSize: 12, color: T.muted }}>{plan[expandedDay].focus}</p>
+                  {/* Day navigation */}
+                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                    {expandedDay > 0 && <button onClick={() => { setExpandedDay(expandedDay - 1); setExpandedItems({}); }} style={{ ...btnS, padding: "4px 12px", fontSize: 12 }}>← Jour {expandedDay}</button>}
+                    {expandedDay < plan.length - 1 && <button onClick={() => { setExpandedDay(expandedDay + 1); setExpandedItems({}); }} style={{ ...btnS, padding: "4px 12px", fontSize: 12 }}>Jour {expandedDay + 2} →</button>}
+                  </div>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {plan[expandedDay].items?.map((item, i) => (
-                    <div key={i} style={card}>
-                      <div onClick={() => setExpandedItems(p => ({ ...p, [i]: !p[i] }))} style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
+                    <div key={i} className="ez-plan-item" style={{ ...card, padding: 16, marginBottom: 0 }}>
+                      <div onClick={() => setExpandedItems(p => ({ ...p, [i]: !p[i] }))} style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>{item.title}</h3>
-                          <p style={{ margin: "4px 0 0", fontSize: 12, color: T.muted }}><Badge v={typeV[item.type] || "default"}>{typeL[item.type] || item.type}</Badge></p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                            <Badge v={typeV[item.type] || "default"}>{typeL[item.type] || item.type}</Badge>
+                            {item.duration && <span style={{ fontSize: 11, color: T.muted }}>{item.duration}</span>}
+                          </div>
                         </div>
-                        <span style={{ color: T.muted }}>{expandedItems[i] ? "▼" : "▶"}</span>
+                        <span style={{ color: T.muted, fontSize: 12, flexShrink: 0 }}>{expandedItems[i] ? "▼" : "▶"}</span>
                       </div>
-                      {expandedItems[i] && <ItemContent item={item} />}
+                      {expandedItems[i] && <div className="ez-plan-item-content"><ItemContent item={item} /></div>}
                     </div>
                   ))}
                 </div>
