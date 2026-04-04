@@ -775,11 +775,18 @@ export default function EzInterview() {
     if (!stats) return;
     setGenerating(true); setPlanError("");
     try {
-      const res = await safeFetch("/api/generate-plan", {
+      // Lecture streaming : le backend envoie des heartbeats (espaces) puis le JSON final
+      const response = await fetch("/api/generate-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobData, stats, intensity, experienceLevel, interviewerRole }),
       });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const rawText = await response.text();
+      const trimmed = rawText.trim();
+      const res = JSON.parse(trimmed);
+      if (res.error) throw new Error(res.error);
+      if (!Array.isArray(res)) throw new Error("Format de plan invalide");
       setPlan(res);
       setStep("plan");
 

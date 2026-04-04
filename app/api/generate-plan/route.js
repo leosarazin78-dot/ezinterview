@@ -1,9 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { extractJSONArray } from "../../lib/parse-json";
 
+// Augmenter le timeout Next.js (300s = 5 min)
+export const maxDuration = 300;
+
 const anthropic = new Anthropic();
 
-// Instructions pour les liens et le contenu du plan
 const SOURCES_INSTRUCTIONS = `
 RÈGLES POUR LES LIENS ET LE CONTENU :
 
@@ -45,81 +47,30 @@ artisanat.fr, compagnons-du-devoir.com, youtube.com, fr.wikipedia.org, scholar.g
 5. Si tu ne connais pas d'URL spécifique pour un sujet, NE METS PAS de lien. Mets plus de contenu dans le summary et les keyPoints à la place.
 `;
 
-// Configuration d'intensite
 const INTENSITY_CONFIG = {
-  "Léger": {
-    dailyTime: "30 min",
-    itemsPerDay: "2-3",
-    quizQuestions: "3-5",
-    description: "plan léger adapté à un emploi du temps chargé"
-  },
-  "Standard": {
-    dailyTime: "1h",
-    itemsPerDay: "3-5",
-    quizQuestions: "5-8",
-    description: "plan équilibré entre effort et efficacité"
-  },
-  "Intensif": {
-    dailyTime: "2h+",
-    itemsPerDay: "5-7",
-    quizQuestions: "8-10",
-    description: "plan intensif pour une préparation en profondeur"
-  }
+  "Léger": { dailyTime: "30 min", itemsPerDay: "2-3", quizQuestions: "3-5", description: "plan léger adapté à un emploi du temps chargé" },
+  "Standard": { dailyTime: "1h", itemsPerDay: "3-5", quizQuestions: "5-8", description: "plan équilibré entre effort et efficacité" },
+  "Intensif": { dailyTime: "2h+", itemsPerDay: "5-7", quizQuestions: "8-10", description: "plan intensif pour une préparation en profondeur" },
 };
 
-// Configuration niveau d'experience
 const LEVEL_CONFIG = {
   "Junior (0-2 ans)": {
     resourceLevel: "débutant/intermédiaire",
     focus: "Privilégie les tutoriels pas-à-pas, cours d'introduction, exercices guidés. Explique les concepts de base. Recommande des formations structurées (Coursera, OpenClassrooms, edX).",
-    quizDifficulty: "Questions de compréhension et de définition, pas de pièges."
+    quizDifficulty: "Questions de compréhension et de définition, pas de pièges.",
   },
   "Confirmé (3-7 ans)": {
     resourceLevel: "intermédiaire/avancé",
     focus: "Privilégie les études de cas, articles approfondis, exercices pratiques réalistes. Moins d'explications basiques, plus de mise en situation.",
-    quizDifficulty: "Questions de mise en situation et d'analyse, quelques questions avancées."
+    quizDifficulty: "Questions de mise en situation et d'analyse, quelques questions avancées.",
   },
   "Senior (8+ ans)": {
     resourceLevel: "avancé/expert",
     focus: "Privilégie les articles de fond (HBR, publications spécialisées), cas complexes, vision stratégique. Focus sur le leadership, la prise de décision, les tendances du secteur.",
-    quizDifficulty: "Questions stratégiques, de jugement et de leadership. Pas de questions basiques."
-  }
+    quizDifficulty: "Questions stratégiques, de jugement et de leadership. Pas de questions basiques.",
+  },
 };
 
-// Triple validation : structure JSON + cohérence contenu + URLs valides
-function validatePlanDeep(parsed) {
-  if (!Array.isArray(parsed) || parsed.length === 0) return { ok: false, reason: "not an array" };
-
-  for (const day of parsed) {
-    if (!day.day || !day.title || !Array.isArray(day.items) || day.items.length === 0) {
-      return { ok: false, reason: `day ${day.day}: missing day/title/items` };
-    }
-    for (const item of day.items) {
-      if (!item.title || !item.type) {
-        return { ok: false, reason: `day ${day.day}: item missing title or type` };
-      }
-      // Vérifier que les liens utilisent les domaines autorisés et ne sont pas des pages d'accueil
-      const links = item.content?.links || [];
-      for (const link of links) {
-        if (!link.url) continue;
-        const domainOk = VERIFIED_DOMAINS.some(d => link.url.includes(d));
-        if (!domainOk) {
-          return { ok: false, reason: `day ${day.day}: URL non vérifiée: ${link.url}` };
-        }
-        // Rejeter les liens trop génériques (page d'accueil sans path)
-        try {
-          const u = new URL(link.url);
-          if (u.pathname === "/" && !u.search && !u.hash) {
-            return { ok: false, reason: `day ${day.day}: URL trop générique (page d'accueil): ${link.url}` };
-          }
-        } catch {}
-      }
-    }
-  }
-  return { ok: true };
-}
-
-// Liste des domaines autorisés pour validation des URLs
 const VERIFIED_DOMAINS = [
   "coursera.org", "edx.org", "openclassrooms.com", "fun-mooc.fr", "khanacademy.org", "ocw.mit.edu",
   "developer.mozilla.org", "react.dev", "docs.python.org", "nodejs.org", "w3schools.com", "leetcode.com", "exercism.org", "github.com",
@@ -133,82 +84,85 @@ const VERIFIED_DOMAINS = [
   "youtube.com", "fr.wikipedia.org", "scholar.google.com",
 ];
 
-async function generateWithRetry(prompt, maxRetries = 3) {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      console.log(`Tentative ${attempt + 1}/${maxRetries} de génération du plan...`);
-      const message = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 8192,
-        messages: [{ role: "user", content: prompt }],
-      });
-
-      const text = message.content[0].text;
-      const parsed = extractJSONArray(text);
-
-      if (parsed && Array.isArray(parsed) && parsed.length > 0) {
-        // Triple check : structure + contenu + URLs
-        const validation = validatePlanDeep(parsed);
-        if (validation.ok) {
-          console.log(`Plan validé à la tentative ${attempt + 1}`);
-          return parsed;
-        }
-        console.warn(`Tentative ${attempt + 1}: validation échouée — ${validation.reason}`);
-      } else {
-        console.warn(`Tentative ${attempt + 1}: JSON invalide, nouvelle tentative...`);
+function validatePlanDeep(parsed) {
+  if (!Array.isArray(parsed) || parsed.length === 0) return { ok: false, reason: "not an array" };
+  for (const day of parsed) {
+    if (!day.day || !day.title || !Array.isArray(day.items) || day.items.length === 0) {
+      return { ok: false, reason: `day ${day.day}: missing day/title/items` };
+    }
+    for (const item of day.items) {
+      if (!item.title || !item.type) {
+        return { ok: false, reason: `day ${day.day}: item missing title or type` };
       }
-    } catch (err) {
-      console.error(`Tentative ${attempt + 1} erreur:`, err.message);
-      if (attempt === maxRetries - 1) throw err;
+      const links = item.content?.links || [];
+      for (const link of links) {
+        if (!link.url) continue;
+        const domainOk = VERIFIED_DOMAINS.some((d) => link.url.includes(d));
+        if (!domainOk) {
+          // Au lieu de rejeter, on supprime le lien invalide silencieusement
+          link._invalid = true;
+          continue;
+        }
+        try {
+          const u = new URL(link.url);
+          if (u.pathname === "/" && !u.search && !u.hash) {
+            link._invalid = true;
+          }
+        } catch {
+          link._invalid = true;
+        }
+      }
+      // Nettoyer les liens invalides plutôt que rejeter tout le plan
+      if (item.content?.links) {
+        item.content.links = item.content.links.filter((l) => !l._invalid);
+      }
     }
   }
-  return null;
+  return { ok: true };
+}
+
+// Nettoie le plan et retourne null si la structure est invalide
+function cleanAndValidate(text) {
+  const parsed = extractJSONArray(text);
+  if (!parsed || !Array.isArray(parsed) || parsed.length === 0) return null;
+
+  const validation = validatePlanDeep(parsed);
+  if (!validation.ok) return null;
+
+  return parsed;
 }
 
 export async function POST(request) {
   try {
-    const {
-      jobData,
-      stats,
-      intensity,
-      experienceLevel,
-      interviewerRole,
-    } = await request.json();
+    const { jobData, stats, intensity, experienceLevel, interviewerRole } = await request.json();
 
-    if (!jobData)
-      return Response.json({ error: "Donnees manquantes" }, { status: 400 });
+    if (!jobData) return Response.json({ error: "Données manquantes" }, { status: 400 });
 
-    // Determiner le nombre de jours (7 par defaut, adapte a l'intensite)
     const intensityKey = intensity || "Standard";
     const ic = INTENSITY_CONFIG[intensityKey] || INTENSITY_CONFIG["Standard"];
     const planDays = intensityKey === "Léger" ? 10 : intensityKey === "Intensif" ? 5 : 7;
 
-    // Extraire les competences a travailler depuis stats
     const matches = stats?.matches || [];
-    const weakAndPartial = matches
-      .filter((m) => m.match === "weak" || m.match === "partial")
-      .map((m) => m.label);
-    const strong = matches
-      .filter((m) => m.match === "strong")
-      .map((m) => m.label);
+    const weakAndPartial = matches.filter((m) => m.match === "weak" || m.match === "partial").map((m) => m.label);
+    const strong = matches.filter((m) => m.match === "strong").map((m) => m.label);
     const allSkills = matches.map((m) => m.label);
 
     const levelKey = experienceLevel || "Confirmé (3-7 ans)";
     const lc = LEVEL_CONFIG[levelKey] || LEVEL_CONFIG["Confirmé (3-7 ans)"];
 
-    const sector = jobData?.companyInfo?.sector || "non precise";
+    const sector = jobData?.companyInfo?.sector || "non précisé";
     const company = jobData?.company || "l'entreprise";
 
-    const prompt = `Tu es un expert en preparation d'entretien. Genere un plan de ${planDays} jours en JSON valide.
+    const prompt = `Tu es un expert en préparation d'entretien. Génère un plan de ${planDays} jours en JSON valide.
 
 CONTEXTE :
 - Poste : ${jobData?.title} chez ${company}
 - Secteur : ${sector}
-- Intensite : ${ic.description} (${ic.dailyTime} par jour)
-- Niveau d'experience : ${levelKey}
-- Competences a renforcer : ${weakAndPartial.length > 0 ? weakAndPartial.join(", ") : "aucune faiblesse identifiee"}
-- Points forts a consolider : ${strong.length > 0 ? strong.join(", ") : "a evaluer"}
-- Toutes les competences requises : ${allSkills.join(", ")}
+- Intensité : ${ic.description} (${ic.dailyTime} par jour)
+- Niveau d'expérience : ${levelKey}
+- Compétences à renforcer : ${weakAndPartial.length > 0 ? weakAndPartial.join(", ") : "aucune faiblesse identifiée"}
+- Points forts à consolider : ${strong.length > 0 ? strong.join(", ") : "à évaluer"}
+- Toutes les compétences requises : ${allSkills.join(", ")}
 ${jobData?.companyInfo?.competitors?.length ? `- Concurrents : ${jobData.companyInfo.competitors.join(", ")}` : ""}
 ${jobData?.companyInfo?.techStack?.length ? `- Outils du poste : ${jobData.companyInfo.techStack.join(", ")}` : ""}
 ${interviewerRole ? `- Interlocuteur : ${interviewerRole} — adapte les exercices et questions d'entretien pour correspondre aux attentes de ce profil. Un CTO posera des questions techniques stratégiques, un DRH des questions comportementales, un Manager des mises en situation, etc.` : ""}
@@ -225,19 +179,17 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
   {
     "day": 1,
     "title": "Titre du jour",
-    "focus": "Mot-cle",
+    "focus": "Mot-clé",
     "items": [
       {
         "type": "note",
         "title": "Titre précis de la leçon",
         "duration": "20 min",
         "content": {
-          "summary": "Explication DÉTAILLÉE en 5-8 phrases. L'utilisateur doit pouvoir apprendre le sujet rien qu'en lisant ce texte. Donne des exemples concrets, des définitions, des cas d'usage. Ne dis pas juste 'React utilise des hooks' — explique COMMENT et POURQUOI avec un mini-exemple.",
-          "keyPoints": ["Point détaillé avec explication complète, pas juste un titre", "Deuxième point avec contexte et exemple", "Troisième point actionnable"],
-          "tips": ["Astuce concrète et applicable immédiatement"],
-          "links": [
-            {"label": "Nom descriptif du cours/article", "url": "URL SPÉCIFIQUE vers la page du cours (pas la page d'accueil)", "type": "article"}
-          ]
+          "summary": "Explication DÉTAILLÉE en 5-8 phrases.",
+          "keyPoints": ["Point détaillé avec explication complète"],
+          "tips": ["Astuce concrète"],
+          "links": [{"label": "Nom descriptif", "url": "URL SPÉCIFIQUE", "type": "article"}]
         },
         "miniQuiz": [{"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0}]
       },
@@ -246,8 +198,8 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
         "title": "Exercice pratique",
         "duration": "30 min",
         "content": {
-          "objective": "Objectif précis et mesurable",
-          "steps": ["Étape détaillée avec instructions claires", "Deuxième étape avec critères de réussite"],
+          "objective": "Objectif précis",
+          "steps": ["Étape détaillée"],
           "tips": ["Conseil pratique"],
           "links": [{"label": "Nom", "url": "URL spécifique", "type": "lab"}]
         }
@@ -257,44 +209,89 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
         "title": "Quiz du jour",
         "duration": "10 min",
         "content": {
-          "questions": [
-            {"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "Pourquoi"}
-          ]
+          "questions": [{"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "Pourquoi"}]
         }
       }
     ]
   }
 ]
 
-REGLES :
+RÈGLES :
 1. ${planDays} jours, ${ic.itemsPerDay} items chacun
 2. Chaque jour finit par un quiz (${ic.quizQuestions} questions)
 3. Les notes ont des miniQuiz (1-2 questions)
-4. URLS : utilise UNIQUEMENT les URLs racines de la liste ci-dessus. NE PAS inventer de sous-pages.
-5. Adapte au domaine du poste (${sector}). Exemples de domaines : developpeur, architecte, juriste, comptable, marketeur, enseignant, artisan, medecin, commercial, RH, data analyst, designer, chef de projet...
-6. Un jour sur ${company} : produits, actualites, culture
-7. Dernier jour = revision + quiz final 10 questions
-8. Contenu concret avec vrais exemples adaptes au secteur
+4. URLS : utilise UNIQUEMENT les domaines de la liste ci-dessus. NE PAS inventer de sous-pages.
+5. Adapte au domaine du poste (${sector}).
+6. Un jour sur ${company} : produits, actualités, culture
+7. Dernier jour = révision + quiz final 10 questions
+8. Contenu concret avec vrais exemples adaptés au secteur
 9. JSON COMPLET et VALIDE, pas de troncature
-10. Pas de guillemets courbes ni retours a la ligne dans les strings
-11. Concentre les premiers jours sur les competences faibles/partielles, les derniers jours sur la consolidation des points forts
-12. Adapte la difficulte au niveau ${levelKey} : ${lc.quizDifficulty}
+10. Pas de guillemets courbes ni retours à la ligne dans les strings
+11. Concentre les premiers jours sur les compétences faibles/partielles
+12. Adapte la difficulté au niveau ${levelKey} : ${lc.quizDifficulty}
 
 JSON uniquement :`;
 
-    const parsed = await generateWithRetry(prompt);
+    // ─── STREAMING : envoie des heartbeats pour éviter le 504 ───
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        // Envoie un heartbeat toutes les 8 secondes pendant la génération
+        const heartbeat = setInterval(() => {
+          try { controller.enqueue(encoder.encode(" ")); } catch {}
+        }, 8000);
 
-    if (!parsed) {
-      return Response.json(
-        {
-          error:
-            "Impossible de generer le plan. Reessaie.",
-        },
-        { status: 500 }
-      );
-    }
+        let result = null;
+        let lastError = null;
 
-    return Response.json(parsed);
+        try {
+          // 2 tentatives max (au lieu de 3) pour rester dans les temps
+          for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+              console.log(`Tentative ${attempt + 1}/2 de génération du plan...`);
+
+              const message = await anthropic.messages.create({
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 8192,
+                messages: [{ role: "user", content: prompt }],
+              });
+
+              const text = message.content[0].text;
+              const parsed = cleanAndValidate(text);
+
+              if (parsed) {
+                console.log(`Plan validé à la tentative ${attempt + 1}`);
+                result = parsed;
+                break;
+              }
+              console.warn(`Tentative ${attempt + 1}: JSON invalide ou structure incorrecte`);
+            } catch (err) {
+              console.error(`Tentative ${attempt + 1} erreur:`, err.message);
+              lastError = err;
+            }
+          }
+        } finally {
+          clearInterval(heartbeat);
+        }
+
+        if (result) {
+          controller.enqueue(encoder.encode(JSON.stringify(result)));
+        } else {
+          controller.enqueue(
+            encoder.encode(JSON.stringify({ error: lastError?.message || "Impossible de générer le plan. Réessaie." }))
+          );
+        }
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        "Transfer-Encoding": "chunked",
+      },
+    });
   } catch (err) {
     console.error("Plan generation error:", err);
     return Response.json({ error: err.message }, { status: 500 });
