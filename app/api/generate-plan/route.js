@@ -14,32 +14,38 @@ const checkLimit = createRateLimit({ key: "generate-plan", maxRequests: 5, windo
 const SOURCES_INSTRUCTIONS = `
 RÈGLES POUR LES LIENS ET LE CONTENU :
 
-1. CONTENU AUTONOME : Chaque note doit être suffisamment détaillée pour que l'utilisateur puisse apprendre SANS cliquer sur les liens. Le summary doit faire 5-8 phrases, les keyPoints doivent être des explications complètes (pas juste des titres). Les liens sont un COMPLÉMENT, pas le contenu principal.
+1. CONTENU AUTONOME : Chaque note doit être suffisamment détaillée pour que l'utilisateur puisse apprendre SANS cliquer sur les liens. Le summary doit faire 5-8 phrases, les keyPoints doivent être des explications complètes (pas juste des titres). Mets le contenu DANS le plan (summary, keyPoints). Les liens sont un bonus, pas obligatoires.
 
-2. LIENS SPÉCIFIQUES : Utilise des URLs qui pointent vers des pages PRÉCISES, pas des pages d'accueil.
+2. PRIORITÉ AU CONTENU : Si tu n'es pas ABSOLUMENT CERTAIN qu'une URL existe, NE L'INCLUS PAS. Il vaut mieux zéro lien qu'un seul lien mort. Mieux vaut enrichir le summary et les keyPoints que de risquer un lien cassé.
 
-3. LIENS YOUTUBE : Inclus 1-2 liens YouTube pertinents par jour quand possible. Les vidéos aident à la compréhension. Utilise des identifiants de vidéos que tu connais vraiment.
+3. LIENS RACINE UNIQUEMENT : Utilise UNIQUEMENT les pages racine des documentations dont tu es certain de l'existence. Ne crée jamais de sous-chemins. Exemples sûrs :
+- https://developer.mozilla.org/fr/docs/Web/JavaScript (racine JavaScript)
+- https://react.dev/learn (section learn de React)
+- https://docs.python.org/3/tutorial (tutoriel Python)
+- https://nodejs.org/en/docs (documentation Node)
+N'invente JAMAIS de sous-chemins. Utilise uniquement des URLs dont tu es certain de l'existence.
 
-EXEMPLES DE BONS LIENS (spécifiques) :
-- https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
-- https://react.dev/learn/state-a-components-memory
-- https://docs.python.org/3/tutorial/datastructures.html
-- https://www.coursera.org/learn/machine-learning
-- https://openclassrooms.com/fr/courses/7150606-creez-une-application-react-complete
-- https://www.w3schools.com/js/js_async.asp
-- https://www.investopedia.com/terms/d/dcf.asp
-- https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006900847
-- https://leetcode.com/problems/two-sum/
-- https://exercism.org/tracks/javascript/exercises/hello-world
-- https://academy.hubspot.com/courses/inbound-marketing
-- https://www.youtube.com/watch?v=dQw4w9WgXcQ (un VRAI ID vidéo)
+4. PAS DE YOUTUBE : N'inclus pas de liens YouTube. Les identifiants sont trop souvent inexacts ou cassés. Privilégie plutôt du contenu textuel détaillé dans le plan.
 
-EXEMPLES DE MAUVAIS LIENS (trop génériques) :
-- https://www.youtube.com (page d'accueil)
-- https://www.coursera.org (page d'accueil)
-- https://github.com (page d'accueil)
+EXEMPLES DE BONS LIENS (pages racines vérifiées) :
+- https://developer.mozilla.org/fr/docs/Web/JavaScript
+- https://react.dev/learn
+- https://docs.python.org/3/tutorial
+- https://www.coursera.org (page d'accueil OK si pas de cours spécifique)
+- https://www.w3schools.com
+- https://www.investopedia.com
+- https://www.legifrance.gouv.fr
+- https://leetcode.com
+- https://exercism.org
+- https://academy.hubspot.com
+- https://fr.wikipedia.org
 
-4. DOMAINES AUTORISÉS pour les liens :
+EXEMPLES DE MAUVAIS LIENS (à ÉVITER) :
+- https://www.youtube.com/watch?v=FAKE_ID_INVENTED
+- https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function (si pas sûr)
+- Tout lien avec un sous-chemin spécifique dont tu n'es pas certain
+
+5. DOMAINES AUTORISÉS pour les liens :
 coursera.org, edx.org, openclassrooms.com, fun-mooc.fr, khanacademy.org, ocw.mit.edu,
 developer.mozilla.org, react.dev, docs.python.org, nodejs.org, w3schools.com, leetcode.com, exercism.org, github.com,
 investopedia.com, lesechos.fr, hbr.org, banque-france.fr, insee.fr,
@@ -47,11 +53,9 @@ legifrance.gouv.fr, service-public.fr, eur-lex.europa.eu, dalloz.fr,
 who.int, has-sante.fr, pubmed.ncbi.nlm.nih.gov, vidal.fr,
 academy.hubspot.com, skillshop.withgoogle.com, statista.com,
 architectes.org, batiactu.com, eduscol.education.fr, education.gouv.fr, reseau-canope.fr,
-artisanat.fr, compagnons-du-devoir.com, youtube.com, fr.wikipedia.org, scholar.google.com
+artisanat.fr, compagnons-du-devoir.com, fr.wikipedia.org, scholar.google.com
 
-5. Pour YouTube : utilise de VRAIS identifiants de vidéos que tu connais. Si tu n'es pas sûr qu'une vidéo existe, ne mets PAS de lien YouTube. Mieux vaut pas de lien qu'un lien mort.
-
-6. Si tu ne connais pas d'URL spécifique pour un sujet, NE METS PAS de lien. Mets plus de contenu dans le summary et les keyPoints à la place.
+6. Si tu ne connais pas d'URL spécifique VÉRIFIÉE pour un sujet, NE METS PAS de lien. Enrichis plutôt le summary et les keyPoints avec du contenu détaillé.
 `;
 
 const INTENSITY_CONFIG = {
@@ -154,10 +158,13 @@ export async function POST(request) {
 
     const intensityKey = intensity || "Standard";
     const ic = INTENSITY_CONFIG[intensityKey] || INTENSITY_CONFIG["Standard"];
-    // Priorité à daysUntilInterview si fourni (max 10 jours)
+    // Priorité à daysUntilInterview si fourni
+    // Si daysUntilInterview > 14, cap à 14 pour les coûts API
+    // Si daysUntilInterview > 0 et <= 14, utilise la vraie durée
+    // Sinon, utilise la logique basée sur l'intensité
     let planDays;
     if (daysUntilInterview && daysUntilInterview > 0) {
-      planDays = Math.min(daysUntilInterview, 10);
+      planDays = Math.min(daysUntilInterview, 14);
     } else {
       planDays = intensityKey === "Léger" ? 10 : intensityKey === "Intensif" ? 5 : 7;
     }
@@ -242,13 +249,14 @@ RÈGLES :
 3. Les notes ont des miniQuiz (1-2 questions)
 4. URLS : utilise UNIQUEMENT les domaines de la liste ci-dessus. NE PAS inventer de sous-pages.
 5. Adapte au domaine du poste (${sector}).
-6. Un jour sur ${company} : produits, actualités, culture
+6. Jour 1 ou 2 : inclus un item 'culture' sur la vie de l'entreprise ${company}, sa culture, ses valeurs. Utilise des liens VERS LE SITE OFFICIEL de ${company} (pages 'À propos', 'Careers', 'Blog'). Explique pourquoi connaître la culture est crucial même pour un entretien technique.
 7. Dernier jour = révision + quiz final 10 questions
 8. Contenu concret avec vrais exemples adaptés au secteur
 9. JSON COMPLET et VALIDE, pas de troncature
 10. Pas de guillemets courbes ni retours à la ligne dans les strings
-11. Concentre les premiers jours sur les compétences faibles/partielles
-12. Adapte la difficulté au niveau ${levelKey} : ${lc.quizDifficulty}
+11. CHAQUE jour doit avoir du contenu substantiel. S'il y a beaucoup de jours, répartis les compétences uniformément. Les premiers jours = fondamentaux et faiblesses. Les derniers jours = révision, simulation d'entretien, culture d'entreprise.
+12. Concentre les premiers jours sur les compétences faibles/partielles
+13. Adapte la difficulté au niveau ${levelKey} : ${lc.quizDifficulty}
 
 JSON uniquement :`;
 

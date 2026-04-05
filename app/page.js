@@ -223,46 +223,93 @@ function CulturePanel({ companyInfo, jobData }) {
   const ci = companyInfo || jobData?.companyInfo;
   if (!ci) return null;
 
+  const company = jobData?.company || "l'entreprise";
+  // Try to build company website URL from job URL or company name
+  const jobSource = jobData?.source || "";
+  let companyDomain = null;
+  if (jobData?.job_url) {
+    try { companyDomain = new URL(jobData.job_url).hostname.replace("www.", ""); } catch {}
+  }
+  // For job board URLs, try to guess company site
+  const companySlug = company.toLowerCase().replace(/[^a-z0-9]/g, "");
+
   return (
     <div style={{ ...card, background: T.accentLt, borderColor: T.accentBd }}>
-      <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 600, color: T.accent }}>Culture & Veille — {jobData?.company}</h3>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>🏢</div>
+        <div>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.accent }}>Culture & Veille — {company}</h3>
+          <p style={{ margin: "2px 0 0", fontSize: 11, color: T.muted }}>Secteur : {ci.sector || "non précisé"}</p>
+        </div>
+      </div>
 
-      {ci.founded && <p style={{ margin: "0 0 8px", fontSize: 13, color: T.muted }}>Fondée en {ci.founded} · {ci.hq} · {ci.employees} employés · {ci.sector}</p>}
+      {/* Importance notice */}
+      <div style={{ padding: 12, borderRadius: T.r, background: T.warnLt, border: `1px solid ${T.warnBd}`, marginBottom: 14 }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: T.warn }}>Pourquoi c'est important ?</p>
+        <p style={{ margin: "4px 0 0", fontSize: 12, lineHeight: 1.6, color: T.text }}>
+          Même pour un entretien technique, montrer que tu connais la culture, les valeurs et l'actualité de l'entreprise fait la différence.
+          Les recruteurs veulent savoir si tu t'es renseigné et si tu partages leur vision. C'est souvent ce qui départage deux candidats de niveau égal.
+        </p>
+      </div>
+
+      {ci.founded && <p style={{ margin: "0 0 10px", fontSize: 13, color: T.muted }}>Fondée en {ci.founded} · {ci.hq} · {ci.employees} employés · {ci.sector}</p>}
 
       {ci.businessModel && (
-        <div style={{ marginBottom: 10 }}>
+        <div style={{ marginBottom: 12 }}>
           <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600 }}>Business model</p>
           <p style={{ margin: 0, fontSize: 13 }}>{ci.businessModel}</p>
         </div>
       )}
 
       {ci.culture && (
-        <div style={{ marginBottom: 10, padding: 10, borderRadius: T.r, background: T.card }}>
+        <div style={{ marginBottom: 12, padding: 12, borderRadius: T.r, background: T.card }}>
           <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.accent }}>Culture d'entreprise</p>
-          <p style={{ margin: 0, fontSize: 13 }}>{ci.culture}</p>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6 }}>{ci.culture}</p>
         </div>
       )}
 
       {ci.recentNews?.length > 0 && (
-        <div style={{ marginBottom: 10 }}>
+        <div style={{ marginBottom: 12 }}>
           <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600 }}>Actualités</p>
           {ci.recentNews.map((n, i) => <p key={i} style={{ margin: "0 0 3px", fontSize: 12, paddingLeft: 8 }}>— {n}</p>)}
         </div>
       )}
 
       {ci.competitors?.length > 0 && (
-        <div style={{ marginBottom: 10 }}>
+        <div style={{ marginBottom: 12 }}>
           <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600 }}>Concurrents</p>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{ci.competitors.map(c => <Badge key={c} v="info">{c}</Badge>)}</div>
         </div>
       )}
 
       {ci.techStack?.length > 0 && (
-        <div>
+        <div style={{ marginBottom: 12 }}>
           <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600 }}>Outils & méthodes</p>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>{ci.techStack.map(t => <Badge key={t} v="tech">{t}</Badge>)}</div>
         </div>
       )}
+
+      {/* Company links */}
+      <div style={{ marginTop: 8, padding: 12, borderRadius: T.r, background: T.card, border: `1px solid ${T.border}` }}>
+        <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: T.accent }}>Liens utiles — à consulter avant l'entretien</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " site officiel")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500 }}>
+            🌐 Site officiel
+          </a>
+          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " avis salariés glassdoor")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.green, background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 500 }}>
+            ⭐ Avis Glassdoor
+          </a>
+          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " actualités")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.warn, background: T.warnLt, border: `1px solid ${T.warnBd}`, fontWeight: 500 }}>
+            📰 Actualités
+          </a>
+          <a href={`https://www.linkedin.com/company/${companySlug}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500 }}>
+            💼 Page LinkedIn
+          </a>
+          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " carrières recrutement")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.purple, background: T.purpleLt, border: `1px solid ${T.purpleBd}`, fontWeight: 500 }}>
+            🎯 Page Carrières
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
@@ -698,6 +745,9 @@ export default function EzInterview() {
   const [reportingItem, setReportingItem] = useState(null);
   const [reportText, setReportText] = useState("");
 
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [profileData, setProfileData] = useState({ firstName: "", lastName: "", phone: "", city: "", birthYear: "" });
+
   // ─── Hash-based routing ───
   useEffect(() => {
     const handleHash = () => {
@@ -733,14 +783,20 @@ export default function EzInterview() {
           const hash = window.location.hash.replace("#", "");
           if (hash === "prepare") { setView("dashboard"); setStep("input"); }
           else { setView("dashboard"); setStep("dashboard"); }
-          // Load saved plans
+          // Check if profile is complete
           try {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.access_token) {
+              const profile = await safeFetch("/api/profile", { headers: { "Authorization": `Bearer ${session.access_token}` } });
+              if (!profile.profileComplete) {
+                setProfileData({ firstName: profile.firstName || "", lastName: profile.lastName || "", phone: profile.phone || "", city: profile.city || "", birthYear: profile.birthYear || "" });
+                setShowProfileForm(true);
+              }
+              // Load saved plans
               const plans = await safeFetch("/api/plans", { headers: { "Authorization": `Bearer ${session.access_token}` } });
               setSavedPlans(plans);
             }
-          } catch (e) { console.error("Load plans error:", e); }
+          } catch (e) { console.error("Load plans/profile error:", e); }
         }
       } catch (err) {
         console.error("Auth error:", err);
@@ -876,14 +932,15 @@ export default function EzInterview() {
       return;
     }
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       await safeFetch("/api/feedback", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
         body: JSON.stringify({
           type: feedbackType,
           message: feedbackMessage,
           rating: feedbackRating,
-          userId: user?.id,
+          page: step,
         }),
       });
       setFeedbackSent(true);
@@ -1002,7 +1059,8 @@ export default function EzInterview() {
           {activeTab === "offer" && (
             <div style={card}>
               <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Lien de l'offre <span style={{ color: T.red }}>*</span></label>
-              <input type="url" placeholder="https://linkedin.com/jobs/..." value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} style={inp} />
+              <input type="url" placeholder="LinkedIn, Indeed, Welcome to the Jungle, Apec..." value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} style={inp} />
+              <p style={{ margin: "4px 0 0", fontSize: 11, color: T.muted }}>Compatible avec LinkedIn, Indeed, Welcome to the Jungle, Apec, HelloWork, Glassdoor, Cadremploi et plus</p>
 
               <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Votre niveau d'expérience dans ce domaine <span style={{ color: T.red }}>*</span></label>
               <select value={experienceLevel} onChange={(e) => setExperienceLevel(e.target.value)} style={inp}>
@@ -1013,16 +1071,11 @@ export default function EzInterview() {
               </select>
 
               <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Date de l'entretien (optionnel)</label>
-              <input type="date" value={interviewDate} onChange={(e) => {
-                const selected = e.target.value;
-                const maxDate = addDays(today(), 10);
-                if (selected <= maxDate) {
-                  setInterviewDate(selected);
-                } else {
-                  setInterviewDate("");
-                  alert("La date doit être dans les 10 prochains jours");
-                }
-              }} min={today()} max={addDays(today(), 10)} style={inp} />
+              <input type="date" value={interviewDate} onChange={(e) => setInterviewDate(e.target.value)} min={addDays(today(), 1)} max={addDays(today(), 30)} style={inp} />
+              {interviewDate && (() => {
+                const days = Math.ceil((new Date(interviewDate) - new Date()) / 86400000);
+                return <p style={{ margin: "6px 0 0", fontSize: 12, color: days <= 3 ? T.red : days <= 7 ? T.warn : T.green, fontWeight: 500 }}>J-{days} — {days <= 3 ? "Préparation express !" : days <= 7 ? "Préparation standard" : "Préparation approfondie"} · Le plan couvrira chaque jour jusqu'à l'entretien</p>;
+              })()}
 
               {jobError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{jobError}</p>}
 
@@ -1243,10 +1296,11 @@ export default function EzInterview() {
                             <button onClick={async () => {
                               if (!reportText.trim()) { alert("Veuillez décrire le problème"); return; }
                               try {
+                                const { data: { session: reportSession } } = await supabase.auth.getSession();
                                 await safeFetch("/api/report", {
                                   method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ dayIndex: expandedDay, itemIndex: i, itemTitle: item.title, reportText, userId: user?.id }),
+                                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${reportSession?.access_token}` },
+                                  body: JSON.stringify({ planId: currentPlanId, dayIndex: expandedDay, itemIndex: i, itemTitle: item.title, reason: reportText }),
                                 });
                                 alert("Merci pour ton signalement !");
                                 setReportingItem(null);
@@ -1279,6 +1333,70 @@ export default function EzInterview() {
         }} onMouseEnter={(e) => e.target.style.transform = "scale(1.1)"} onMouseLeave={(e) => e.target.style.transform = "scale(1)"}>
           💬
         </button>
+      )}
+
+      {/* Profile Completion Modal */}
+      {showProfileForm && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(27,37,89,0.5)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001, padding: 16 }}>
+          <div style={{ maxWidth: 460, width: "100%", background: T.card, borderRadius: 20, padding: 32, position: "relative", boxShadow: "0 24px 64px rgba(0,0,0,0.2)", animation: "fadeIn 0.25s ease" }}>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: T.accent, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: T.text }}>Complète ton profil</h3>
+              <p style={{ margin: "6px 0 0", fontSize: 13, color: T.muted }}>Pour personnaliser ton expérience</p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Prénom <span style={{ color: T.red }}>*</span></label>
+                <input type="text" placeholder="Jean" value={profileData.firstName} onChange={(e) => setProfileData(p => ({ ...p, firstName: e.target.value }))} style={inp} />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Nom <span style={{ color: T.red }}>*</span></label>
+                <input type="text" placeholder="Dupont" value={profileData.lastName} onChange={(e) => setProfileData(p => ({ ...p, lastName: e.target.value }))} style={inp} />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Téléphone</label>
+              <input type="tel" placeholder="06 12 34 56 78" value={profileData.phone} onChange={(e) => setProfileData(p => ({ ...p, phone: e.target.value }))} style={inp} />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Ville</label>
+                <input type="text" placeholder="Paris" value={profileData.city} onChange={(e) => setProfileData(p => ({ ...p, city: e.target.value }))} style={inp} />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Année de naissance</label>
+                <input type="number" placeholder="1995" min="1950" max="2010" value={profileData.birthYear} onChange={(e) => setProfileData(p => ({ ...p, birthYear: e.target.value }))} style={inp} />
+              </div>
+            </div>
+
+            <button onClick={async () => {
+              if (!profileData.firstName.trim() || !profileData.lastName.trim()) { alert("Nom et prénom obligatoires"); return; }
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                await safeFetch("/api/profile", {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
+                  body: JSON.stringify(profileData),
+                });
+                setShowProfileForm(false);
+              } catch (err) {
+                console.error("Profile save error:", err);
+                alert("Erreur lors de la sauvegarde");
+              }
+            }} disabled={!profileData.firstName.trim() || !profileData.lastName.trim()} style={{ ...(!profileData.firstName.trim() || !profileData.lastName.trim() ? btnD : btnP), width: "100%" }}>
+              Enregistrer
+            </button>
+
+            <button onClick={() => setShowProfileForm(false)} style={{ ...btnS, width: "100%", marginTop: 8, fontSize: 12, color: T.muted }}>
+              Plus tard
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Feedback Modal */}
