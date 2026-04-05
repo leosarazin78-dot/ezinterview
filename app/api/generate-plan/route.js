@@ -1,10 +1,15 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { extractJSONArray } from "../../lib/parse-json";
+import { createRateLimit, rateLimitResponse } from "../../lib/rate-limit";
+import { sanitizeObject, sanitizeUrl } from "../../lib/sanitize";
 
 // Augmenter le timeout Next.js (300s = 5 min)
 export const maxDuration = 300;
 
 const anthropic = new Anthropic();
+
+// Rate limit : 5 plans par heure par IP (appel coûteux)
+const checkLimit = createRateLimit({ key: "generate-plan", maxRequests: 5, windowMs: 3600000 });
 
 const SOURCES_INSTRUCTIONS = `
 RÈGLES POUR LES LIENS ET LE CONTENU :
@@ -12,6 +17,8 @@ RÈGLES POUR LES LIENS ET LE CONTENU :
 1. CONTENU AUTONOME : Chaque note doit être suffisamment détaillée pour que l'utilisateur puisse apprendre SANS cliquer sur les liens. Le summary doit faire 5-8 phrases, les keyPoints doivent être des explications complètes (pas juste des titres). Les liens sont un COMPLÉMENT, pas le contenu principal.
 
 2. LIENS SPÉCIFIQUES : Utilise des URLs qui pointent vers des pages PRÉCISES, pas des pages d'accueil.
+
+3. LIENS YOUTUBE : Inclus 1-2 liens YouTube pertinents par jour quand possible. Les vidéos aident à la compréhension. Utilise des identifiants de vidéos que tu connais vraiment.
 
 EXEMPLES DE BONS LIENS (spécifiques) :
 - https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
@@ -32,7 +39,7 @@ EXEMPLES DE MAUVAIS LIENS (trop génériques) :
 - https://www.coursera.org (page d'accueil)
 - https://github.com (page d'accueil)
 
-3. DOMAINES AUTORISÉS pour les liens :
+4. DOMAINES AUTORISÉS pour les liens :
 coursera.org, edx.org, openclassrooms.com, fun-mooc.fr, khanacademy.org, ocw.mit.edu,
 developer.mozilla.org, react.dev, docs.python.org, nodejs.org, w3schools.com, leetcode.com, exercism.org, github.com,
 investopedia.com, lesechos.fr, hbr.org, banque-france.fr, insee.fr,
@@ -42,9 +49,9 @@ academy.hubspot.com, skillshop.withgoogle.com, statista.com,
 architectes.org, batiactu.com, eduscol.education.fr, education.gouv.fr, reseau-canope.fr,
 artisanat.fr, compagnons-du-devoir.com, youtube.com, fr.wikipedia.org, scholar.google.com
 
-4. Pour YouTube : utilise de VRAIS identifiants de vidéos que tu connais. Si tu n'es pas sûr qu'une vidéo existe, ne mets PAS de lien YouTube. Mieux vaut pas de lien qu'un lien mort.
+5. Pour YouTube : utilise de VRAIS identifiants de vidéos que tu connais. Si tu n'es pas sûr qu'une vidéo existe, ne mets PAS de lien YouTube. Mieux vaut pas de lien qu'un lien mort.
 
-5. Si tu ne connais pas d'URL spécifique pour un sujet, NE METS PAS de lien. Mets plus de contenu dans le summary et les keyPoints à la place.
+6. Si tu ne connais pas d'URL spécifique pour un sujet, NE METS PAS de lien. Mets plus de contenu dans le summary et les keyPoints à la place.
 `;
 
 const INTENSITY_CONFIG = {
@@ -133,14 +140,27 @@ function cleanAndValidate(text) {
 }
 
 export async function POST(request) {
+  // Rate limiting
+  const rl = checkLimit(request);
+  const rlResponse = rateLimitResponse(rl);
+  if (rlResponse) return rlResponse;
+
   try {
-    const { jobData, stats, intensity, experienceLevel, interviewerRole } = await request.json();
+    const raw = await request.json();
+    // Sanitize tous les inputs
+    const { jobData, stats, intensity, experienceLevel, interviewerRole, interviewDate, daysUntilInterview } = sanitizeObject(raw);
 
     if (!jobData) return Response.json({ error: "Données manquantes" }, { status: 400 });
 
     const intensityKey = intensity || "Standard";
     const ic = INTENSITY_CONFIG[intensityKey] || INTENSITY_CONFIG["Standard"];
-    const planDays = intensityKey === "Léger" ? 10 : intensityKey === "Intensif" ? 5 : 7;
+    // Priorité à daysUntilInterview si fourni (max 10 jours)
+    let planDays;
+    if (daysUntilInterview && daysUntilInterview > 0) {
+      planDays = Math.min(daysUntilInterview, 10);
+    } else {
+      planDays = intensityKey === "Léger" ? 10 : intensityKey === "Intensif" ? 5 : 7;
+    }
 
     const matches = stats?.matches || [];
     const weakAndPartial = matches.filter((m) => m.match === "weak" || m.match === "partial").map((m) => m.label);

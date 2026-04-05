@@ -1,11 +1,21 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { extractJSONObject } from "../../lib/parse-json";
+import { createRateLimit, rateLimitResponse } from "../../lib/rate-limit";
+import { sanitizeObject } from "../../lib/sanitize";
 
 const anthropic = new Anthropic();
 
+// Rate limit : 15 analyses de profil par heure par IP
+const checkLimit = createRateLimit({ key: "analyze-profile", maxRequests: 15, windowMs: 3600000 });
+
 export async function POST(request) {
+  const rl = checkLimit(request);
+  const rlResponse = rateLimitResponse(rl);
+  if (rlResponse) return rlResponse;
+
   try {
-    const { jobData, cvText, linkedinUrl, experienceLevel } = await request.json();
+    const raw = await request.json();
+    const { jobData, cvText, linkedinUrl, experienceLevel } = sanitizeObject(raw);
     if (!jobData || !cvText)
       return Response.json({ error: "Données manquantes" }, { status: 400 });
 

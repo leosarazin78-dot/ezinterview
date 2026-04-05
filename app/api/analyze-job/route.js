@@ -1,8 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as cheerio from "cheerio";
 import { extractJSONObject } from "../../lib/parse-json";
+import { createRateLimit, rateLimitResponse } from "../../lib/rate-limit";
+import { sanitizeUrl, sanitizeString } from "../../lib/sanitize";
 
 const anthropic = new Anthropic();
+
+// Rate limit : 15 analyses d'offre par heure par IP
+const checkLimit = createRateLimit({ key: "analyze-job", maxRequests: 15, windowMs: 3600000 });
 
 async function fetchJobPage(url) {
   try {
@@ -30,10 +35,16 @@ async function fetchJobPage(url) {
 }
 
 export async function POST(request) {
+  const rl = checkLimit(request);
+  const rlResponse = rateLimitResponse(rl);
+  if (rlResponse) return rlResponse;
+
   try {
-    const { jobUrl, experienceLevel } = await request.json();
+    const raw = await request.json();
+    const jobUrl = sanitizeUrl(raw.jobUrl);
+    const experienceLevel = sanitizeString(raw.experienceLevel || "", 50);
     const url = jobUrl;
-    if (!url) return Response.json({ error: "URL manquante" }, { status: 400 });
+    if (!url) return Response.json({ error: "URL manquante ou invalide" }, { status: 400 });
 
     const pageText = await fetchJobPage(url);
     if (!pageText) {

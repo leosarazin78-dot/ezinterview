@@ -371,7 +371,7 @@ function LandingPage({ user, onLogin }) {
             <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
             </div>
-            <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}>EntretienZen</span>
+            <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}><span style={{ fontWeight: 900, color: T.accent }}>EZE</span><span style={{ fontWeight: 400 }}>ntretienZen</span></span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {user ? (
@@ -529,14 +529,19 @@ function LandingPage({ user, onLogin }) {
 
       {/* ─── Footer ─── */}
       <footer style={{ borderTop: `1px solid ${T.border}`, background: T.card }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 32, height: 32, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
             </div>
-            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}>EntretienZen</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}><span style={{ fontWeight: 900, color: T.accent }}>EZE</span><span style={{ fontWeight: 400 }}>ntretienZen</span></span>
           </div>
-          <span style={{ fontSize: 13, color: T.muted }}>Open source — 2024-2026</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+            <a href="/mentions-legales" style={{ fontSize: 12, color: T.muted, textDecoration: "none" }}>Mentions légales</a>
+            <a href="/confidentialite" style={{ fontSize: 12, color: T.muted, textDecoration: "none" }}>Confidentialité</a>
+            <a href="/cgu" style={{ fontSize: 12, color: T.muted, textDecoration: "none" }}>CGU</a>
+            <span style={{ fontSize: 12, color: T.light }}>© 2024-2026</span>
+          </div>
         </div>
       </footer>
 
@@ -667,6 +672,7 @@ export default function EzInterview() {
   const [cvFile, setCvFile] = useState(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [interviewDate, setInterviewDate] = useState("");
 
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -682,6 +688,15 @@ export default function EzInterview() {
   const [expandedDay, setExpandedDay] = useState(0);
   const [expandedItems, setExpandedItems] = useState({});
   const [completedDays, setCompletedDays] = useState({});
+
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackType, setFeedbackType] = useState("Retour général");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackSent, setFeedbackSent] = useState(false);
+
+  const [reportingItem, setReportingItem] = useState(null);
+  const [reportText, setReportText] = useState("");
 
   // ─── Hash-based routing ───
   useEffect(() => {
@@ -775,11 +790,16 @@ export default function EzInterview() {
     if (!stats) return;
     setGenerating(true); setPlanError("");
     try {
+      // Calculer daysUntilInterview si interviewDate est fournie
+      let daysUntilInterview = null;
+      if (interviewDate) {
+        daysUntilInterview = Math.ceil((new Date(interviewDate) - new Date()) / 86400000);
+      }
       // Lecture streaming : le backend envoie des heartbeats (espaces) puis le JSON final
       const response = await fetch("/api/generate-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobData, stats, intensity, experienceLevel, interviewerRole }),
+        body: JSON.stringify({ jobData, stats, intensity, experienceLevel, interviewerRole, interviewDate, daysUntilInterview }),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const rawText = await response.text();
@@ -802,10 +822,12 @@ export default function EzInterview() {
               company: jobData?.company || "",
               job_url: jobUrl,
               job_data: jobData,
-              profile: { cvText, linkedinUrl, experienceLevel, interviewerRole },
+              // RGPD : on ne stocke JAMAIS le CV en base, uniquement les métadonnées
+              profile: { linkedinUrl, experienceLevel, interviewerRole },
               matches: stats?.matches || [],
               plan_data: res,
               next_interlocutor: interviewerRole || null,
+              interview_date: interviewDate || null,
             }),
           });
           // Refresh saved plans
@@ -848,6 +870,36 @@ export default function EzInterview() {
     setStep("input");
   };
 
+  const handleSendFeedback = async () => {
+    if (!feedbackMessage.trim()) {
+      alert("Veuillez écrire un message");
+      return;
+    }
+    try {
+      await safeFetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: feedbackType,
+          message: feedbackMessage,
+          rating: feedbackRating,
+          userId: user?.id,
+        }),
+      });
+      setFeedbackSent(true);
+      setTimeout(() => {
+        setShowFeedback(false);
+        setFeedbackSent(false);
+        setFeedbackMessage("");
+        setFeedbackRating(0);
+        setFeedbackType("Retour général");
+      }, 2000);
+    } catch (err) {
+      console.error("Feedback error:", err);
+      alert("Erreur lors de l'envoi du feedback");
+    }
+  };
+
   if (authLoading) return <Spin text="Chargement..." />;
 
   if (view === "landing") {
@@ -888,7 +940,7 @@ export default function EzInterview() {
       `}</style>
 
       <nav style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span onClick={() => setView("landing")} style={{ fontSize: 18, fontWeight: 700, color: T.text, cursor: "pointer" }}>EntretienZen</span>
+        <span onClick={() => setView("landing")} style={{ fontSize: 18, fontWeight: 700, color: T.text, cursor: "pointer" }}><span style={{ fontWeight: 900, color: T.accent }}>EZE</span><span style={{ fontWeight: 400 }}>ntretienZen</span></span>
         <button onClick={() => setStep("dashboard")} style={btnS}>Mon espace</button>
       </nav>
 
@@ -904,7 +956,7 @@ export default function EzInterview() {
                 setStep("plan");
               }
             }}
-            onNew={() => { setStep("input"); setActiveTab("offer"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setCvFile(null); setJobUrl(""); setExperienceLevel(""); setInterviewerRole(""); }}
+            onNew={() => { setStep("input"); setActiveTab("offer"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setCvFile(null); setJobUrl(""); setExperienceLevel(""); setInterviewerRole(""); setInterviewDate(""); }}
             onDelete={handleDeletePlan}
             deletingPlan={deletingPlan}
             user={user}
@@ -959,6 +1011,18 @@ export default function EzInterview() {
                 <option value="Confirmé (3-7 ans)">Confirmé (3-7 ans)</option>
                 <option value="Senior (8+ ans)">Senior (8+ ans)</option>
               </select>
+
+              <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Date de l'entretien (optionnel)</label>
+              <input type="date" value={interviewDate} onChange={(e) => {
+                const selected = e.target.value;
+                const maxDate = addDays(today(), 10);
+                if (selected <= maxDate) {
+                  setInterviewDate(selected);
+                } else {
+                  setInterviewDate("");
+                  alert("La date doit être dans les 10 prochains jours");
+                }
+              }} min={today()} max={addDays(today(), 10)} style={inp} />
 
               {jobError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{jobError}</p>}
 
@@ -1130,12 +1194,12 @@ export default function EzInterview() {
             {plan.map((day, i) => (
               <button key={i} onClick={() => { setExpandedDay(i); setExpandedItems({}); }}
                 style={{
-                  padding: "8px 14px", borderRadius: 20, border: `1px solid ${expandedDay === i ? T.accent : T.border}`,
+                  padding: "8px 12px", borderRadius: 20, border: `1px solid ${expandedDay === i ? T.accent : T.border}`,
                   background: expandedDay === i ? T.accent : T.card, color: expandedDay === i ? "#fff" : T.text,
                   fontWeight: expandedDay === i ? 700 : 500, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
                   flexShrink: 0, whiteSpace: "nowrap",
                 }}>
-                J{i + 1}
+                <span style={{ fontWeight: 600 }}>J{i + 1}</span> {plan[i].title?.slice(0, 15)}{plan[i].title?.length > 15 ? "…" : ""}
               </button>
             ))}
           </div>
@@ -1153,6 +1217,8 @@ export default function EzInterview() {
                   </div>
                 </div>
 
+                {(expandedDay === 0 || jobData?.companyInfo) && <CulturePanel companyInfo={jobData?.companyInfo} jobData={jobData} />}
+
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {plan[expandedDay].items?.map((item, i) => (
                     <div key={i} className="ez-plan-item" style={{ ...card, padding: 16, marginBottom: 0 }}>
@@ -1164,13 +1230,95 @@ export default function EzInterview() {
                             {item.duration && <span style={{ fontSize: 11, color: T.muted }}>{item.duration}</span>}
                           </div>
                         </div>
-                        <span style={{ color: T.muted, fontSize: 12, flexShrink: 0 }}>{expandedItems[i] ? "▼" : "▶"}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                          <button onClick={(e) => { e.stopPropagation(); setReportingItem({ day: expandedDay, item: i, title: item.title }); }} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 13, cursor: "pointer", padding: 4, fontFamily: "inherit" }} title="Signaler une erreur">⚠</button>
+                          <span style={{ color: T.muted, fontSize: 12 }}>{expandedItems[i] ? "▼" : "▶"}</span>
+                        </div>
                       </div>
                       {expandedItems[i] && <div className="ez-plan-item-content"><ItemContent item={item} /></div>}
+                      {reportingItem?.day === expandedDay && reportingItem?.item === i && (
+                        <div style={{ marginTop: 12, padding: 12, borderRadius: T.r, background: T.warnLt, border: `1px solid ${T.warnBd}` }}>
+                          <textarea placeholder="Décris le problème..." value={reportText} onChange={(e) => setReportText(e.target.value)} style={{ ...inp, minHeight: 60, marginBottom: 8 }} />
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button onClick={async () => {
+                              if (!reportText.trim()) { alert("Veuillez décrire le problème"); return; }
+                              try {
+                                await safeFetch("/api/report", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ dayIndex: expandedDay, itemIndex: i, itemTitle: item.title, reportText, userId: user?.id }),
+                                });
+                                alert("Merci pour ton signalement !");
+                                setReportingItem(null);
+                                setReportText("");
+                              } catch (err) {
+                                console.error("Report error:", err);
+                                alert("Erreur lors du signalement");
+                              }
+                            }} style={{ ...btnP, padding: "6px 12px", fontSize: 12, flex: 1 }}>Envoyer</button>
+                            <button onClick={() => { setReportingItem(null); setReportText(""); }} style={{ ...btnS, padding: "6px 12px", fontSize: 12 }}>Annuler</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Floating Feedback Button (only when logged in, not on landing) */}
+      {user && view !== "landing" && (
+        <button onClick={() => setShowFeedback(true)} style={{
+          position: "fixed", bottom: 24, right: 24, width: 56, height: 56, borderRadius: "50%",
+          background: T.accent, color: "#fff", border: "none", fontSize: 20, cursor: "pointer",
+          boxShadow: "0 4px 16px rgba(59, 130, 246, 0.4)", display: "flex", alignItems: "center",
+          justifyContent: "center", fontFamily: "inherit", zIndex: 50, transition: "all 0.2s ease"
+        }} onMouseEnter={(e) => e.target.style.transform = "scale(1.1)"} onMouseLeave={(e) => e.target.style.transform = "scale(1)"}>
+          💬
+        </button>
+      )}
+
+      {/* Feedback Modal */}
+      {showFeedback && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(27,37,89,0.5)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowFeedback(false); }}>
+          <div style={{ maxWidth: 420, width: "100%", background: T.card, borderRadius: 20, padding: 28, position: "relative", boxShadow: "0 24px 64px rgba(0,0,0,0.2)", animation: "fadeIn 0.25s ease" }}>
+            <button onClick={() => setShowFeedback(false)} style={{ position: "absolute", top: 16, right: 16, background: T.bg, border: "none", fontSize: 16, color: T.muted, cursor: "pointer", fontFamily: "inherit", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8 }}>✕</button>
+
+            {!feedbackSent ? (
+              <>
+                <h3 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 800, color: T.text }}>Ton avis nous aide !</h3>
+
+                <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: 600, color: T.muted }}>Type de retour</label>
+                <select value={feedbackType} onChange={(e) => setFeedbackType(e.target.value)} style={{ ...inp, marginBottom: 16 }}>
+                  <option>Retour général</option>
+                  <option>Bug</option>
+                  <option>Nouvelle fonctionnalité</option>
+                  <option>Amélioration</option>
+                </select>
+
+                <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: 600, color: T.muted }}>Message</label>
+                <textarea placeholder="Dis-nous ce que tu penses..." value={feedbackMessage} onChange={(e) => setFeedbackMessage(e.target.value)} style={{ ...inp, minHeight: 80, marginBottom: 16 }} />
+
+                <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: 600, color: T.muted }}>Ton avis (optionnel)</label>
+                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                  {[1, 2, 3, 4, 5].map((r) => (
+                    <button key={r} onClick={() => setFeedbackRating(r)} style={{ fontSize: 24, background: "transparent", border: "none", cursor: "pointer", opacity: feedbackRating >= r ? 1 : 0.3, transition: "all 0.2s" }}>
+                      ⭐
+                    </button>
+                  ))}
+                </div>
+
+                <button onClick={handleSendFeedback} style={{ ...btnP, width: "100%" }}>Envoyer</button>
+              </>
+            ) : (
+              <div style={{ textAlign: "center", padding: 20 }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>✓</div>
+                <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.green }}>Merci pour ton feedback !</p>
+                <p style={{ margin: "6px 0 0", fontSize: 13, color: T.muted }}>On l'a bien reçu</p>
+              </div>
             )}
           </div>
         </div>
