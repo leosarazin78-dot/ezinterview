@@ -3,10 +3,15 @@ import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const T = {
-  bg: "#FAF8F5", card: "#FFFFFF", border: "#E8E2D9", text: "#1B2559",
-  muted: "#64748B", accent: "#3B82F6", accentLt: "#EFF6FF",
-  green: "#10B981", greenLt: "#ECFDF5", red: "#EF4444", redLt: "#FEF2F2",
-  warn: "#F59E0B", warnLt: "#FFFBEB",
+  bg: "#0A0A0F", bgSoft: "#12121A", card: "#1A1A24",
+  bgGlass: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.08)",
+  borderHover: "rgba(255,255,255,0.15)", text: "#F0F0F5", muted: "#8888A0",
+  accent: "#7C5CFC", accentLt: "rgba(124,92,252,0.12)", accentBd: "rgba(124,92,252,0.25)",
+  accentGradient: "linear-gradient(135deg, #7C5CFC 0%, #5B8DEF 100%)",
+  green: "#34D399", greenLt: "rgba(52,211,153,0.12)", greenBd: "rgba(52,211,153,0.25)",
+  red: "#F87171", redLt: "rgba(248,113,113,0.12)", redBd: "rgba(248,113,113,0.25)",
+  warn: "#FBBF24", warnLt: "rgba(251,191,36,0.12)", warnBd: "rgba(251,191,36,0.25)",
+  blue: "#60A5FA", blueLt: "rgba(96,165,250,0.12)", blueBd: "rgba(96,165,250,0.25)",
 };
 
 const supabase = typeof window !== "undefined"
@@ -142,12 +147,12 @@ export default function AdminPage() {
                   placeholder="Email admin"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{ width: "100%", padding: "10px 12px", border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 12 }}
+                  style={{ width: "100%", padding: "12px 14px", border: `1px solid ${T.border}`, borderRadius: 12, fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 12, background: "rgba(255,255,255,0.05)", color: T.text }}
                 />
                 <button
                   type="submit"
                   disabled={loading || !email}
-                  style={{ width: "100%", padding: "10px 20px", background: T.accent, color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: (loading || !email) ? 0.6 : 1 }}>
+                  style={{ width: "100%", padding: "12px 20px", background: T.accentGradient, color: "#fff", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: (loading || !email) ? 0.6 : 1, boxShadow: "0 4px 16px rgba(124,92,252,0.25)" }}>
                   {loading ? "Envoi..." : "Recevoir le lien de connexion"}
                 </button>
               </form>
@@ -182,7 +187,7 @@ export default function AdminPage() {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Inter', sans-serif", color: T.text }}>
       <nav style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 18, fontWeight: 800 }}>Admin — EntretienZen</span>
+        <span style={{ fontSize: 18, fontWeight: 800 }}>Admin — <span style={{ color: T.accent }}>EZE</span></span>
         <button onClick={handleLogout} style={{ background: "transparent", border: "none", color: T.muted, cursor: "pointer", fontSize: 13 }}>Déconnexion</button>
       </nav>
 
@@ -209,7 +214,7 @@ export default function AdminPage() {
         <div style={{ display: "flex", gap: 0, marginBottom: 20, background: T.card, borderRadius: 10, padding: 3, border: `1px solid ${T.border}`, overflowX: "auto" }}>
           {["users", "plans", "feedback", "reports"].map(t => (
             <button key={t} onClick={() => setTab(t)}
-              style={{ flex: "0 0 auto", padding: "10px 16px", border: "none", borderRadius: 8, background: tab === t ? T.accent : "transparent", color: tab === t ? "#fff" : T.muted, fontWeight: tab === t ? 700 : 400, fontSize: 13, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
+              style={{ flex: "0 0 auto", padding: "10px 16px", border: "none", borderRadius: 8, background: tab === t ? T.accentGradient : "transparent", color: tab === t ? "#fff" : T.muted, fontWeight: tab === t ? 700 : 400, fontSize: 13, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", boxShadow: tab === t ? "0 2px 8px rgba(124,92,252,0.3)" : "none" }}>
               {t === "users" ? `Users (${users.length})` : t === "plans" ? `Plans (${plans.length})` : t === "feedback" ? `Feedback (${feedback.length})` : `Reports (${reports.length})`}
             </button>
           ))}

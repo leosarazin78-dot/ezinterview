@@ -7,18 +7,49 @@ const supabase = typeof window !== "undefined"
   ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
   : null;
 
-// ─── UNIFIED THEME ───
+// ─── PREMIUM 2026 THEME ───
 const T = {
-  bg: "#FAF8F5", card: "#FFFFFF", border: "#E8E2D9", text: "#1B2559",
-  muted: "#64748B", light: "#94A3B8",
-  accent: "#3B82F6", accentLt: "#EFF6FF", accentBd: "#BFDBFE",
-  green: "#10B981", greenLt: "#ECFDF5", greenBd: "#A7F3D0",
-  warn: "#F59E0B", warnLt: "#FFFBEB", warnBd: "#FDE68A",
-  red: "#EF4444", redLt: "#FEF2F2", redBd: "#FECACA",
-  purple: "#8B5CF6", purpleLt: "#F5F3FF", purpleBd: "#DDD6FE",
-  orange: "#F97316", orangeLt: "#FFF7ED", orangeBd: "#FED7AA",
-  pink: "#EC4899", pinkLt: "#FDF2F8", pinkBd: "#FBCFE8",
-  r: 12,
+  // Base
+  bg: "#0A0A0F",
+  bgSoft: "#12121A",
+  bgCard: "#1A1A24",
+  bgGlass: "rgba(255,255,255,0.03)",
+  border: "rgba(255,255,255,0.08)",
+  borderHover: "rgba(255,255,255,0.15)",
+
+  // Text
+  text: "#F0F0F5",
+  muted: "#8888A0",
+  light: "#555568",
+
+  // Accent — warm indigo/violet gradient
+  accent: "#7C5CFC",
+  accentHover: "#9B7FFF",
+  accentLt: "rgba(124,92,252,0.12)",
+  accentBd: "rgba(124,92,252,0.25)",
+  accentGradient: "linear-gradient(135deg, #7C5CFC 0%, #5B8DEF 100%)",
+
+  // Semantic
+  green: "#34D399",
+  greenLt: "rgba(52,211,153,0.12)",
+  greenBd: "rgba(52,211,153,0.25)",
+  warn: "#FBBF24",
+  warnLt: "rgba(251,191,36,0.12)",
+  warnBd: "rgba(251,191,36,0.25)",
+  red: "#F87171",
+  redLt: "rgba(248,113,113,0.12)",
+  redBd: "rgba(248,113,113,0.25)",
+  purple: "#A78BFA",
+  purpleLt: "rgba(167,139,250,0.12)",
+  purpleBd: "rgba(167,139,250,0.25)",
+  orange: "#FB923C",
+  orangeLt: "rgba(251,146,60,0.12)",
+  orangeBd: "rgba(251,146,60,0.25)",
+  pink: "#F472B6",
+  pinkLt: "rgba(244,114,182,0.12)",
+  pinkBd: "rgba(244,114,182,0.25)",
+
+  r: 16,
 };
 
 // ─── Utilities ───
@@ -43,6 +74,16 @@ const safeFetch = async (url, opts = {}) => {
   }
 };
 
+// ─── Logo Component ───
+const Logo = ({ size = 32 }) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+    <rect width="40" height="40" rx="12" fill="url(#logoGrad)"/>
+    <path d="M10 12h10v3H13.5v4.5h6v3h-6V27H10V12Z" fill="#fff" opacity="0.9"/>
+    <path d="M21 12h9.5l-5 7.5L31 27h-4l-3.8-5.7L19.5 27H16l5.5-7.5L16.5 12H21Z" fill="#fff"/>
+    <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40"><stop stopColor="#7C5CFC"/><stop offset="1" stopColor="#5B8DEF"/></linearGradient></defs>
+  </svg>
+);
+
 // ─── UI atoms ───
 const Badge = ({ children, v = "default" }) => {
   const s = {
@@ -53,30 +94,30 @@ const Badge = ({ children, v = "default" }) => {
     tech: { background: T.purpleLt, color: T.purple, border: `1px solid ${T.purpleBd}` },
     info: { background: T.accentLt, color: T.accent, border: `1px solid ${T.accentBd}` },
   };
-  return <span style={{ ...s[v] || s.default, padding: "2px 10px", borderRadius: T.r, fontSize: 12, fontWeight: 500, display: "inline-block", lineHeight: "20px" }}>{children}</span>;
+  return <span style={{ ...s[v] || s.default, padding: "4px 12px", borderRadius: T.r, fontSize: 12, fontWeight: 500, display: "inline-block", lineHeight: "20px" }}>{children}</span>;
 };
 
 const Spin = ({ text }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center", padding: 32 }}>
-    <div style={{ width: 16, height: 16, border: `2px solid ${T.border}`, borderTopColor: T.accent, borderRadius: "50%", animation: "spin .6s linear infinite" }} />
+    <div style={{ width: 16, height: 16, border: `2px solid ${T.accentBd}`, borderTopColor: T.accent, borderRadius: "50%", animation: "spin .6s linear infinite" }} />
     <span style={{ fontSize: 14, color: T.muted }}>{text}</span>
     <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
   </div>
 );
 
 const Bar = ({ value, max, color = T.accent, h = 6 }) => (
-  <div style={{ height: h, borderRadius: T.r, background: "#EDE9E3", overflow: "hidden", width: "100%" }}>
+  <div style={{ height: h, borderRadius: T.r, background: T.bgCard, overflow: "hidden", width: "100%", border: `1px solid ${T.border}` }}>
     <div style={{ height: "100%", width: `${max > 0 ? Math.round((value / max) * 100) : 0}%`, borderRadius: T.r, background: color, transition: "width .4s ease" }} />
   </div>
 );
 
 // ─── Styles ───
-const card = { border: `1px solid ${T.border}`, borderRadius: T.r, padding: 24, marginBottom: 16, background: T.card };
-const inp = { width: "100%", padding: "10px 12px", border: `1px solid ${T.border}`, borderRadius: T.r, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit", background: T.card, color: T.text };
-const btnP = { background: T.accent, color: "#fff", border: "none", borderRadius: T.r, padding: "10px 20px", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" };
-const btnS = { background: T.card, color: T.text, border: `1px solid ${T.border}`, borderRadius: T.r, padding: "10px 20px", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" };
-const btnD = { ...btnP, background: "#B5B0A8", cursor: "not-allowed" };
-const tabS = (a) => ({ padding: "8px 20px", border: "none", borderBottom: a ? `2px solid ${T.accent}` : "2px solid transparent", background: "transparent", color: a ? T.text : T.muted, fontWeight: a ? 600 : 400, fontSize: 14, cursor: "pointer", fontFamily: "inherit" });
+const card = { background: T.bgGlass, border: `1px solid ${T.border}`, borderRadius: T.r, padding: 24, marginBottom: 16, backdropFilter: "blur(20px)" };
+const inp = { width: "100%", padding: "12px 14px", border: `1px solid ${T.border}`, borderRadius: T.r, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit", background: "rgba(255,255,255,0.05)", color: T.text, transition: "all 0.2s" };
+const btnP = { background: T.accentGradient, color: "#fff", border: "none", borderRadius: T.r, padding: "12px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s", boxShadow: "0 4px 16px rgba(124,92,252,0.25)" };
+const btnS = { background: T.bgGlass, color: T.text, border: `1px solid ${T.border}`, borderRadius: T.r, padding: "12px 24px", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s", backdropFilter: "blur(10px)" };
+const btnD = { ...btnP, background: "rgba(136,136,160,0.3)", cursor: "not-allowed", boxShadow: "none" };
+const tabS = (a) => ({ padding: "10px 20px", border: "none", borderBottom: a ? `2px solid ${T.accent}` : "2px solid transparent", background: "transparent", color: a ? T.text : T.muted, fontWeight: a ? 600 : 400, fontSize: 14, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" });
 const typeL = { memo: "Memo", video: "Vidéo", exercise: "Labo", note: "Note", quiz: "Quiz" };
 const typeV = { memo: "default", video: "info", exercise: "tech", note: "default", quiz: "warn" };
 
@@ -108,9 +149,9 @@ function QuizBlock({ questions, title }) {
       {!submitted ? (
         <button style={{ ...btnP, marginTop: 12, fontSize: 13 }} onClick={() => setSubmitted(true)} disabled={Object.keys(answers).length < questions.length}>Valider ({Object.keys(answers).length}/{questions.length})</button>
       ) : (
-        <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: T.r, background: score >= questions.length * 0.7 ? T.greenLt : T.warnLt, border: `1px solid ${score >= questions.length * 0.7 ? T.greenBd : T.warnBd}` }}>
+        <div style={{ marginTop: 12, padding: "12px 16px", borderRadius: T.r, background: score >= questions.length * 0.7 ? T.greenLt : T.warnLt, border: `1px solid ${score >= questions.length * 0.7 ? T.greenBd : T.warnBd}` }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: score >= questions.length * 0.7 ? T.green : T.warn }}>{score}/{questions.length} — {score >= questions.length * 0.7 ? "Bien joué !" : "À revoir"}</span>
-          <button style={{ ...btnS, marginLeft: 12, padding: "4px 12px", fontSize: 12 }} onClick={() => { setAnswers({}); setSubmitted(false); }}>Refaire</button>
+          <button style={{ ...btnS, marginLeft: 12, padding: "6px 14px", fontSize: 12 }} onClick={() => { setAnswers({}); setSubmitted(false); }}>Refaire</button>
         </div>
       )}
     </div>
@@ -127,19 +168,19 @@ function MiniQuiz({ questions }) {
   const q = questions[current];
 
   return (
-    <div style={{ marginTop: 10, padding: 10, borderRadius: T.r, background: T.warnLt, border: `1px solid ${T.warnBd}` }}>
+    <div style={{ marginTop: 10, padding: 12, borderRadius: T.r, background: T.warnLt, border: `1px solid ${T.warnBd}` }}>
       <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: T.warn }}>Mini-Quiz</p>
       <p style={{ margin: "0 0 6px", fontSize: 13 }}>{q.q}</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
         {q.options?.map((opt, oi) => (
           <button key={oi} onClick={() => { if (!showResult) { setSelected(oi); setShowResult(true); } }}
-            style={{ padding: "4px 10px", borderRadius: T.r, fontSize: 12, border: `1px solid ${showResult && oi === q.correct ? T.greenBd : showResult && selected === oi ? T.redBd : T.warnBd}`, background: showResult && oi === q.correct ? T.greenLt : showResult && selected === oi && oi !== q.correct ? T.redLt : T.card, cursor: showResult ? "default" : "pointer", fontFamily: "inherit", color: T.text }}>
+            style={{ padding: "4px 10px", borderRadius: T.r, fontSize: 12, border: `1px solid ${showResult && oi === q.correct ? T.greenBd : showResult && selected === oi ? T.redBd : T.warnBd}`, background: showResult && oi === q.correct ? T.greenLt : showResult && selected === oi && oi !== q.correct ? T.redLt : T.bgCard, cursor: showResult ? "default" : "pointer", fontFamily: "inherit", color: T.text }}>
             {opt}
           </button>
         ))}
       </div>
       {showResult && current < questions.length - 1 && (
-        <button style={{ ...btnS, padding: "3px 10px", fontSize: 11, marginTop: 6 }} onClick={() => { setCurrent(c => c + 1); setSelected(null); setShowResult(false); }}>Suivant</button>
+        <button style={{ ...btnS, padding: "4px 12px", fontSize: 11, marginTop: 6 }} onClick={() => { setCurrent(c => c + 1); setSelected(null); setShowResult(false); }}>Suivant</button>
       )}
     </div>
   );
@@ -210,7 +251,7 @@ function LinksBlock({ links }) {
     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
       {links.map((lk, i) => (
         <a key={i} href={lk.url} target="_blank" rel="noopener noreferrer"
-          style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: lk.type === "video" ? T.orange : lk.type === "lab" ? T.purple : T.accent, background: lk.type === "video" ? T.orangeLt : lk.type === "lab" ? T.purpleLt : T.accentLt, border: `1px solid ${lk.type === "video" ? T.orangeBd : lk.type === "lab" ? T.purpleBd : T.accentBd}` }}>
+          style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: lk.type === "video" ? T.orange : lk.type === "lab" ? T.purple : T.accent, background: lk.type === "video" ? T.orangeLt : lk.type === "lab" ? T.purpleLt : T.accentLt, border: `1px solid ${lk.type === "video" ? T.orangeBd : lk.type === "lab" ? T.purpleBd : T.accentBd}`, transition: "all 0.2s" }}>
           <span>{icons[lk.type] || "🔗"}</span>{lk.label}
         </a>
       ))}
@@ -224,19 +265,16 @@ function CulturePanel({ companyInfo, jobData }) {
   if (!ci) return null;
 
   const company = jobData?.company || "l'entreprise";
-  // Try to build company website URL from job URL or company name
-  const jobSource = jobData?.source || "";
   let companyDomain = null;
   if (jobData?.job_url) {
     try { companyDomain = new URL(jobData.job_url).hostname.replace("www.", ""); } catch {}
   }
-  // For job board URLs, try to guess company site
   const companySlug = company.toLowerCase().replace(/[^a-z0-9]/g, "");
 
   return (
     <div style={{ ...card, background: T.accentLt, borderColor: T.accentBd }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>🏢</div>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: T.accentGradient, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>🏢</div>
         <div>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.accent }}>Culture & Veille — {company}</h3>
           <p style={{ margin: "2px 0 0", fontSize: 11, color: T.muted }}>Secteur : {ci.sector || "non précisé"}</p>
@@ -262,7 +300,7 @@ function CulturePanel({ companyInfo, jobData }) {
       )}
 
       {ci.culture && (
-        <div style={{ marginBottom: 12, padding: 12, borderRadius: T.r, background: T.card }}>
+        <div style={{ marginBottom: 12, padding: 12, borderRadius: T.r, background: T.bgCard, border: `1px solid ${T.border}` }}>
           <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.accent }}>Culture d'entreprise</p>
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6 }}>{ci.culture}</p>
         </div>
@@ -290,22 +328,22 @@ function CulturePanel({ companyInfo, jobData }) {
       )}
 
       {/* Company links */}
-      <div style={{ marginTop: 8, padding: 12, borderRadius: T.r, background: T.card, border: `1px solid ${T.border}` }}>
+      <div style={{ marginTop: 8, padding: 12, borderRadius: T.r, background: T.bgCard, border: `1px solid ${T.border}` }}>
         <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: T.accent }}>Liens utiles — à consulter avant l'entretien</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " site officiel")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500 }}>
+          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " site officiel")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
             🌐 Site officiel
           </a>
-          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " avis salariés glassdoor")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.green, background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 500 }}>
+          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " avis salariés glassdoor")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.green, background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 500, transition: "all 0.2s" }}>
             ⭐ Avis Glassdoor
           </a>
-          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " actualités")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.warn, background: T.warnLt, border: `1px solid ${T.warnBd}`, fontWeight: 500 }}>
+          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " actualités")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.warn, background: T.warnLt, border: `1px solid ${T.warnBd}`, fontWeight: 500, transition: "all 0.2s" }}>
             📰 Actualités
           </a>
-          <a href={`https://www.linkedin.com/company/${companySlug}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500 }}>
+          <a href={`https://www.linkedin.com/company/${companySlug}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
             💼 Page LinkedIn
           </a>
-          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " carrières recrutement")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.purple, background: T.purpleLt, border: `1px solid ${T.purpleBd}`, fontWeight: 500 }}>
+          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " carrières recrutement")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.purple, background: T.purpleLt, border: `1px solid ${T.purpleBd}`, fontWeight: 500, transition: "all 0.2s" }}>
             🎯 Page Carrières
           </a>
         </div>
@@ -387,13 +425,21 @@ function LandingPage({ user, onLogin }) {
     <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: T.text, background: T.bg, minHeight: "100vh", lineHeight: 1.6 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+        * { box-sizing: border-box; }
+        body { background: #0A0A0F; margin: 0; }
+        ::selection { background: rgba(124,92,252,0.3); color: #fff; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(124,92,252,0.2); } 50% { box-shadow: 0 0 40px rgba(124,92,252,0.4); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass:hover { border-color: rgba(255,255,255,0.15); }
+        .btn-primary { background: linear-gradient(135deg, #7C5CFC, #5B8DEF); color: #fff; border: none; border-radius: 16px; padding: 12px 24px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(124,92,252,0.4); }
         .ez-card { transition: all 0.2s ease; cursor: pointer; }
-        .ez-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+        .ez-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(124,92,252,0.15); border-color: rgba(124,92,252,0.4); }
         .ez-btn { transition: all 0.15s ease; }
-        .ez-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.35); }
+        .ez-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.35); }
         @media (max-width: 768px) {
           .ez-hero-grid { grid-template-columns: 1fr !important; }
           .ez-hero-text h1 { font-size: 32px !important; }
@@ -412,21 +458,19 @@ function LandingPage({ user, onLogin }) {
       `}</style>
 
       {/* ─── Nav ─── */}
-      <nav style={{ background: T.card, borderBottom: `1px solid ${T.border}`, position: "sticky", top: 0, zIndex: 100 }}>
+      <nav style={{ background: T.bgGlass, borderBottom: `1px solid ${T.border}`, backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 100 }}>
         <div className="ez-nav-inner" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
-            </div>
-            <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}><span style={{ fontWeight: 900, color: T.accent, fontSize: "inherit", letterSpacing: "-0.5px" }}>EZE</span></span>
+            <Logo size={32} />
+            <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}>EZE</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {user ? (
-              <button onClick={() => onLogin?.()} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 14, fontWeight: 500, padding: "8px 16px", cursor: "pointer", fontFamily: "inherit", borderRadius: 8 }}>Mon espace</button>
+              <button onClick={() => onLogin?.()} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 14, fontWeight: 500, padding: "8px 16px", cursor: "pointer", fontFamily: "inherit", borderRadius: 8, transition: "all 0.2s" }}>Mon espace</button>
             ) : (
               <>
-                <button onClick={() => setShowAuth(true)} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 14, fontWeight: 500, padding: "8px 16px", cursor: "pointer", fontFamily: "inherit", borderRadius: 8 }}>Se connecter</button>
-                <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: 8, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>S'inscrire</button>
+                <button onClick={() => setShowAuth(true)} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 14, fontWeight: 500, padding: "8px 16px", cursor: "pointer", fontFamily: "inherit", borderRadius: 8, transition: "all 0.2s" }}>Se connecter</button>
+                <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: T.accentGradient, color: "#fff", border: "none", borderRadius: 10, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 16px rgba(124,92,252,0.25)" }}>S'inscrire</button>
               </>
             )}
           </div>
@@ -434,18 +478,21 @@ function LandingPage({ user, onLogin }) {
       </nav>
 
       {/* ─── Hero ─── */}
-      <section style={{ background: T.bg, borderBottom: `1px solid ${T.border}` }}>
-        <div className="ez-hero-grid ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+      <section style={{ background: T.bg, borderBottom: `1px solid ${T.border}`, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,92,252,0.15) 0%, transparent 70%)", top: -200, right: -100, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(91,141,239,0.1) 0%, transparent 70%)", bottom: -100, left: 100, pointerEvents: "none" }} />
+
+        <div className="ez-hero-grid ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center", position: "relative", zIndex: 1 }}>
           <div className="ez-hero-text" style={{ animation: "fadeIn 0.5s ease" }}>
-            <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.accentLt, fontSize: 13, fontWeight: 600, color: T.accent, marginBottom: 32 }}>Nouveau : tous les métiers</div>
-            <h1 style={{ fontSize: 48, fontWeight: 900, lineHeight: 1.1, margin: "0 0 24px", letterSpacing: "-1.5px", color: T.text }}>
+            <div style={{ display: "inline-block", padding: "8px 16px", borderRadius: 20, background: T.accentLt, fontSize: 12, fontWeight: 700, color: T.accent, marginBottom: 32, border: `1px solid ${T.accentBd}` }}>Nouveau : tous les métiers</div>
+            <h1 style={{ fontSize: 52, fontWeight: 900, lineHeight: 1.1, margin: "0 0 24px", letterSpacing: "-1.5px", color: T.text, background: T.accentGradient, backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Arrive en entretien avec l'assurance de celui qui a déjà les réponses.
             </h1>
             <p style={{ fontSize: 18, color: T.muted, margin: "0 0 40px", lineHeight: 1.8, maxWidth: 550 }}>
               La plupart des candidats ne savent pas par où commencer. EntretienZen crée un plan de préparation personnalisé, jour par jour, avec sources fiables et quiz adaptés à ton secteur.
             </p>
             <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 48 }}>
-              <button className="ez-btn" onClick={() => user ? onLogin?.() : setShowAuth(true)} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: T.r, padding: "14px 32px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              <button className="ez-btn" onClick={() => user ? onLogin?.() : setShowAuth(true)} style={{ ...btnP, padding: "14px 32px", fontSize: 16, fontWeight: 700 }}>
                 {user ? "Accéder à mon espace" : "Préparer mon entretien gratuitement"}
               </button>
               <span style={{ fontSize: 13, color: T.muted }}>Sans carte bancaire</span>
@@ -453,9 +500,9 @@ function LandingPage({ user, onLogin }) {
           </div>
 
           <div className="ez-hero-mockup" style={{ animation: "fadeIn 0.7s ease" }}>
-            <div style={{ background: T.card, borderRadius: 24, padding: 24, border: `1px solid ${T.border}`, boxShadow: "0 8px 30px rgba(0,0,0,0.04)" }}>
+            <div style={{ background: T.bgGlass, borderRadius: 24, padding: 24, border: `1px solid ${T.border}`, boxShadow: "0 20px 60px rgba(124,92,252,0.2)", backdropFilter: "blur(20px)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18 }}>📋</div>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: T.accentGradient, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20 }}>📋</div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Développeur Frontend React</div>
                   <div style={{ fontSize: 11, color: T.muted }}>Exemple interactif — clique pour explorer</div>
@@ -468,15 +515,15 @@ function LandingPage({ user, onLogin }) {
                     style={{
                       display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
                       borderRadius: demoDay === i ? `${T.r}px ${T.r}px 0 0` : T.r,
-                      background: T.card, cursor: "pointer",
+                      background: T.bgCard, cursor: "pointer",
                       border: `1px solid ${d.status === "completed" ? T.greenBd : d.status === "progress" ? T.accentBd : T.border}`,
                       borderBottom: demoDay === i ? "none" : undefined,
                       transition: "all 0.2s ease",
                     }}
                   >
                     <div style={{
-                      width: 28, height: 28, borderRadius: 7,
-                      background: d.status === "completed" ? T.greenLt : d.status === "progress" ? T.accentLt : "#F1F5F9",
+                      width: 28, height: 28, borderRadius: 8,
+                      background: d.status === "completed" ? T.greenLt : d.status === "progress" ? T.accentLt : "rgba(255,255,255,0.05)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: 12, fontWeight: 700, flexShrink: 0,
                       color: d.status === "completed" ? T.green : d.status === "progress" ? T.accent : T.muted,
@@ -520,8 +567,8 @@ function LandingPage({ user, onLogin }) {
       <section style={{ background: T.bg, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
         <div className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px" }}>
           <div style={{ textAlign: "center", marginBottom: 60 }}>
-            <div style={{ display: "inline-block", padding: "6px 16px", borderRadius: 20, background: T.orangeLt, fontSize: 12, fontWeight: 700, color: T.orange, marginBottom: 16, textTransform: "uppercase", letterSpacing: "1px" }}>Comment ça marche</div>
-            <h2 style={{ fontSize: 32, fontWeight: 800, margin: 0, color: T.text }}>3 étapes simples</h2>
+            <div style={{ display: "inline-block", padding: "8px 16px", borderRadius: 20, background: T.orangeLt, fontSize: 12, fontWeight: 700, color: T.orange, marginBottom: 16, textTransform: "uppercase", letterSpacing: "1px", border: `1px solid ${T.orangeBd}` }}>Comment ça marche</div>
+            <h2 style={{ fontSize: 40, fontWeight: 900, margin: 0, color: T.text }}>3 étapes simples</h2>
           </div>
           <div className="ez-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28 }}>
             {[
@@ -529,10 +576,10 @@ function LandingPage({ user, onLogin }) {
               { title: "Matching CV", desc: "Compare ton profil à l'offre. On identifie tes forces et tes points à travailler.", icon: "📄", n: 2 },
               { title: "Plan de préparation", desc: "Plan jour par jour : cours, exercices, quiz et ressources adaptées à ton métier.", icon: "🎯", n: 3 },
             ].map((c, i) => (
-              <div key={i} className="ez-card" style={{ borderRadius: T.r, background: T.card, border: `1px solid ${T.border}`, padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ width: 56, height: 56, borderRadius: T.r, background: T.accentLt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>{c.icon}</div>
+              <div key={i} className="ez-card" style={{ ...card, borderColor: T.accentBd }}>
+                <div style={{ width: 56, height: 56, borderRadius: T.r, background: T.accentLt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, marginBottom: 16 }}>{c.icon}</div>
                 <div>
-                  <div style={{ display: "inline-block", padding: "4px 12px", borderRadius: 20, background: T.accentLt, fontSize: 11, fontWeight: 700, color: T.accent, marginBottom: 8, textTransform: "uppercase" }}>Étape {c.n}</div>
+                  <div style={{ display: "inline-block", padding: "6px 12px", borderRadius: 20, background: T.accentLt, fontSize: 11, fontWeight: 700, color: T.accent, marginBottom: 8, textTransform: "uppercase", border: `1px solid ${T.accentBd}` }}>Étape {c.n}</div>
                   <h3 style={{ fontSize: 19, fontWeight: 700, margin: "0 0 10px", color: T.text }}>{c.title}</h3>
                   <p style={{ fontSize: 14, color: T.muted, margin: 0, lineHeight: 1.6 }}>{c.desc}</p>
                 </div>
@@ -545,16 +592,18 @@ function LandingPage({ user, onLogin }) {
       {/* ─── Features ─── */}
       <section className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px" }}>
         <div style={{ textAlign: "center", marginBottom: 60 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 12px", color: T.text }}>Tout pour réussir ton entretien</h2>
+          <h2 style={{ fontSize: 40, fontWeight: 900, margin: "0 0 12px", color: T.text }}>Tout pour réussir ton entretien</h2>
           <p style={{ fontSize: 16, color: T.muted, margin: 0, maxWidth: 650, marginLeft: "auto", marginRight: "auto" }}>Des outils complets et une préparation sérieuse, pas des promesses creuses</p>
         </div>
         <div className="ez-features-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 28 }}>
           {features.map((h, i) => (
-            <div key={i} style={{ display: "flex", gap: 20, padding: 32, borderRadius: T.r, background: T.card, border: `1px solid ${T.border}` }}>
-              <div style={{ width: 56, height: 56, borderRadius: T.r, background: [T.accentLt, T.accentLt, T.accentLt, T.accentLt][i], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{h.icon}</div>
-              <div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 6px", color: T.text }}>{h.title}</h3>
-                <p style={{ fontSize: 14, color: T.muted, margin: 0, lineHeight: 1.6 }}>{h.desc}</p>
+            <div key={i} style={{ ...card, borderColor: T.border }}>
+              <div style={{ display: "flex", gap: 20 }}>
+                <div style={{ width: 56, height: 56, borderRadius: T.r, background: T.accentLt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, flexShrink: 0, border: `1px solid ${T.accentBd}` }}>{h.icon}</div>
+                <div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 6px", color: T.text }}>{h.title}</h3>
+                  <p style={{ fontSize: 14, color: T.muted, margin: 0, lineHeight: 1.6 }}>{h.desc}</p>
+                </div>
               </div>
             </div>
           ))}
@@ -563,30 +612,28 @@ function LandingPage({ user, onLogin }) {
 
       {/* ─── CTA ─── */}
       <section className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px" }}>
-        <div className="ez-cta-box" style={{ maxWidth: 700, margin: "0 auto", padding: "64px 48px", borderRadius: 24, background: T.text, color: "#fff", textAlign: "center" }}>
-          <h2 style={{ fontSize: 36, fontWeight: 900, margin: "0 0 16px", letterSpacing: "-0.8px" }}>Prêt à décrocher ton poste ?</h2>
-          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.8)", margin: "0 0 32px", lineHeight: 1.7 }}>
+        <div className="ez-cta-box" style={{ maxWidth: 700, margin: "0 auto", padding: "64px 48px", borderRadius: 24, background: T.accentGradient, color: "#fff", textAlign: "center", boxShadow: "0 20px 60px rgba(124,92,252,0.25)" }}>
+          <h2 style={{ fontSize: 40, fontWeight: 900, margin: "0 0 16px", letterSpacing: "-0.8px" }}>Prêt à décrocher ton poste ?</h2>
+          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.85)", margin: "0 0 32px", lineHeight: 1.7 }}>
             Commence ta préparation gratuitement. Sans carte bancaire, en 2 minutes.
           </p>
-          <button className="ez-btn" onClick={() => user ? onLogin?.() : setShowAuth(true)} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: T.r, padding: "16px 40px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+          <button className="ez-btn" onClick={() => user ? onLogin?.() : setShowAuth(true)} style={{ background: "#fff", color: T.accent, border: "none", borderRadius: T.r, padding: "16px 40px", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}>
             {user ? "Accéder à mon espace" : "Commencer maintenant"}
           </button>
         </div>
       </section>
 
       {/* ─── Footer ─── */}
-      <footer style={{ borderTop: `1px solid ${T.border}`, background: T.card }}>
+      <footer style={{ borderTop: `1px solid ${T.border}`, background: T.bgGlass, backdropFilter: "blur(20px)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
-            </div>
-            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}><span style={{ fontWeight: 900, color: T.accent, fontSize: "inherit", letterSpacing: "-0.5px" }}>EZE</span></span>
+            <Logo size={28} />
+            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}>EZE</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-            <a href="/mentions-legales" style={{ fontSize: 12, color: T.muted, textDecoration: "none" }}>Mentions légales</a>
-            <a href="/confidentialite" style={{ fontSize: 12, color: T.muted, textDecoration: "none" }}>Confidentialité</a>
-            <a href="/cgu" style={{ fontSize: 12, color: T.muted, textDecoration: "none" }}>CGU</a>
+            <a href="/mentions-legales" style={{ fontSize: 12, color: T.muted, textDecoration: "none", transition: "all 0.2s" }}>Mentions légales</a>
+            <a href="/confidentialite" style={{ fontSize: 12, color: T.muted, textDecoration: "none", transition: "all 0.2s" }}>Confidentialité</a>
+            <a href="/cgu" style={{ fontSize: 12, color: T.muted, textDecoration: "none", transition: "all 0.2s" }}>CGU</a>
             <span style={{ fontSize: 12, color: T.light }}>© 2024-2026</span>
           </div>
         </div>
@@ -594,20 +641,20 @@ function LandingPage({ user, onLogin }) {
 
       {/* ─── Auth Modal ─── */}
       {showAuth && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(27,37,89,0.5)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowAuth(false); }}>
-          <div style={{ maxWidth: 420, width: "100%", background: T.card, borderRadius: 20, padding: 32, position: "relative", boxShadow: "0 24px 64px rgba(0,0,0,0.2)", animation: "fadeIn 0.25s ease" }}>
-            <button onClick={() => setShowAuth(false)} style={{ position: "absolute", top: 16, right: 16, background: T.bg, border: "none", fontSize: 16, color: T.muted, cursor: "pointer", fontFamily: "inherit", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8 }}>✕</button>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowAuth(false); }}>
+          <div style={{ maxWidth: 420, width: "100%", background: T.bgGlass, borderRadius: 20, padding: 32, position: "relative", boxShadow: "0 24px 64px rgba(124,92,252,0.2)", animation: "fadeIn 0.25s ease", border: `1px solid ${T.border}`, backdropFilter: "blur(20px)" }}>
+            <button onClick={() => setShowAuth(false)} style={{ position: "absolute", top: 16, right: 16, background: T.bgSoft, border: `1px solid ${T.border}`, fontSize: 16, color: T.muted, cursor: "pointer", fontFamily: "inherit", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8 }}>✕</button>
 
             <div style={{ textAlign: "center", marginBottom: 28 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: T.accent, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: T.accentGradient, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16, boxShadow: "0 8px 24px rgba(124,92,252,0.3)" }}>
+                <Logo size={28} />
               </div>
               <h3 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: T.text }}>Bienvenue</h3>
               <p style={{ margin: "6px 0 0", fontSize: 14, color: T.muted }}>Connecte-toi pour préparer ton entretien</p>
             </div>
 
             <button onClick={handleGoogle} disabled={loading}
-              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, padding: "12px 20px", marginBottom: 20, fontSize: 14, fontWeight: 600, background: T.bg, color: T.text, border: `1px solid ${T.border}`, borderRadius: T.r, cursor: "pointer", fontFamily: "inherit" }}>
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, padding: "12px 20px", marginBottom: 20, fontSize: 14, fontWeight: 600, background: T.bgCard, color: T.text, border: `1px solid ${T.border}`, borderRadius: T.r, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" }}>
               <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
               Continuer avec Google
             </button>
@@ -618,10 +665,10 @@ function LandingPage({ user, onLogin }) {
               <div style={{ flex: 1, height: 1, background: T.border }} />
             </div>
 
-            <div style={{ display: "flex", gap: 0, marginBottom: 20, background: T.bg, borderRadius: 10, padding: 3 }}>
+            <div style={{ display: "flex", gap: 0, marginBottom: 20, background: T.bgCard, borderRadius: 12, padding: 3, border: `1px solid ${T.border}` }}>
               {["login", "signup"].map(m => (
                 <button key={m} onClick={() => { setMode(m); setError(""); setMessage(""); }}
-                  style={{ flex: 1, padding: "8px 0", border: "none", borderRadius: 8, background: mode === m ? T.card : "transparent", color: mode === m ? T.text : T.muted, fontWeight: mode === m ? 600 : 400, fontSize: 13, cursor: "pointer", fontFamily: "inherit", boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.08)" : "none" }}>
+                  style={{ flex: 1, padding: "8px 0", border: "none", borderRadius: 10, background: mode === m ? T.bgGlass : "transparent", color: mode === m ? T.text : T.muted, fontWeight: mode === m ? 600 : 400, fontSize: 13, cursor: "pointer", fontFamily: "inherit", boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.2)" : "none", transition: "all 0.2s" }}>
                   {m === "login" ? "Connexion" : "Inscription"}
                 </button>
               ))}
@@ -649,10 +696,10 @@ function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, user, 
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   return (
-    <div style={{ ...card, background: T.accentLt, borderColor: T.accentBd }}>
+    <div style={card}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.text }}>Mes préparations</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text }}>Mes préparations</h2>
           <p style={{ margin: "4px 0 0", fontSize: 12, color: T.muted }}>Continue ou crée une nouvelle</p>
         </div>
         <button onClick={onNew} style={btnP}>Nouveau plan</button>
@@ -666,7 +713,7 @@ function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, user, 
             const done = Object.keys(plan.completed_days || {}).length;
             const daysLeft = plan.interview_date ? Math.max(0, Math.ceil((new Date(plan.interview_date) - new Date()) / 86400000)) : null;
             return (
-              <div key={plan.id} style={{ padding: 16, borderRadius: T.r, background: T.card, border: `1px solid ${T.border}`, cursor: "pointer", transition: "all .2s", position: "relative" }}>
+              <div key={plan.id} style={{ ...card, cursor: "pointer", position: "relative" }}>
                 <div onClick={() => onSelect(plan.id)}>
                   <h3 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: T.text }}>{plan.job_title}</h3>
                   <p style={{ margin: "0 0 4px", fontSize: 12, color: T.muted }}>{plan.company}</p>
@@ -678,15 +725,15 @@ function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, user, 
                   <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
                     <button onClick={(e) => { e.stopPropagation(); onDelete(plan.id); setConfirmDelete(null); }}
                       disabled={deletingPlan === plan.id}
-                      style={{ ...btnP, padding: "4px 10px", fontSize: 11, background: T.red }}>
+                      style={{ ...btnP, padding: "6px 12px", fontSize: 11, background: T.red }}>
                       {deletingPlan === plan.id ? "..." : "Confirmer"}
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(null); }}
-                      style={{ ...btnS, padding: "4px 10px", fontSize: 11 }}>Annuler</button>
+                      style={{ ...btnS, padding: "6px 12px", fontSize: 11 }}>Annuler</button>
                   </div>
                 ) : (
                   <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(plan.id); }}
-                    style={{ position: "absolute", top: 10, right: 10, background: "transparent", border: "none", cursor: "pointer", fontSize: 14, color: T.muted, padding: 4 }}
+                    style={{ position: "absolute", top: 16, right: 16, background: "transparent", border: "none", cursor: "pointer", fontSize: 14, color: T.muted, padding: 4, transition: "all 0.2s" }}
                     title="Supprimer ce plan">🗑</button>
                 )}
               </div>
@@ -979,6 +1026,18 @@ export default function EzInterview() {
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: T.text, background: T.bg, minHeight: "100vh", lineHeight: 1.6 }}>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        * { box-sizing: border-box; }
+        body { background: #0A0A0F; margin: 0; }
+        ::selection { background: rgba(124,92,252,0.3); color: #fff; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(124,92,252,0.2); } 50% { box-shadow: 0 0 40px rgba(124,92,252,0.4); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass:hover { border-color: rgba(255,255,255,0.15); }
+        .btn-primary { background: linear-gradient(135deg, #7C5CFC, #5B8DEF); color: #fff; border: none; border-radius: 16px; padding: 12px 24px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(124,92,252,0.4); }
         @media (max-width: 768px) {
           .ez-plan-sidebar { display: none !important; }
           .ez-plan-main { grid-template-columns: 1fr !important; }
@@ -1006,8 +1065,11 @@ export default function EzInterview() {
         }
       `}</style>
 
-      <nav style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span onClick={() => setView("landing")} style={{ fontSize: 18, fontWeight: 700, color: T.text, cursor: "pointer" }}><span style={{ fontWeight: 900, color: T.accent, fontSize: "inherit", letterSpacing: "-0.5px" }}>EZE</span></span>
+      <nav style={{ background: T.bgGlass, borderBottom: `1px solid ${T.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", backdropFilter: "blur(20px)" }}>
+        <div onClick={() => setView("landing")} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+          <Logo size={28} />
+          <span style={{ fontSize: 18, fontWeight: 700, color: T.text }}>EZE</span>
+        </div>
         <button onClick={() => setStep("dashboard")} style={btnS}>Mon espace</button>
       </nav>
 
@@ -1035,10 +1097,10 @@ export default function EzInterview() {
 
       {step === "input" && (
         <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
-          <h1 style={{ margin: "0 0 28px", fontSize: 32, fontWeight: 700, color: T.text }}>Préparer mon entretien</h1>
+          <h1 style={{ margin: "0 0 28px", fontSize: 36, fontWeight: 700, color: T.text }}>Préparer mon entretien</h1>
 
           {/* ─── Stepper tabs ─── */}
-          <div style={{ display: "flex", gap: 0, marginBottom: 32, background: T.card, borderRadius: 14, padding: 4, border: `1px solid ${T.border}` }}>
+          <div style={{ display: "flex", gap: 0, marginBottom: 32, background: T.bgGlass, borderRadius: 16, padding: 4, border: `1px solid ${T.border}`, backdropFilter: "blur(10px)" }}>
             {[
               { key: "offer", label: "① Offre", done: !!jobData },
               { key: "cv", label: "② CV", done: !!cvText || !!cvFile },
@@ -1050,13 +1112,14 @@ export default function EzInterview() {
                 <button key={tab.key}
                   onClick={() => !isLocked && setActiveTab(tab.key)}
                   style={{
-                    flex: 1, padding: "12px 0", border: "none", borderRadius: 10,
-                    background: isActive ? T.accent : "transparent",
+                    flex: 1, padding: "14px 0", border: "none", borderRadius: 12,
+                    background: isActive ? T.accentGradient : "transparent",
                     color: isActive ? "#fff" : isLocked ? T.light : T.text,
                     fontWeight: isActive ? 700 : 500, fontSize: 14,
                     cursor: isLocked ? "not-allowed" : "pointer",
                     fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                     opacity: isLocked ? 0.5 : 1,
+                    transition: "all 0.2s",
                   }}>
                   {tab.label}
                   <span style={{ color: isActive ? "rgba(255,255,255,0.7)" : T.red, fontSize: 11, fontWeight: 700 }}>*</span>
@@ -1141,7 +1204,7 @@ export default function EzInterview() {
                 style={{
                   border: `2px dashed ${dragOver ? T.accent : T.border}`,
                   borderRadius: T.r, padding: 32, textAlign: "center",
-                  background: dragOver ? T.accentLt : T.bg,
+                  background: dragOver ? T.accentLt : T.bgCard,
                   cursor: "pointer", transition: "all 0.2s ease", marginBottom: 16,
                 }}
                 onClick={() => document.getElementById("cv-file-input")?.click()}
@@ -1161,7 +1224,7 @@ export default function EzInterview() {
                     }
                   }}
                 />
-                <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>📄</div>
+                <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.5 }}>📄</div>
                 {cvFile ? (
                   <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.green }}>{cvFile.name} — Fichier sélectionné ✓</p>
                 ) : (
@@ -1199,7 +1262,7 @@ export default function EzInterview() {
                 {stats.matches?.length > 0 && (
                   <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
                     {stats.matches.map((m, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: T.r, background: m.match === "strong" ? T.greenLt : m.match === "partial" ? T.warnLt : T.redLt, border: `1px solid ${m.match === "strong" ? T.greenBd : m.match === "partial" ? T.warnBd : T.redBd}` }}>
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: T.r, background: m.match === "strong" ? T.greenLt : m.match === "partial" ? T.warnLt : T.redLt, border: `1px solid ${m.match === "strong" ? T.greenBd : m.match === "partial" ? T.warnBd : T.redBd}` }}>
                         <Badge v={m.match}>{m.match === "strong" ? "Acquis" : m.match === "partial" ? "Partiel" : "À travailler"}</Badge>
                         <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{m.label}</span>
                       </div>
@@ -1218,7 +1281,7 @@ export default function EzInterview() {
                 <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: T.text }}>Intensité de préparation</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                   {["Léger", "Standard", "Intensif"].map((i) => (
-                    <button key={i} onClick={() => setIntensity(i)} style={{ padding: 12, borderRadius: T.r, border: `2px solid ${intensity === i ? T.accent : T.border}`, background: intensity === i ? T.accentLt : T.card, color: T.text, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                    <button key={i} onClick={() => setIntensity(i)} style={{ padding: 14, borderRadius: T.r, border: `2px solid ${intensity === i ? T.accent : T.border}`, background: intensity === i ? T.accentLt : T.bgCard, color: T.text, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" }}>
                       {i}<br/><span style={{ fontSize: 11, fontWeight: 400, color: T.muted }}>{i === "Léger" ? "30 min/j" : i === "Standard" ? "1h/j" : "2h+/j"}</span>
                     </button>
                   ))}
@@ -1255,7 +1318,7 @@ export default function EzInterview() {
           <div className="ez-plan-sidebar" style={{ display: "flex", flexDirection: "column", gap: 8, position: "sticky", top: 80, alignSelf: "start" }}>
             <button onClick={() => { setStep("dashboard"); setExpandedItems({}); }} style={{ ...btnS, marginBottom: 8, fontSize: 12 }}>← Mes préparations</button>
             {plan.map((day, i) => (
-              <button key={i} onClick={() => { setExpandedDay(i); setExpandedItems({}); }} style={{ padding: "10px 14px", borderRadius: T.r, border: `1px solid ${expandedDay === i ? T.accent : T.border}`, background: expandedDay === i ? T.accentLt : T.card, color: T.text, textAlign: "left", cursor: "pointer", fontFamily: "inherit", fontWeight: expandedDay === i ? 700 : 500, fontSize: 13 }}>
+              <button key={i} onClick={() => { setExpandedDay(i); setExpandedItems({}); }} style={{ padding: "12px 14px", borderRadius: T.r, border: `1px solid ${expandedDay === i ? T.accent : T.border}`, background: expandedDay === i ? T.accentLt : T.bgCard, color: T.text, textAlign: "left", cursor: "pointer", fontFamily: "inherit", fontWeight: expandedDay === i ? 700 : 500, fontSize: 13, transition: "all 0.2s" }}>
                 <span style={{ fontWeight: 700 }}>J{i + 1}</span> — {day.title?.slice(0, 25)}{day.title?.length > 25 ? "…" : ""}
               </button>
             ))}
@@ -1268,7 +1331,7 @@ export default function EzInterview() {
               <button key={i} onClick={() => { setExpandedDay(i); setExpandedItems({}); }}
                 style={{
                   padding: "8px 12px", borderRadius: 20, border: `1px solid ${expandedDay === i ? T.accent : T.border}`,
-                  background: expandedDay === i ? T.accent : T.card, color: expandedDay === i ? "#fff" : T.text,
+                  background: expandedDay === i ? T.accent : T.bgCard, color: expandedDay === i ? "#fff" : T.text,
                   fontWeight: expandedDay === i ? 700 : 500, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
                   flexShrink: 0, whiteSpace: "nowrap",
                 }}>
@@ -1280,13 +1343,13 @@ export default function EzInterview() {
           <div className="ez-plan-main" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
             {plan[expandedDay] && (
               <>
-                <div className="ez-plan-day-header" style={{ ...card, padding: 20 }}>
-                  <h2 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: T.text }}>Jour {expandedDay + 1} — {plan[expandedDay].title}</h2>
+                <div className="ez-plan-day-header" style={{ ...card }}>
+                  <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700, color: T.text }}>Jour {expandedDay + 1} — {plan[expandedDay].title}</h2>
                   <p style={{ margin: 0, fontSize: 12, color: T.muted }}>{plan[expandedDay].focus}</p>
                   {/* Day navigation */}
                   <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                    {expandedDay > 0 && <button onClick={() => { setExpandedDay(expandedDay - 1); setExpandedItems({}); }} style={{ ...btnS, padding: "4px 12px", fontSize: 12 }}>← Jour {expandedDay}</button>}
-                    {expandedDay < plan.length - 1 && <button onClick={() => { setExpandedDay(expandedDay + 1); setExpandedItems({}); }} style={{ ...btnS, padding: "4px 12px", fontSize: 12 }}>Jour {expandedDay + 2} →</button>}
+                    {expandedDay > 0 && <button onClick={() => { setExpandedDay(expandedDay - 1); setExpandedItems({}); }} style={{ ...btnS, padding: "6px 14px", fontSize: 12 }}>← Jour {expandedDay}</button>}
+                    {expandedDay < plan.length - 1 && <button onClick={() => { setExpandedDay(expandedDay + 1); setExpandedItems({}); }} style={{ ...btnS, padding: "6px 14px", fontSize: 12 }}>Jour {expandedDay + 2} →</button>}
                   </div>
                 </div>
 
@@ -1294,7 +1357,7 @@ export default function EzInterview() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {plan[expandedDay].items?.map((item, i) => (
-                    <div key={i} className="ez-plan-item" style={{ ...card, padding: 16, marginBottom: 0 }}>
+                    <div key={i} className="ez-plan-item" style={{ ...card, marginBottom: 0 }}>
                       <div onClick={() => setExpandedItems(p => ({ ...p, [i]: !p[i] }))} style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>{item.title}</h3>
@@ -1304,7 +1367,7 @@ export default function EzInterview() {
                           </div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                          <button onClick={(e) => { e.stopPropagation(); setReportingItem({ day: expandedDay, item: i, title: item.title }); }} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 13, cursor: "pointer", padding: 4, fontFamily: "inherit" }} title="Signaler une erreur">⚠</button>
+                          <button onClick={(e) => { e.stopPropagation(); setReportingItem({ day: expandedDay, item: i, title: item.title }); }} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 13, cursor: "pointer", padding: 4, fontFamily: "inherit", transition: "all 0.2s" }} title="Signaler une erreur">⚠</button>
                           <span style={{ color: T.muted, fontSize: 12 }}>{expandedItems[i] ? "▼" : "▶"}</span>
                         </div>
                       </div>
@@ -1329,8 +1392,8 @@ export default function EzInterview() {
                                 console.error("Report error:", err);
                                 alert("Erreur lors du signalement");
                               }
-                            }} style={{ ...btnP, padding: "6px 12px", fontSize: 12, flex: 1 }}>Envoyer</button>
-                            <button onClick={() => { setReportingItem(null); setReportText(""); }} style={{ ...btnS, padding: "6px 12px", fontSize: 12 }}>Annuler</button>
+                            }} style={{ ...btnP, padding: "8px 14px", fontSize: 12, flex: 1 }}>Envoyer</button>
+                            <button onClick={() => { setReportingItem(null); setReportText(""); }} style={{ ...btnS, padding: "8px 14px", fontSize: 12 }}>Annuler</button>
                           </div>
                         </div>
                       )}
@@ -1347,23 +1410,23 @@ export default function EzInterview() {
       {user && view !== "landing" && (
         <button onClick={() => setShowFeedback(true)} style={{
           position: "fixed", bottom: 24, right: 24, width: 56, height: 56, borderRadius: "50%",
-          background: T.accent, color: "#fff", border: "none", fontSize: 20, cursor: "pointer",
-          boxShadow: "0 4px 16px rgba(59, 130, 246, 0.4)", display: "flex", alignItems: "center",
+          background: T.accentGradient, color: "#fff", border: "none", fontSize: 20, cursor: "pointer",
+          boxShadow: "0 8px 24px rgba(124,92,252,0.35)", display: "flex", alignItems: "center",
           justifyContent: "center", fontFamily: "inherit", zIndex: 50, transition: "all 0.2s ease"
-        }} onMouseEnter={(e) => e.target.style.transform = "scale(1.1)"} onMouseLeave={(e) => e.target.style.transform = "scale(1)"}>
+        }} onMouseEnter={(e) => e.target.style.transform = "scale(1.15)"} onMouseLeave={(e) => e.target.style.transform = "scale(1)"}>
           💬
         </button>
       )}
 
       {/* Profile Completion Modal */}
       {showProfileForm && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(27,37,89,0.5)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001, padding: 16 }}>
-          <div style={{ maxWidth: 460, width: "100%", background: T.card, borderRadius: 20, padding: 32, position: "relative", boxShadow: "0 24px 64px rgba(0,0,0,0.2)", animation: "fadeIn 0.25s ease" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001, padding: 16 }}>
+          <div style={{ maxWidth: 460, width: "100%", background: T.bgGlass, borderRadius: 20, padding: 32, position: "relative", boxShadow: "0 24px 64px rgba(124,92,252,0.2)", animation: "fadeIn 0.25s ease", border: `1px solid ${T.border}`, backdropFilter: "blur(20px)" }}>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: T.accent, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: T.accentGradient, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12, boxShadow: "0 8px 24px rgba(124,92,252,0.3)" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </div>
-              <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: T.text }}>Complète ton profil</h3>
+              <h3 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: T.text }}>Complète ton profil</h3>
               <p style={{ margin: "6px 0 0", fontSize: 13, color: T.muted }}>Pour personnaliser ton expérience</p>
             </div>
 
@@ -1421,9 +1484,9 @@ export default function EzInterview() {
 
       {/* Feedback Modal */}
       {showFeedback && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(27,37,89,0.5)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowFeedback(false); }}>
-          <div style={{ maxWidth: 420, width: "100%", background: T.card, borderRadius: 20, padding: 28, position: "relative", boxShadow: "0 24px 64px rgba(0,0,0,0.2)", animation: "fadeIn 0.25s ease" }}>
-            <button onClick={() => setShowFeedback(false)} style={{ position: "absolute", top: 16, right: 16, background: T.bg, border: "none", fontSize: 16, color: T.muted, cursor: "pointer", fontFamily: "inherit", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8 }}>✕</button>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowFeedback(false); }}>
+          <div style={{ maxWidth: 420, width: "100%", background: T.bgGlass, borderRadius: 20, padding: 28, position: "relative", boxShadow: "0 24px 64px rgba(124,92,252,0.2)", animation: "fadeIn 0.25s ease", border: `1px solid ${T.border}`, backdropFilter: "blur(20px)" }}>
+            <button onClick={() => setShowFeedback(false)} style={{ position: "absolute", top: 16, right: 16, background: T.bgSoft, border: `1px solid ${T.border}`, fontSize: 16, color: T.muted, cursor: "pointer", fontFamily: "inherit", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8 }}>✕</button>
 
             {!feedbackSent ? (
               <>
