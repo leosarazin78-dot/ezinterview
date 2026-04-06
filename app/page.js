@@ -330,7 +330,7 @@ function CulturePanel({ companyInfo, jobData }) {
       {/* Company links */}
       <div style={{ marginTop: 8, padding: 12, borderRadius: T.r, background: T.bgCard, border: `1px solid ${T.border}` }}>
         <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: T.accent }}>Liens utiles — à consulter avant l'entretien</p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <div className="ez-culture-links" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " site officiel")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
             🌐 Site officiel
           </a>
@@ -441,19 +441,28 @@ function LandingPage({ user, onLogin }) {
         .ez-btn { transition: all 0.15s ease; }
         .ez-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.35); }
         @media (max-width: 768px) {
-          .ez-hero-grid { grid-template-columns: 1fr !important; }
-          .ez-hero-text h1 { font-size: 32px !important; }
-          .ez-hero-text p { font-size: 15px !important; }
+          .ez-hero-grid { grid-template-columns: 1fr !important; gap: 32px !important; padding: 48px 20px !important; }
+          .ez-hero-text h1 { font-size: 32px !important; letter-spacing: -1px !important; }
+          .ez-hero-text p { font-size: 14px !important; margin-bottom: 28px !important; }
           .ez-hero-mockup { display: none !important; }
-          .ez-courses-grid { grid-template-columns: 1fr !important; }
-          .ez-features-grid { grid-template-columns: 1fr !important; }
+          .ez-courses-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .ez-features-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .ez-section { padding-left: 16px !important; padding-right: 16px !important; }
-          .ez-nav-inner { padding: 0 16px !important; }
-          .ez-cta-box { padding: 40px 24px !important; }
-          .ez-cta-box h2 { font-size: 24px !important; }
+          .ez-section h2 { font-size: 24px !important; }
+          .ez-nav-inner { padding: 0 16px !important; height: 56px !important; }
+          .ez-nav-inner .ez-btn { padding: 8px 16px !important; font-size: 13px !important; }
+          .ez-cta-box { padding: 32px 20px !important; border-radius: 16px !important; }
+          .ez-cta-box h2 { font-size: 22px !important; }
+          .ez-cta-box p { font-size: 14px !important; }
+          .ez-cta-box button { padding: 14px 28px !important; font-size: 15px !important; width: 100% !important; }
+          .ez-steps-section { padding: 48px 16px !important; }
+          .ez-features-section { padding: 48px 16px !important; }
         }
         @media (max-width: 480px) {
-          .ez-hero-text h1 { font-size: 26px !important; }
+          .ez-hero-text h1 { font-size: 26px !important; line-height: 1.15 !important; }
+          .ez-hero-text p { font-size: 13px !important; }
+          .ez-hero-grid { padding: 32px 16px !important; }
+          .ez-nav-inner button:first-of-type { display: none !important; }
         }
       `}</style>
 
@@ -697,7 +706,7 @@ function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, user, 
 
   return (
     <div style={card}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <div className="ez-dashboard-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text }}>Mes préparations</h2>
           <p style={{ margin: "4px 0 0", fontSize: 12, color: T.muted }}>Continue ou crée une nouvelle</p>
@@ -708,7 +717,7 @@ function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, user, 
       {!plans?.length ? (
         <p style={{ fontSize: 13, color: T.muted, textAlign: "center", padding: 32 }}>Aucun plan encore. Crée-en un pour commencer !</p>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+        <div className="ez-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {plans.map((plan) => {
             const done = Object.keys(plan.completed_days || {}).length;
             const daysLeft = plan.interview_date ? Math.max(0, Math.ceil((new Date(plan.interview_date) - new Date()) / 86400000)) : null;
@@ -823,30 +832,36 @@ export default function EzInterview() {
     }
   }, [view, step]);
 
+  // Charge le profil et les plans d'un utilisateur connecté
+  const loadUserData = async (currentUser) => {
+    setUser(currentUser);
+    const hash = window.location.hash.replace("#", "");
+    if (hash === "prepare") { setView("dashboard"); setStep("input"); }
+    else { setView("dashboard"); setStep("dashboard"); }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        try {
+          const profile = await safeFetch("/api/profile", { headers: { "Authorization": `Bearer ${session.access_token}` } });
+          if (!profile.profileComplete) {
+            setProfileData({ firstName: profile.firstName || "", lastName: profile.lastName || "", phone: profile.phone || "", city: profile.city || "", birthYear: profile.birthYear || "" });
+            setShowProfileForm(true);
+          }
+        } catch (e) { console.error("Profile load error:", e); }
+        try {
+          const plans = await safeFetch("/api/plans", { headers: { "Authorization": `Bearer ${session.access_token}` } });
+          setSavedPlans(plans);
+        } catch (e) { console.error("Plans load error:", e); }
+      }
+    } catch (e) { console.error("Session error:", e); }
+  };
+
   useEffect(() => {
+    // Check initial auth
     const checkAuth = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUser(user);
-          const hash = window.location.hash.replace("#", "");
-          if (hash === "prepare") { setView("dashboard"); setStep("input"); }
-          else { setView("dashboard"); setStep("dashboard"); }
-          // Check if profile is complete
-          try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.access_token) {
-              const profile = await safeFetch("/api/profile", { headers: { "Authorization": `Bearer ${session.access_token}` } });
-              if (!profile.profileComplete) {
-                setProfileData({ firstName: profile.firstName || "", lastName: profile.lastName || "", phone: profile.phone || "", city: profile.city || "", birthYear: profile.birthYear || "" });
-                setShowProfileForm(true);
-              }
-              // Load saved plans
-              const plans = await safeFetch("/api/plans", { headers: { "Authorization": `Bearer ${session.access_token}` } });
-              setSavedPlans(plans);
-            }
-          } catch (e) { console.error("Load plans/profile error:", e); }
-        }
+        const { data: { user: existingUser } } = await supabase.auth.getUser();
+        if (existingUser) await loadUserData(existingUser);
       } catch (err) {
         console.error("Auth error:", err);
       } finally {
@@ -854,6 +869,24 @@ export default function EzInterview() {
       }
     };
     checkAuth();
+
+    // Écoute les changements d'auth en temps réel (Google OAuth, email confirm, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        await loadUserData(session.user);
+        setAuthLoading(false);
+      } else if (event === "SIGNED_OUT") {
+        setUser(null);
+        setView("landing");
+        setStep("input");
+        setSavedPlans([]);
+        setPlan(null);
+        setJobData(null);
+        setStats(null);
+      }
+    });
+
+    return () => subscription?.unsubscribe();
   }, []);
 
   const fetchJobData = async () => {
@@ -978,9 +1011,7 @@ export default function EzInterview() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    setView("landing");
-    setStep("input");
+    // onAuthStateChange gère le reset automatiquement
   };
 
   const handleSendFeedback = async () => {
@@ -1038,34 +1069,100 @@ export default function EzInterview() {
         .glass:hover { border-color: rgba(255,255,255,0.15); }
         .btn-primary { background: linear-gradient(135deg, #7C5CFC, #5B8DEF); color: #fff; border: none; border-radius: 16px; padding: 12px 24px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(124,92,252,0.4); }
+        /* ═══ Mobile: Editor / Plan View ═══ */
         @media (max-width: 768px) {
+          /* ── Layout ── */
           .ez-plan-sidebar { display: none !important; }
           .ez-plan-main { grid-template-columns: 1fr !important; }
-          .ez-plan-container { grid-template-columns: 1fr !important; padding: 8px !important; gap: 8px !important; }
-          .ez-step { padding: 12px !important; }
+          .ez-plan-container { grid-template-columns: 1fr !important; padding: 10px !important; gap: 10px !important; }
+          .ez-step { padding: 16px 12px !important; }
+          .ez-step h1 { font-size: 24px !important; margin-bottom: 20px !important; }
           .ez-input-grid { grid-template-columns: 1fr !important; }
-          .ez-stepper { font-size: 12px !important; }
-          .ez-stepper button { padding: 10px 4px !important; font-size: 12px !important; }
-          .ez-plan-day-header { padding: 12px !important; }
-          .ez-plan-day-header h2 { font-size: 16px !important; margin-bottom: 4px !important; }
-          .ez-plan-day-header p { font-size: 11px !important; }
-          .ez-plan-item { padding: 12px !important; margin-bottom: 8px !important; }
-          .ez-plan-item h3 { font-size: 13px !important; }
-          .ez-plan-item-content p { font-size: 12px !important; line-height: 1.5 !important; }
-          .ez-plan-item-content .ez-key-point { font-size: 12px !important; padding-left: 6px !important; }
-          .ez-plan-mobile-days { display: flex !important; }
-          .ez-plan-nav-top { padding: 8px 12px !important; }
+
+          /* ── Stepper tabs: horizontal scroll pills ── */
+          .ez-stepper-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+          .ez-stepper-wrap::-webkit-scrollbar { display: none; }
+          .ez-stepper-wrap > div { flex-wrap: nowrap !important; min-width: max-content !important; padding: 3px !important; }
+          .ez-stepper-wrap button { padding: 10px 14px !important; font-size: 13px !important; flex: 0 0 auto !important; min-height: 44px !important; border-radius: 10px !important; white-space: nowrap !important; }
+
+          /* ── Mobile day selector (pills bar) ── */
+          .ez-plan-mobile-days { display: flex !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 4px 0 10px !important; }
+          .ez-plan-mobile-days::-webkit-scrollbar { display: none; }
+          .ez-plan-mobile-days button { min-height: 44px !important; padding: 10px 16px !important; font-size: 13px !important; }
+
+          /* ── Plan day header ── */
+          .ez-plan-day-header { padding: 16px !important; }
+          .ez-plan-day-header h2 { font-size: 18px !important; margin-bottom: 4px !important; }
+          .ez-plan-day-header p { font-size: 12px !important; }
+
+          /* ── Plan items (cards) ── */
+          .ez-plan-item { padding: 14px !important; margin-bottom: 8px !important; }
+          .ez-plan-item h3 { font-size: 14px !important; }
+          .ez-plan-item-content p { font-size: 13px !important; line-height: 1.6 !important; }
+          .ez-plan-item-content .ez-key-point { font-size: 12px !important; padding: 8px 10px !important; }
+
+          /* ── Nav (editor) ── */
+          .ez-plan-nav-top { padding: 10px 14px !important; }
+          .ez-plan-nav-top button { min-height: 44px !important; }
+
+          /* ── Cards & inputs ── */
+          .ez-card-mobile { padding: 16px !important; border-radius: 14px !important; }
+
+          /* ── Matching grid (Léger/Standard/Intensif) ── */
+          .ez-intensity-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+          .ez-intensity-grid button { min-height: 52px !important; }
+
+          /* ── Modals: full-width on mobile ── */
+          .ez-modal-overlay { padding: 12px !important; align-items: flex-end !important; }
+          .ez-modal-content { max-width: 100% !important; border-radius: 20px 20px 0 0 !important; padding: 24px 20px !important; max-height: 90vh !important; overflow-y: auto !important; }
+          .ez-modal-content h3 { font-size: 20px !important; }
+          .ez-modal-content input, .ez-modal-content select, .ez-modal-content textarea { min-height: 44px !important; font-size: 16px !important; }
+          .ez-modal-content button { min-height: 48px !important; font-size: 15px !important; }
+
+          /* ── Profile form grid ── */
+          .ez-profile-grid { grid-template-columns: 1fr !important; }
+
+          /* ── Floating feedback button ── */
+          .ez-fab { bottom: 16px !important; right: 16px !important; width: 52px !important; height: 52px !important; }
+
+          /* ── Touch targets ── */
+          button, a, select, input[type="file"] { min-height: 44px; }
+          input, textarea, select { font-size: 16px !important; }
+
+          /* ── Drag & drop zone ── */
+          .ez-dropzone { padding: 24px 16px !important; }
+          .ez-dropzone p { font-size: 13px !important; }
+
+          /* ── Culture panel links ── */
+          .ez-culture-links { flex-wrap: wrap !important; gap: 8px !important; }
+          .ez-culture-links a { padding: 10px 14px !important; min-height: 44px !important; font-size: 12px !important; }
+
+          /* ── Dashboard ── */
+          .ez-dashboard-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .ez-dashboard-header button { width: 100% !important; }
+          .ez-dashboard-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+
+          /* ── Matching badges ── */
+          .ez-match-badge { padding: 8px 12px !important; }
+          .ez-match-badge span { font-size: 12px !important; }
         }
+
         @media (max-width: 480px) {
-          .ez-plan-container { padding: 4px !important; }
-          .ez-plan-day-header { padding: 10px !important; }
-          .ez-plan-day-header h2 { font-size: 15px !important; }
-          .ez-plan-item { padding: 10px !important; }
-          .ez-plan-item h3 { font-size: 12px !important; }
+          .ez-plan-container { padding: 6px !important; }
+          .ez-step { padding: 12px 8px !important; }
+          .ez-step h1 { font-size: 20px !important; }
+          .ez-plan-day-header { padding: 12px !important; }
+          .ez-plan-day-header h2 { font-size: 16px !important; }
+          .ez-plan-item { padding: 12px !important; }
+          .ez-plan-item h3 { font-size: 13px !important; }
+          .ez-plan-mobile-days button { padding: 8px 12px !important; font-size: 12px !important; }
+          .ez-stepper-wrap button { padding: 8px 10px !important; font-size: 12px !important; }
+          .ez-modal-content { padding: 20px 16px !important; }
+          .ez-fab { bottom: 12px !important; right: 12px !important; width: 48px !important; height: 48px !important; font-size: 18px !important; }
         }
       `}</style>
 
-      <nav style={{ background: T.bgGlass, borderBottom: `1px solid ${T.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", backdropFilter: "blur(20px)" }}>
+      <nav className="ez-plan-nav-top" style={{ background: T.bgGlass, borderBottom: `1px solid ${T.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", backdropFilter: "blur(20px)" }}>
         <div onClick={() => setView("landing")} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
           <Logo size={28} />
           <span style={{ fontSize: 18, fontWeight: 700, color: T.text }}>EZE</span>
@@ -1074,7 +1171,7 @@ export default function EzInterview() {
       </nav>
 
       {step === "dashboard" && (
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
+        <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
           <PlansDashboard
             plans={savedPlans}
             onSelect={(id) => {
@@ -1096,11 +1193,11 @@ export default function EzInterview() {
       )}
 
       {step === "input" && (
-        <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: 32 }}>
+        <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
           <h1 style={{ margin: "0 0 28px", fontSize: 36, fontWeight: 700, color: T.text }}>Préparer mon entretien</h1>
 
           {/* ─── Stepper tabs ─── */}
-          <div style={{ display: "flex", gap: 0, marginBottom: 32, background: T.bgGlass, borderRadius: 16, padding: 4, border: `1px solid ${T.border}`, backdropFilter: "blur(10px)" }}>
+          <div className="ez-stepper-wrap" style={{ display: "flex", gap: 0, marginBottom: 32, background: T.bgGlass, borderRadius: 16, padding: 4, border: `1px solid ${T.border}`, backdropFilter: "blur(10px)" }}>
             {[
               { key: "offer", label: "① Offre", done: !!jobData },
               { key: "cv", label: "② CV", done: !!cvText || !!cvFile },
@@ -1184,7 +1281,7 @@ export default function EzInterview() {
               <label style={{ display: "block", marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Votre CV <span style={{ color: T.red }}>*</span></label>
 
               {/* ─── Drag & drop zone ─── */}
-              <div
+              <div className="ez-dropzone"
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={(e) => {
@@ -1279,7 +1376,7 @@ export default function EzInterview() {
 
               <div style={card}>
                 <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: T.text }}>Intensité de préparation</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                <div className="ez-intensity-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                   {["Léger", "Standard", "Intensif"].map((i) => (
                     <button key={i} onClick={() => setIntensity(i)} style={{ padding: 14, borderRadius: T.r, border: `2px solid ${intensity === i ? T.accent : T.border}`, background: intensity === i ? T.accentLt : T.bgCard, color: T.text, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" }}>
                       {i}<br/><span style={{ fontSize: 11, fontWeight: 400, color: T.muted }}>{i === "Léger" ? "30 min/j" : i === "Standard" ? "1h/j" : "2h+/j"}</span>
@@ -1408,7 +1505,7 @@ export default function EzInterview() {
 
       {/* Floating Feedback Button (only when logged in, not on landing) */}
       {user && view !== "landing" && (
-        <button onClick={() => setShowFeedback(true)} style={{
+        <button className="ez-fab" onClick={() => setShowFeedback(true)} style={{
           position: "fixed", bottom: 24, right: 24, width: 56, height: 56, borderRadius: "50%",
           background: T.accentGradient, color: "#fff", border: "none", fontSize: 20, cursor: "pointer",
           boxShadow: "0 8px 24px rgba(124,92,252,0.35)", display: "flex", alignItems: "center",
@@ -1420,8 +1517,8 @@ export default function EzInterview() {
 
       {/* Profile Completion Modal */}
       {showProfileForm && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001, padding: 16 }}>
-          <div style={{ maxWidth: 460, width: "100%", background: T.bgGlass, borderRadius: 20, padding: 32, position: "relative", boxShadow: "0 24px 64px rgba(124,92,252,0.2)", animation: "fadeIn 0.25s ease", border: `1px solid ${T.border}`, backdropFilter: "blur(20px)" }}>
+        <div className="ez-modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001, padding: 16 }}>
+          <div className="ez-modal-content" style={{ maxWidth: 460, width: "100%", background: T.bgGlass, borderRadius: 20, padding: 32, position: "relative", boxShadow: "0 24px 64px rgba(124,92,252,0.2)", animation: "fadeIn 0.25s ease", border: `1px solid ${T.border}`, backdropFilter: "blur(20px)" }}>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
               <div style={{ width: 56, height: 56, borderRadius: 14, background: T.accentGradient, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12, boxShadow: "0 8px 24px rgba(124,92,252,0.3)" }}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -1430,7 +1527,7 @@ export default function EzInterview() {
               <p style={{ margin: "6px 0 0", fontSize: 13, color: T.muted }}>Pour personnaliser ton expérience</p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+            <div className="ez-profile-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
               <div>
                 <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Prénom <span style={{ color: T.red }}>*</span></label>
                 <input type="text" placeholder="Jean" value={profileData.firstName} onChange={(e) => setProfileData(p => ({ ...p, firstName: e.target.value }))} style={inp} />
@@ -1446,7 +1543,7 @@ export default function EzInterview() {
               <input type="tel" placeholder="06 12 34 56 78" value={profileData.phone} onChange={(e) => setProfileData(p => ({ ...p, phone: e.target.value }))} style={inp} />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+            <div className="ez-profile-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
               <div>
                 <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Ville</label>
                 <input type="text" placeholder="Paris" value={profileData.city} onChange={(e) => setProfileData(p => ({ ...p, city: e.target.value }))} style={inp} />
@@ -1484,8 +1581,8 @@ export default function EzInterview() {
 
       {/* Feedback Modal */}
       {showFeedback && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowFeedback(false); }}>
-          <div style={{ maxWidth: 420, width: "100%", background: T.bgGlass, borderRadius: 20, padding: 28, position: "relative", boxShadow: "0 24px 64px rgba(124,92,252,0.2)", animation: "fadeIn 0.25s ease", border: `1px solid ${T.border}`, backdropFilter: "blur(20px)" }}>
+        <div className="ez-modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowFeedback(false); }}>
+          <div className="ez-modal-content" style={{ maxWidth: 420, width: "100%", background: T.bgGlass, borderRadius: 20, padding: 28, position: "relative", boxShadow: "0 24px 64px rgba(124,92,252,0.2)", animation: "fadeIn 0.25s ease", border: `1px solid ${T.border}`, backdropFilter: "blur(20px)" }}>
             <button onClick={() => setShowFeedback(false)} style={{ position: "absolute", top: 16, right: 16, background: T.bgSoft, border: `1px solid ${T.border}`, fontSize: 16, color: T.muted, cursor: "pointer", fontFamily: "inherit", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8 }}>✕</button>
 
             {!feedbackSent ? (

@@ -2,8 +2,15 @@ import Script from "next/script";
 import CookieBanner from "./cookie-banner";
 
 export const metadata = {
-  title: "EntretienZen — Prépare ton entretien avec l'IA",
+  title: "EZE — Prépare ton entretien avec l'IA",
   description: "Préparation d'entretien personnalisée avec IA : analyse de poste, matching CV, plan jour par jour avec sources fiables.",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({ children }) {
@@ -47,7 +54,7 @@ export default function RootLayout({ children }) {
           </>
         )}
       </head>
-      <body style={{ margin: 0, padding: 0, background: "#FAF8F5" }}>
+      <body style={{ margin: 0, padding: 0, background: "#0A0A0F" }}>
         {children}
         <CookieBanner />
       </body>
