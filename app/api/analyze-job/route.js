@@ -36,53 +36,126 @@ function detectJobSite(url) {
   return hostname;
 }
 
+// Extraire les données structurées JSON-LD d'une page (schema.org JobPosting)
+function extractJsonLd(html) {
+  try {
+    const $ = cheerio.load(html);
+    const scripts = $('script[type="application/ld+json"]');
+    let jobData = null;
+    scripts.each((_, el) => {
+      try {
+        const data = JSON.parse($(el).html());
+        // Peut être un tableau ou un objet
+        const items = Array.isArray(data) ? data : [data];
+        for (const item of items) {
+          if (item["@type"] === "JobPosting" || item["@type"]?.includes("JobPosting")) {
+            jobData = item;
+            break;
+          }
+          // Parfois imbriqué dans @graph
+          if (item["@graph"]) {
+            const job = item["@graph"].find(g => g["@type"] === "JobPosting");
+            if (job) { jobData = job; break; }
+          }
+        }
+      } catch {}
+    });
+    if (!jobData) return null;
+    // Convertir en texte lisible pour l'IA
+    const parts = [];
+    if (jobData.title) parts.push(`Titre: ${jobData.title}`);
+    if (jobData.hiringOrganization?.name) parts.push(`Entreprise: ${jobData.hiringOrganization.name}`);
+    if (jobData.jobLocation?.address) {
+      const addr = jobData.jobLocation.address;
+      parts.push(`Lieu: ${addr.addressLocality || ""} ${addr.addressCountry || ""}`);
+    }
+    if (jobData.description) parts.push(`Description: ${jobData.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()}`);
+    if (jobData.qualifications) parts.push(`Qualifications: ${jobData.qualifications}`);
+    if (jobData.skills) parts.push(`Compétences: ${jobData.skills}`);
+    if (jobData.employmentType) parts.push(`Type: ${jobData.employmentType}`);
+    if (jobData.baseSalary) parts.push(`Salaire: ${JSON.stringify(jobData.baseSalary)}`);
+    return parts.join("\n").slice(0, 8000);
+  } catch {
+    return null;
+  }
+}
+
+// Extraire les meta tags Open Graph et description
+function extractMetaTags(html) {
+  try {
+    const $ = cheerio.load(html);
+    const parts = [];
+    const ogTitle = $('meta[property="og:title"]').attr("content");
+    const ogDesc = $('meta[property="og:description"]').attr("content");
+    const metaDesc = $('meta[name="description"]').attr("content");
+    const title = $("title").text();
+    if (ogTitle) parts.push(`Titre: ${ogTitle}`);
+    else if (title) parts.push(`Titre: ${title}`);
+    if (ogDesc) parts.push(`Description: ${ogDesc}`);
+    else if (metaDesc) parts.push(`Description: ${metaDesc}`);
+    return parts.length > 0 ? parts.join("\n") : null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchJobPage(url, attempt = 1) {
   try {
     const userAgent = getRandomUserAgent();
-    const siteType = detectJobSite(url);
 
-    // Site-specific headers
     const headers = {
       "User-Agent": userAgent,
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
       "Referer": "https://www.google.com/",
       "Sec-Fetch-Dest": "document",
       "Sec-Fetch-Mode": "navigate",
       "Sec-Fetch-Site": "none",
       "Sec-Fetch-User": "?1",
+      "Cache-Control": "no-cache",
     };
-
-    // Site-specific adjustments
-    if (siteType === "welcometothejungle.com" || siteType === "wttj.co") {
-      headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-    } else if (siteType === "indeed.com") {
-      headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-      headers["Cache-Control"] = "no-cache";
-    } else {
-      headers["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-    }
 
     const res = await fetch(url, {
       headers,
       redirect: "follow",
-      signal: AbortSignal.timeout(20000), // Increased timeout for slower sites
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
+
+    // 1. Essayer JSON-LD en priorité (données structurées = meilleure qualité)
+    const jsonLdText = extractJsonLd(html);
+    if (jsonLdText && jsonLdText.length > 200) {
+      console.log("Extracted job data from JSON-LD structured data");
+      return jsonLdText;
+    }
+
+    // 2. Essayer le body text nettoyé
     const $ = cheerio.load(html);
-
-    // Remove clutter elements
     $("script, style, nav, footer, header, aside, iframe, noscript").remove();
-    const text = $("body").text().replace(/\s+/g, " ").trim();
+    const bodyText = $("body").text().replace(/\s+/g, " ").trim();
 
-    // If content is too short and this is the first attempt, retry with different headers
-    if (text.length < 200 && attempt === 1) {
-      console.log(`Content too short (${text.length} chars), retrying with different headers`);
+    if (bodyText.length >= 200) {
+      return bodyText.slice(0, 8000);
+    }
+
+    // 3. Fallback meta tags si body trop court
+    const metaText = extractMetaTags(html);
+    if (metaText) {
+      console.log("Fallback to meta tags extraction");
+      // Combiner meta + body court
+      return `${metaText}\n\nContenu de la page:\n${bodyText}`.slice(0, 8000);
+    }
+
+    // 4. Retry avec headers différents
+    if (attempt === 1) {
+      console.log(`Content too short (${bodyText.length} chars), retrying`);
       return fetchJobPage(url, 2);
     }
 
-    return text.slice(0, 8000);
+    // 5. Retourner ce qu'on a même si c'est court
+    return bodyText.length > 50 ? bodyText.slice(0, 8000) : null;
   } catch (err) {
     console.error(`Scrape error (attempt ${attempt}):`, err.message);
     return null;
@@ -97,24 +170,33 @@ export async function POST(request) {
   try {
     const raw = await request.json();
     const jobUrl = sanitizeUrl(raw.jobUrl);
+    const jobText = sanitizeString(raw.jobText || "", 10000);
     const experienceLevel = sanitizeString(raw.experienceLevel || "", 50);
-    const url = jobUrl;
-    if (!url) return Response.json({ error: "URL manquante ou invalide" }, { status: 400 });
 
-    const pageText = await fetchJobPage(url);
-    if (!pageText) {
-      return Response.json(
-        { error: "Impossible d'acceder a cette page. Verifie le lien." },
-        { status: 422 }
-      );
-    }
-
-    // Detect job site using improved detection
+    // Mode texte collé (fallback quand scraping échoue)
+    let pageText = null;
     let source = "site";
-    try {
-      source = detectJobSite(url);
-    } catch (err) {
-      console.error("Source detection error:", err.message);
+    let url = jobUrl;
+
+    if (jobText && jobText.length > 50) {
+      // L'utilisateur a collé le texte directement
+      pageText = jobText.slice(0, 8000);
+      source = "texte collé";
+    } else if (url) {
+      pageText = await fetchJobPage(url);
+      if (!pageText) {
+        return Response.json(
+          { error: "Impossible d'accéder à cette page. Essaie de coller le texte de l'offre directement." },
+          { status: 422 }
+        );
+      }
+      try {
+        source = detectJobSite(url);
+      } catch (err) {
+        console.error("Source detection error:", err.message);
+      }
+    } else {
+      return Response.json({ error: "URL ou texte de l'offre requis" }, { status: 400 });
     }
 
     const levelContext = experienceLevel

@@ -418,7 +418,7 @@ function LandingPage({ user, onLogin }) {
             <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
             </div>
-            <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}><span style={{ fontWeight: 900, color: T.accent }}>EZE</span><span style={{ fontWeight: 400 }}>ntretienZen</span></span>
+            <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}><span style={{ fontWeight: 900, color: T.accent, fontSize: "inherit", letterSpacing: "-0.5px" }}>EZE</span></span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {user ? (
@@ -581,7 +581,7 @@ function LandingPage({ user, onLogin }) {
             <div style={{ width: 32, height: 32, borderRadius: 10, background: T.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
             </div>
-            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}><span style={{ fontWeight: 900, color: T.accent }}>EZE</span><span style={{ fontWeight: 400 }}>ntretienZen</span></span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}><span style={{ fontWeight: 900, color: T.accent, fontSize: "inherit", letterSpacing: "-0.5px" }}>EZE</span></span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
             <a href="/mentions-legales" style={{ fontSize: 12, color: T.muted, textDecoration: "none" }}>Mentions légales</a>
@@ -711,6 +711,8 @@ export default function EzInterview() {
   const [step, setStep] = useState("input");
   const [activeTab, setActiveTab] = useState("offer");
   const [jobUrl, setJobUrl] = useState("");
+  const [jobText, setJobText] = useState("");
+  const [showJobTextFallback, setShowJobTextFallback] = useState(false);
   const [jobData, setJobData] = useState(null);
   const [jobLoading, setJobLoading] = useState(false);
   const [jobError, setJobError] = useState("");
@@ -813,12 +815,19 @@ export default function EzInterview() {
       const res = await safeFetch("/api/analyze-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobUrl, experienceLevel }),
+        body: JSON.stringify({ jobUrl, jobText, experienceLevel }),
       });
       setJobData(res);
       setActiveTab("cv");
+      setShowJobTextFallback(false);
     } catch (err) {
-      setJobError(err.message);
+      // Si erreur 422 (scraping échoué), proposer le mode texte
+      if (err.message.includes("422")) {
+        setShowJobTextFallback(true);
+        setJobError("Impossible d'accéder au site. Colle le texte de l'offre ci-dessous.");
+      } else {
+        setJobError(err.message);
+      }
     } finally {
       setJobLoading(false);
     }
@@ -870,7 +879,7 @@ export default function EzInterview() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.access_token) {
-          await safeFetch("/api/plans", {
+          const saved = await safeFetch("/api/plans", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
             body: JSON.stringify({
@@ -886,6 +895,7 @@ export default function EzInterview() {
               interview_date: interviewDate || null,
             }),
           });
+          if (saved?.id) setCurrentPlanId(saved.id);
           // Refresh saved plans
           const plans = await safeFetch("/api/plans", { headers: { "Authorization": `Bearer ${session.access_token}` } });
           setSavedPlans(plans);
@@ -997,7 +1007,7 @@ export default function EzInterview() {
       `}</style>
 
       <nav style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span onClick={() => setView("landing")} style={{ fontSize: 18, fontWeight: 700, color: T.text, cursor: "pointer" }}><span style={{ fontWeight: 900, color: T.accent }}>EZE</span><span style={{ fontWeight: 400 }}>ntretienZen</span></span>
+        <span onClick={() => setView("landing")} style={{ fontSize: 18, fontWeight: 700, color: T.text, cursor: "pointer" }}><span style={{ fontWeight: 900, color: T.accent, fontSize: "inherit", letterSpacing: "-0.5px" }}>EZE</span></span>
         <button onClick={() => setStep("dashboard")} style={btnS}>Mon espace</button>
       </nav>
 
@@ -1010,6 +1020,7 @@ export default function EzInterview() {
               if (found?.plan_data) {
                 setPlan(found.plan_data);
                 setJobData(found.job_data);
+                setCurrentPlanId(id);
                 setStep("plan");
               }
             }}
@@ -1079,8 +1090,17 @@ export default function EzInterview() {
 
               {jobError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{jobError}</p>}
 
-              <button onClick={fetchJobData} disabled={jobLoading || !jobUrl || !experienceLevel} style={{ ...(!jobUrl || !experienceLevel ? btnD : btnP), marginTop: 16, width: "100%" }}>
-                {jobLoading ? "Analyse en cours..." : "Analyser l'offre"}
+              {/* Fallback : coller le texte de l'offre */}
+              {showJobTextFallback && (
+                <div style={{ marginTop: 16, padding: 16, borderRadius: T.r, background: T.warnLt, border: `1px solid ${T.warnBd}` }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600, color: T.warn }}>Le site bloque l'accès automatique</p>
+                  <p style={{ margin: "0 0 12px", fontSize: 12, color: T.muted }}>Copie-colle le texte de l'annonce ici. Va sur la page de l'offre, sélectionne tout le texte (Ctrl+A) et colle-le.</p>
+                  <textarea placeholder="Colle le texte complet de l'offre d'emploi ici..." value={jobText} onChange={(e) => setJobText(e.target.value)} style={{ ...inp, minHeight: 150, fontSize: 12, fontFamily: "monospace" }} />
+                </div>
+              )}
+
+              <button onClick={fetchJobData} disabled={jobLoading || (!jobUrl && !jobText) || !experienceLevel} style={{ ...((!jobUrl && !jobText) || !experienceLevel ? btnD : btnP), marginTop: 16, width: "100%" }}>
+                {jobLoading ? "Analyse en cours..." : showJobTextFallback && jobText ? "Analyser le texte collé" : "Analyser l'offre"}
               </button>
 
               {jobData && (
