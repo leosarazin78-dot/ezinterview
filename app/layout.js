@@ -2,8 +2,43 @@ import Script from "next/script";
 import CookieBanner from "./cookie-banner";
 
 export const metadata = {
-  title: "EZE — Prépare ton entretien avec l'IA",
-  description: "Préparation d'entretien personnalisée avec IA : analyse de poste, matching CV, plan jour par jour avec sources fiables.",
+  title: {
+    default: "EZE — Prépare ton entretien avec l'IA",
+    template: "%s | EZE"
+  },
+  description: "Préparation d'entretien personnalisée avec IA : analyse de poste, matching CV, plan jour par jour avec quiz et ressources fiables. Gratuit et sans carte bancaire.",
+  keywords: ["préparation entretien", "entretien embauche", "coaching entretien", "simulation entretien", "IA entretien", "préparer entretien", "questions entretien", "plan préparation entretien", "EZE", "entretien technique", "entretien RH"],
+  authors: [{ name: "EZE" }],
+  creator: "EZE",
+  publisher: "EZE",
+  metadataBase: new URL("https://eze-interview.vercel.app"),
+  alternates: {
+    canonical: "/",
+    languages: { "fr-FR": "/" },
+  },
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: "https://eze-interview.vercel.app",
+    siteName: "EZE",
+    title: "EZE — Prépare ton entretien avec l'IA",
+    description: "Plan de préparation personnalisé, jour par jour. Analyse ton CV, match avec l'offre, quiz adapté à ton niveau. Gratuit.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "EZE — Préparation d'entretien IA" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EZE — Prépare ton entretien avec l'IA",
+    description: "Plan personnalisé jour par jour pour réussir ton entretien. IA + quiz + ressources fiables.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-video-preview": -1, "max-image-preview": "large", "max-snippet": -1 },
+  },
+  verification: {
+    google: "GOOGLE_SITE_VERIFICATION_CODE",
+  },
 };
 
 export const viewport = {

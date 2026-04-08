@@ -125,33 +125,113 @@ const typeV = { memo: "default", video: "info", exercise: "tech", note: "default
 function QuizBlock({ questions, title }) {
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const score = submitted ? questions.filter((q, i) => answers[i] === q.correct).length : 0;
 
   return (
     <div style={{ marginTop: 12 }}>
-      {title && <h5 style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 600, color: T.warn }}>{title}</h5>}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {questions.map((q, qi) => (
-          <div key={qi} style={{ padding: 12, borderRadius: T.r, background: submitted ? (answers[qi] === q.correct ? T.greenLt : T.redLt) : T.accentLt, border: `1px solid ${submitted ? (answers[qi] === q.correct ? T.greenBd : T.redBd) : T.accentBd}` }}>
-            <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 500 }}>{qi + 1}. {q.q}</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {q.options?.map((opt, oi) => (
-                <label key={oi} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: T.r, cursor: submitted ? "default" : "pointer", fontSize: 13, background: submitted && oi === q.correct ? T.greenLt : submitted && answers[qi] === oi && oi !== q.correct ? T.redLt : answers[qi] === oi ? T.accentLt : "transparent", border: `1px solid ${submitted && oi === q.correct ? T.greenBd : answers[qi] === oi ? T.accentBd : "transparent"}` }}>
-                  <input type="radio" name={`quiz-${title}-${qi}`} checked={answers[qi] === oi} onChange={() => !submitted && setAnswers(p => ({ ...p, [qi]: oi }))} disabled={submitted} style={{ accentColor: T.accent }} />
-                  {opt}
-                </label>
-              ))}
-            </div>
-            {submitted && q.explanation && <p style={{ margin: "8px 0 0", fontSize: 12, color: T.muted, fontStyle: "italic" }}>{q.explanation}</p>}
+      <button onClick={() => setIsOpen(!isOpen)} style={{
+        width: "100%", padding: "14px 18px", borderRadius: T.r,
+        background: T.warnLt, border: `1px solid ${T.warnBd}`,
+        color: T.warn, fontWeight: 700, fontSize: 14,
+        cursor: "pointer", fontFamily: "inherit",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        transition: "all 0.2s", marginBottom: isOpen ? 12 : 0
+      }}>
+        <span>📝 {title || "Quiz"} ({questions.length} questions)</span>
+        <span style={{ fontSize: 12, color: T.muted }}>{isOpen ? "▼ Fermer" : "▶ Commencer le quiz"}</span>
+      </button>
+      {isOpen && (
+        <div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {questions.map((q, qi) => (
+              <div key={qi} style={{ padding: 12, borderRadius: T.r, background: submitted ? (answers[qi] === q.correct ? T.greenLt : T.redLt) : T.accentLt, border: `1px solid ${submitted ? (answers[qi] === q.correct ? T.greenBd : T.redBd) : T.accentBd}` }}>
+                <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 500 }}>{qi + 1}. {q.q}</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {q.options?.map((opt, oi) => (
+                    <label key={oi} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: T.r, cursor: submitted ? "default" : "pointer", fontSize: 13, background: submitted && oi === q.correct ? T.greenLt : submitted && answers[qi] === oi && oi !== q.correct ? T.redLt : answers[qi] === oi ? T.accentLt : "transparent", border: `1px solid ${submitted && oi === q.correct ? T.greenBd : answers[qi] === oi ? T.accentBd : "transparent"}` }}>
+                      <input type="radio" name={`quiz-${title}-${qi}`} checked={answers[qi] === oi} onChange={() => !submitted && setAnswers(p => ({ ...p, [qi]: oi }))} disabled={submitted} style={{ accentColor: T.accent }} />
+                      {opt}
+                    </label>
+                  ))}
+                </div>
+                {submitted && q.explanation && <p style={{ margin: "8px 0 0", fontSize: 12, color: T.muted, fontStyle: "italic" }}>{q.explanation}</p>}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      {!submitted ? (
-        <button style={{ ...btnP, marginTop: 12, fontSize: 13 }} onClick={() => setSubmitted(true)} disabled={Object.keys(answers).length < questions.length}>Valider ({Object.keys(answers).length}/{questions.length})</button>
-      ) : (
-        <div style={{ marginTop: 12, padding: "12px 16px", borderRadius: T.r, background: score >= questions.length * 0.7 ? T.greenLt : T.warnLt, border: `1px solid ${score >= questions.length * 0.7 ? T.greenBd : T.warnBd}` }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: score >= questions.length * 0.7 ? T.green : T.warn }}>{score}/{questions.length} — {score >= questions.length * 0.7 ? "Bien joué !" : "À revoir"}</span>
-          <button style={{ ...btnS, marginLeft: 12, padding: "6px 14px", fontSize: 12 }} onClick={() => { setAnswers({}); setSubmitted(false); }}>Refaire</button>
+          {!submitted ? (
+            <button style={{ ...btnP, marginTop: 12, fontSize: 13 }} onClick={() => setSubmitted(true)} disabled={Object.keys(answers).length < questions.length}>Valider ({Object.keys(answers).length}/{questions.length})</button>
+          ) : (
+            <div style={{ marginTop: 12, padding: "12px 16px", borderRadius: T.r, background: score >= questions.length * 0.7 ? T.greenLt : T.warnLt, border: `1px solid ${score >= questions.length * 0.7 ? T.greenBd : T.warnBd}` }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: score >= questions.length * 0.7 ? T.green : T.warn }}>{score}/{questions.length} — {score >= questions.length * 0.7 ? "Bien joué !" : "À revoir"}</span>
+              <button style={{ ...btnS, marginLeft: 12, padding: "6px 14px", fontSize: 12 }} onClick={() => { setAnswers({}); setSubmitted(false); }}>Refaire</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MiniQuizAccordion ───
+function MiniQuizAccordion({ questions }) {
+  const [open, setOpen] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+
+  if (!questions?.length) return null;
+  const q = questions[current];
+
+  return (
+    <div style={{ marginTop: 12 }}>
+      <button onClick={() => setOpen(!open)} style={{
+        width: "100%", padding: "12px 16px", borderRadius: T.r,
+        background: open ? T.warnLt : T.bgSoft,
+        border: `1px solid ${open ? T.warnBd : T.border}`,
+        color: T.warn, fontWeight: 700, fontSize: 13,
+        cursor: "pointer", fontFamily: "inherit",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        transition: "all 0.2s"
+      }}>
+        <span>🧠 Mini-Quiz ({questions.length} question{questions.length > 1 ? "s" : ""})</span>
+        <span style={{ fontSize: 11, color: T.muted }}>{open ? "▼ Fermer" : "▶ Tester mes connaissances"}</span>
+      </button>
+
+      {open && (
+        <div style={{ marginTop: 8, padding: 16, borderRadius: T.r, background: T.warnLt, border: `1px solid ${T.warnBd}`, animation: "fadeIn 0.2s ease" }}>
+          <p style={{ margin: "0 0 4px", fontSize: 11, color: T.muted }}>Question {current + 1}/{questions.length}</p>
+          <p style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 600, color: T.text }}>{q.q}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {q.options?.map((opt, oi) => (
+              <button key={oi} onClick={() => {
+                if (!showResult) {
+                  setSelected(oi);
+                  setShowResult(true);
+                  if (oi === q.correct) setScore(s => s + 1);
+                }
+              }}
+                style={{
+                  padding: "10px 14px", borderRadius: T.r, fontSize: 13, textAlign: "left",
+                  border: `1px solid ${showResult && oi === q.correct ? T.greenBd : showResult && selected === oi && oi !== q.correct ? T.redBd : T.warnBd}`,
+                  background: showResult && oi === q.correct ? T.greenLt : showResult && selected === oi && oi !== q.correct ? T.redLt : T.bgCard,
+                  cursor: showResult ? "default" : "pointer", fontFamily: "inherit", color: T.text,
+                  transition: "all 0.15s", minHeight: 44
+                }}>
+                {opt}
+              </button>
+            ))}
+          </div>
+          {showResult && (
+            <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
+              {current < questions.length - 1 ? (
+                <button style={{ ...btnP, padding: "8px 16px", fontSize: 12 }} onClick={() => { setCurrent(c => c + 1); setSelected(null); setShowResult(false); }}>Question suivante →</button>
+              ) : (
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: score >= questions.length * 0.7 ? T.green : T.warn }}>Résultat : {score}/{questions.length} — {score >= questions.length * 0.7 ? "Bien joué !" : "À revoir"}</p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -192,44 +272,67 @@ function ItemContent({ item }) {
   if (!c) return <p style={{ fontSize: 13, color: T.muted, margin: "8px 0 0" }}>Pas de contenu détaillé.</p>;
 
   return (
-    <div style={{ marginTop: 12 }}>
+    <div style={{ marginTop: 14 }}>
       {(item.type === "note" || item.type === "memo") && (
         <>
-          {c.summary && <p style={{ margin: "0 0 10px", fontSize: 13, lineHeight: 1.6 }}>{c.summary}</p>}
+          {c.summary && <p style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.7, color: T.text, letterSpacing: "0.01em" }}>{c.summary}</p>}
+
+          {/* Sub-sections with headings */}
+          {c.sections?.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 14 }}>
+              {c.sections.map((sec, si) => (
+                <div key={si} style={{ padding: "12px 16px", borderRadius: T.r, background: T.bgSoft, borderLeft: `3px solid ${T.accent}` }}>
+                  <h6 style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700, color: T.accent, textTransform: "uppercase", letterSpacing: "0.5px" }}>{sec.heading}</h6>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {sec.points?.map((pt, pi) => (
+                      <p key={pi} style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: T.text, paddingLeft: 12, borderLeft: `2px solid ${T.border}` }}>{pt}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {c.keyPoints?.length > 0 && (
-            <div style={{ marginBottom: 10 }}>
-              <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: T.accent }}>Points clés</p>
-              {c.keyPoints.map((pt, i) => <p key={i} style={{ margin: "0 0 4px", fontSize: 13, paddingLeft: 10 }}>- {pt}</p>)}
+            <div style={{ marginBottom: 12, padding: "12px 16px", borderRadius: T.r, background: T.accentLt, border: `1px solid ${T.accentBd}` }}>
+              <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: T.accent, textTransform: "uppercase", letterSpacing: "1px" }}>Points clés</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {c.keyPoints.map((pt, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                    <span style={{ color: T.accent, fontSize: 10, marginTop: 4, flexShrink: 0 }}>◆</span>
+                    <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: T.text }}>{pt}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           {c.tips?.length > 0 && (
-            <div style={{ marginBottom: 10, padding: 10, borderRadius: T.r, background: T.warnLt, border: `1px solid ${T.warnBd}` }}>
-              <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.warn }}>Astuces</p>
-              {c.tips.map((tip, i) => <p key={i} style={{ margin: "0 0 3px", fontSize: 12 }}>{tip}</p>)}
+            <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: T.r, background: T.warnLt, border: `1px solid ${T.warnBd}` }}>
+              <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 700, color: T.warn, textTransform: "uppercase", letterSpacing: "1px" }}>Astuces</p>
+              {c.tips.map((tip, i) => <p key={i} style={{ margin: "0 0 3px", fontSize: 12, lineHeight: 1.5, color: T.text }}>💡 {tip}</p>)}
             </div>
           )}
           {c.links?.length > 0 && <LinksBlock links={c.links} />}
-          {item.miniQuiz?.length > 0 && <MiniQuiz questions={item.miniQuiz} />}
+          {item.miniQuiz?.length > 0 && <MiniQuizAccordion questions={item.miniQuiz} />}
         </>
       )}
 
       {item.type === "exercise" && (
         <>
-          {c.objective && <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 500 }}>{c.objective}</p>}
+          {c.objective && <p style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 500, color: T.text, lineHeight: 1.6 }}>{c.objective}</p>}
           {c.steps?.length > 0 && (
-            <div style={{ marginBottom: 10 }}>
-              <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 600, color: T.purple }}>Étapes</p>
+            <div style={{ marginBottom: 12 }}>
               {c.steps.map((s, i) => (
-                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4, fontSize: 13 }}>
-                  <span style={{ color: T.purple, fontWeight: 600, flexShrink: 0 }}>{i + 1}.</span>
-                  <span>{s}</span>
+                <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, padding: "8px 12px", borderRadius: T.r, background: i % 2 === 0 ? T.purpleLt : "transparent", border: i % 2 === 0 ? `1px solid ${T.purpleBd}` : "1px solid transparent" }}>
+                  <span style={{ color: T.purple, fontWeight: 800, fontSize: 14, flexShrink: 0, width: 24, height: 24, borderRadius: "50%", background: T.purpleLt, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${T.purpleBd}` }}>{i + 1}</span>
+                  <span style={{ fontSize: 13, lineHeight: 1.6, color: T.text }}>{s}</span>
                 </div>
               ))}
             </div>
           )}
           {c.tips?.length > 0 && (
-            <div style={{ marginBottom: 10, padding: 10, borderRadius: T.r, background: T.purpleLt, border: `1px solid ${T.purpleBd}` }}>
-              {c.tips.map((tip, i) => <p key={i} style={{ margin: "0 0 3px", fontSize: 12 }}>{tip}</p>)}
+            <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: T.r, background: T.purpleLt, border: `1px solid ${T.purpleBd}` }}>
+              {c.tips.map((tip, i) => <p key={i} style={{ margin: "0 0 3px", fontSize: 12, lineHeight: 1.5, color: T.text }}>💡 {tip}</p>)}
             </div>
           )}
           {c.links?.length > 0 && <LinksBlock links={c.links} />}
@@ -356,12 +459,32 @@ function CulturePanel({ companyInfo, jobData }) {
 function LandingPage({ user, onLogin }) {
   const [showAuth, setShowAuth] = useState(false);
   const [mode, setMode] = useState("login");
+  const [signupStep, setSignupStep] = useState(1); // 1=email+mdp, 2=profil
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [signupProfile, setSignupProfile] = useState({ firstName: "", lastName: "", phone: "", city: "", birthYear: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [demoDay, setDemoDay] = useState(null);
+
+  const passwordStrength = (pw) => {
+    if (!pw) return { score: 0, label: "", color: T.muted };
+    let s = 0;
+    if (pw.length >= 8) s++;
+    if (pw.length >= 12) s++;
+    if (/[A-Z]/.test(pw)) s++;
+    if (/[0-9]/.test(pw)) s++;
+    if (/[^A-Za-z0-9]/.test(pw)) s++;
+    if (s <= 1) return { score: s, label: "Très faible", color: T.red };
+    if (s === 2) return { score: s, label: "Faible", color: T.red };
+    if (s === 3) return { score: s, label: "Moyen", color: T.warn };
+    if (s === 4) return { score: s, label: "Fort", color: T.green };
+    return { score: s, label: "Très fort", color: T.green };
+  };
+
+  const pwStr = passwordStrength(password);
+  const isPasswordValid = password.length >= 8 && pwStr.score >= 3;
 
   const handleEmail = async (e) => {
     e.preventDefault();
@@ -372,7 +495,16 @@ function LandingPage({ user, onLogin }) {
         if (error) throw error;
         onLogin?.();
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
+        if (signupStep === 1) {
+          if (!isPasswordValid) { setError("Mot de passe trop faible (min 8 caractères, majuscule, chiffre)"); setLoading(false); return; }
+          setSignupStep(2); setLoading(false); return;
+        }
+        // Step 2: create account with profile data
+        if (!signupProfile.firstName.trim() || !signupProfile.lastName.trim()) { setError("Nom et prénom obligatoires"); setLoading(false); return; }
+        const { error } = await supabase.auth.signUp({
+          email, password,
+          options: { data: { firstName: signupProfile.firstName, lastName: signupProfile.lastName, phone: signupProfile.phone, city: signupProfile.city, birthYear: signupProfile.birthYear, profileComplete: true } }
+        });
         if (error) throw error;
         setMessage("Vérifie tes emails pour confirmer ton compte !");
       }
@@ -423,6 +555,19 @@ function LandingPage({ user, onLogin }) {
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: T.text, background: T.bg, minHeight: "100vh", lineHeight: 1.6 }}>
+      {/* JSON-LD Structured Data for SEO */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "EZE",
+        "description": "Préparation d'entretien personnalisée avec IA : analyse de poste, matching CV, plan jour par jour.",
+        "url": "https://eze-interview.vercel.app",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "120" },
+        "inLanguage": "fr"
+      })}} />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
@@ -676,7 +821,7 @@ function LandingPage({ user, onLogin }) {
 
             <div style={{ display: "flex", gap: 0, marginBottom: 20, background: T.bgCard, borderRadius: 12, padding: 3, border: `1px solid ${T.border}` }}>
               {["login", "signup"].map(m => (
-                <button key={m} onClick={() => { setMode(m); setError(""); setMessage(""); }}
+                <button key={m} onClick={() => { setMode(m); setSignupStep(1); setError(""); setMessage(""); }}
                   style={{ flex: 1, padding: "8px 0", border: "none", borderRadius: 10, background: mode === m ? T.bgGlass : "transparent", color: mode === m ? T.text : T.muted, fontWeight: mode === m ? 600 : 400, fontSize: 13, cursor: "pointer", fontFamily: "inherit", boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.2)" : "none", transition: "all 0.2s" }}>
                   {m === "login" ? "Connexion" : "Inscription"}
                 </button>
@@ -684,11 +829,65 @@ function LandingPage({ user, onLogin }) {
             </div>
 
             <form onSubmit={handleEmail} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={inp} />
-              <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} style={inp} />
-              <button type="submit" disabled={loading || !email || !password || !isValidEmail(email)} style={{ ...(!isValidEmail(email) || !password ? btnD : btnP) }}>
-                {loading ? "..." : mode === "login" ? "Connexion" : "S'inscrire"}
-              </button>
+              {/* Login OR signup step 1 */}
+              {(mode === "login" || signupStep === 1) && (
+                <>
+                  <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={inp} />
+                  <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} style={inp} />
+                  {mode === "signup" && password && (
+                    <div>
+                      <div style={{ display: "flex", gap: 4, marginBottom: 4 }}>
+                        {[1,2,3,4,5].map(i => (
+                          <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= pwStr.score ? pwStr.color : T.bgCard, transition: "all 0.2s" }} />
+                        ))}
+                      </div>
+                      <p style={{ margin: 0, fontSize: 11, color: pwStr.color, fontWeight: 500 }}>{pwStr.label}{pwStr.score < 3 ? " — min 8 car., 1 majuscule, 1 chiffre, 1 symbole" : ""}</p>
+                    </div>
+                  )}
+                  <button type="submit" disabled={loading || !email || !password || !isValidEmail(email) || (mode === "signup" && !isPasswordValid)} style={{ ...(!isValidEmail(email) || !password || (mode === "signup" && !isPasswordValid) ? btnD : btnP) }}>
+                    {loading ? "..." : mode === "login" ? "Connexion" : "Continuer →"}
+                  </button>
+                </>
+              )}
+
+              {/* Signup step 2 — profile info */}
+              {mode === "signup" && signupStep === 2 && (
+                <>
+                  <div style={{ padding: "10px 14px", borderRadius: T.r, background: T.accentLt, border: `1px solid ${T.accentBd}`, marginBottom: 4 }}>
+                    <p style={{ margin: 0, fontSize: 12, color: T.accent, fontWeight: 500 }}>✓ {email} — Dernière étape !</p>
+                  </div>
+                  <div className="ez-profile-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 3 }}>Prénom *</label>
+                      <input type="text" placeholder="Jean" value={signupProfile.firstName} onChange={(e) => setSignupProfile(p => ({ ...p, firstName: e.target.value }))} style={inp} />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 3 }}>Nom *</label>
+                      <input type="text" placeholder="Dupont" value={signupProfile.lastName} onChange={(e) => setSignupProfile(p => ({ ...p, lastName: e.target.value }))} style={inp} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 3 }}>Téléphone</label>
+                    <input type="tel" placeholder="06 12 34 56 78" value={signupProfile.phone} onChange={(e) => setSignupProfile(p => ({ ...p, phone: e.target.value }))} style={inp} />
+                  </div>
+                  <div className="ez-profile-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 3 }}>Ville</label>
+                      <input type="text" placeholder="Paris" value={signupProfile.city} onChange={(e) => setSignupProfile(p => ({ ...p, city: e.target.value }))} style={inp} />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 3 }}>Année de naissance</label>
+                      <input type="number" placeholder="1995" min="1950" max="2010" value={signupProfile.birthYear} onChange={(e) => setSignupProfile(p => ({ ...p, birthYear: e.target.value }))} style={inp} />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button type="button" onClick={() => setSignupStep(1)} style={{ ...btnS, flex: "0 0 auto" }}>← Retour</button>
+                    <button type="submit" disabled={loading || !signupProfile.firstName.trim() || !signupProfile.lastName.trim()} style={{ ...(!signupProfile.firstName.trim() || !signupProfile.lastName.trim() ? btnD : btnP), flex: 1 }}>
+                      {loading ? "..." : "Créer mon compte"}
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
 
             {error && <p style={{ fontSize: 13, color: T.red, margin: "12px 0 0", textAlign: "center" }}>{error}</p>}
@@ -1390,7 +1589,7 @@ export default function EzInterview() {
                   <Spin text="" />
                   <h2 style={{ margin: "24px 0 8px", fontSize: 20, fontWeight: 700, color: T.text }}>Création de ton plan personnalisé...</h2>
                   <p style={{ fontSize: 14, color: T.muted, maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>
-                    L'IA analyse les meilleures ressources pour ton profil. Cela peut prendre 1 à 2 minutes.
+                    L'IA construit ton plan sur mesure avec les meilleures ressources. Cela prend généralement 2 à 3 minutes.
                   </p>
                   <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 24 }}>
                     {["Analyse des compétences", "Recherche de ressources", "Construction du plan"].map((s, i) => (

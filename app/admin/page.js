@@ -210,6 +210,17 @@ export default function AdminPage() {
           ))}
         </div>
 
+        {/* Analytics links */}
+        <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.2)" }}>
+          <h4 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, color: "#7C5CFC" }}>Analytics & SEO</h4>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#5B8DEF", background: "rgba(91,141,239,0.12)", border: "1px solid rgba(91,141,239,0.25)", fontWeight: 500 }}>📊 Google Analytics</a>
+            <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#34D399", background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.25)", fontWeight: 500 }}>🔍 Search Console</a>
+            <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#FBBF24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", fontWeight: 500 }}>💰 Google Ads (SEA)</a>
+          </div>
+          <p style={{ margin: "10px 0 0", fontSize: 11, color: "#8888A0" }}>Configure Google Analytics (GA4) dans les variables Vercel : NEXT_PUBLIC_GA_ID</p>
+        </div>
+
         {/* Tabs */}
         <div style={{ display: "flex", gap: 0, marginBottom: 20, background: T.card, borderRadius: 10, padding: 3, border: `1px solid ${T.border}`, overflowX: "auto" }}>
           {["users", "plans", "feedback", "reports"].map(t => (

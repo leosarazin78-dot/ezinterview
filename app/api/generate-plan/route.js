@@ -14,7 +14,7 @@ const checkLimit = createRateLimit({ key: "generate-plan", maxRequests: 5, windo
 const SOURCES_INSTRUCTIONS = `
 RÈGLES POUR LES LIENS ET LE CONTENU :
 
-1. CONTENU AUTONOME : Chaque note doit être suffisamment détaillée pour que l'utilisateur puisse apprendre SANS cliquer sur les liens. Le summary doit faire 5-8 phrases, les keyPoints doivent être des explications complètes (pas juste des titres). Mets le contenu DANS le plan (summary, keyPoints). Les liens sont un bonus, pas obligatoires.
+1. CONTENU AUTONOME MAIS CONCIS : Chaque note doit permettre d'apprendre SANS cliquer sur les liens, mais être COURTE. Le summary = 2-3 phrases max. Utilise les "sections" pour structurer le contenu en sous-parties claires. Les keyPoints = phrases courtes (max 15 mots chacun). Les liens sont un bonus.
 
 2. PRIORITÉ AU CONTENU : Si tu n'es pas ABSOLUMENT CERTAIN qu'une URL existe, NE L'INCLUS PAS. Il vaut mieux zéro lien qu'un seul lien mort. Mieux vaut enrichir le summary et les keyPoints que de risquer un lien cassé.
 
@@ -164,7 +164,7 @@ export async function POST(request) {
     // Sinon, utilise la logique basée sur l'intensité
     let planDays;
     if (daysUntilInterview && daysUntilInterview > 0) {
-      planDays = Math.min(daysUntilInterview, 14);
+      planDays = Math.min(daysUntilInterview, 30);
     } else {
       planDays = intensityKey === "Léger" ? 10 : intensityKey === "Intensif" ? 5 : 7;
     }
@@ -205,30 +205,36 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
 [
   {
     "day": 1,
-    "title": "Titre du jour",
+    "title": "Titre court du jour (max 5 mots)",
     "focus": "Mot-clé",
     "items": [
       {
         "type": "note",
-        "title": "Titre précis de la leçon",
-        "duration": "20 min",
+        "title": "Titre précis (max 8 mots)",
+        "duration": "15 min",
         "content": {
-          "summary": "Explication DÉTAILLÉE en 5-8 phrases.",
-          "keyPoints": ["Point détaillé avec explication complète"],
-          "tips": ["Astuce concrète"],
-          "links": [{"label": "Nom descriptif", "url": "URL SPÉCIFIQUE", "type": "article"}]
+          "summary": "Explication CONCISE en 2-3 phrases max. Va droit au but.",
+          "sections": [
+            {
+              "heading": "Sous-titre du concept",
+              "points": ["Point concis (1 phrase)", "Point concis (1 phrase)"]
+            }
+          ],
+          "keyPoints": ["Point clé en 1 phrase courte (max 15 mots)"],
+          "tips": ["Astuce en 1 phrase courte"],
+          "links": [{"label": "Nom", "url": "URL VÉRIFIÉE", "type": "article"}]
         },
         "miniQuiz": [{"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0}]
       },
       {
         "type": "exercise",
-        "title": "Exercice pratique",
-        "duration": "30 min",
+        "title": "Exercice pratique (max 8 mots)",
+        "duration": "20 min",
         "content": {
-          "objective": "Objectif précis",
-          "steps": ["Étape détaillée"],
-          "tips": ["Conseil pratique"],
-          "links": [{"label": "Nom", "url": "URL spécifique", "type": "lab"}]
+          "objective": "Objectif en 1 phrase",
+          "steps": ["Étape courte et actionnable"],
+          "tips": ["Conseil en 1 phrase"],
+          "links": [{"label": "Nom", "url": "URL", "type": "lab"}]
         }
       },
       {
@@ -236,27 +242,27 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
         "title": "Quiz du jour",
         "duration": "10 min",
         "content": {
-          "questions": [{"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "Pourquoi"}]
+          "questions": [{"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "Explication en 1 phrase"}]
         }
       }
     ]
   }
 ]
 
-RÈGLES :
+RÈGLES DE CONTENU — TRÈS IMPORTANT :
 1. ${planDays} jours, ${ic.itemsPerDay} items chacun
-2. Chaque jour finit par un quiz (${ic.quizQuestions} questions)
-3. Les notes ont des miniQuiz (1-2 questions)
-4. URLS : utilise UNIQUEMENT les domaines de la liste ci-dessus. NE PAS inventer de sous-pages.
-5. Adapte au domaine du poste (${sector}).
-6. Jour 1 ou 2 : inclus un item 'culture' sur la vie de l'entreprise ${company}, sa culture, ses valeurs. Utilise des liens VERS LE SITE OFFICIEL de ${company} (pages 'À propos', 'Careers', 'Blog'). Explique pourquoi connaître la culture est crucial même pour un entretien technique.
-7. Dernier jour = révision + quiz final 10 questions
-8. Contenu concret avec vrais exemples adaptés au secteur
-9. JSON COMPLET et VALIDE, pas de troncature
-10. Pas de guillemets courbes ni retours à la ligne dans les strings
-11. CHAQUE jour doit avoir du contenu substantiel. S'il y a beaucoup de jours, répartis les compétences uniformément. Les premiers jours = fondamentaux et faiblesses. Les derniers jours = révision, simulation d'entretien, culture d'entreprise.
-12. Concentre les premiers jours sur les compétences faibles/partielles
-13. Adapte la difficulté au niveau ${levelKey} : ${lc.quizDifficulty}
+2. CONCISION : Chaque note doit être COURTE et LISIBLE. Un humain doit pouvoir la lire en 5 minutes max. Pas de pavés de texte. summary = 2-3 phrases. keyPoints = max 4 points de 1 phrase.
+3. SOUS-CHAPITRES : Utilise le champ "sections" pour découper chaque note en 2-3 sous-parties avec un "heading" clair et 2-3 "points" courts. Ça rend le contenu scannable.
+4. Chaque jour finit par un quiz (${ic.quizQuestions} questions)
+5. Les notes ont des miniQuiz (1-2 questions)
+6. URLS : utilise UNIQUEMENT les domaines de la liste ci-dessus. NE PAS inventer de sous-pages.
+7. Adapte au domaine du poste (${sector}).
+8. Jour 1 ou 2 : inclus un item 'culture' sur ${company}. Explique pourquoi connaître la culture est crucial même pour un entretien technique.
+9. Dernier jour = révision + quiz final 10 questions
+10. JSON COMPLET et VALIDE, pas de troncature, pas de guillemets courbes
+11. Répartis les compétences uniformément. Premiers jours = fondamentaux et faiblesses. Derniers jours = révision, simulation d'entretien.
+12. Adapte la difficulté au niveau ${levelKey} : ${lc.quizDifficulty}
+13. LISIBILITÉ : Imagine un candidat stressé qui doit apprendre. Chaque partie doit être digeste, organisée et aller à l'essentiel. Pas de répétitions. Pas de phrases inutiles.
 
 JSON uniquement :`;
 
