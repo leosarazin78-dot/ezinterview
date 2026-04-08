@@ -37,7 +37,7 @@ export const metadata = {
     googleBot: { index: true, follow: true, "max-video-preview": -1, "max-image-preview": "large", "max-snippet": -1 },
   },
   verification: {
-    google: "GOOGLE_SITE_VERIFICATION_CODE",
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
   },
 };
 
@@ -49,41 +49,63 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
+  // ─── Analytics config (au choix) ───
   const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "";
+  const UMAMI_URL = process.env.NEXT_PUBLIC_UMAMI_URL || "";
+  const UMAMI_ID = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID || "";
+  const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY || "";
+  const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
 
   return (
     <html lang="fr">
       <head>
-        {/* Google Analytics — consent mode par défaut : refusé */}
+        {/* ═══ OPTION 1 : Umami (open source, RGPD sans cookies, gratuit) ═══ */}
+        {UMAMI_URL && UMAMI_ID && (
+          <Script
+            src={UMAMI_URL}
+            data-website-id={UMAMI_ID}
+            strategy="afterInteractive"
+            async
+          />
+        )}
+
+        {/* ═══ OPTION 2 : PostHog (open source, free tier 1M events/mois) ═══ */}
+        {POSTHOG_KEY && (
+          <Script id="posthog-init" strategy="afterInteractive">
+            {`
+              !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group setPersonProperties resetPersonProperties setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+              posthog.init('${POSTHOG_KEY}', {
+                api_host: '${POSTHOG_HOST}',
+                person_profiles: 'identified_only',
+                capture_pageview: true,
+                capture_pageleave: true,
+                autocapture: true,
+              });
+            `}
+          </Script>
+        )}
+
+        {/* ═══ OPTION 3 : Google Analytics (si configuré) ═══ */}
         {GA_ID && (
           <>
             <Script id="ga-consent-default" strategy="beforeInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
-                gtag('consent', 'default', {
-                  analytics_storage: 'denied',
-                });
-                // Si l'utilisateur a déjà accepté, on active
+                gtag('consent', 'default', { analytics_storage: 'denied' });
                 if (typeof localStorage !== 'undefined' && localStorage.getItem('cookie-consent') === 'accepted') {
                   gtag('consent', 'update', { analytics_storage: 'granted' });
                 }
               `}
             </Script>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="afterInteractive"
-            />
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
             <Script id="google-analytics" strategy="afterInteractive">
               {`
                 window.__GA_ID = '${GA_ID}';
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
-                gtag('config', '${GA_ID}', {
-                  page_path: window.location.pathname + window.location.hash,
-                  anonymize_ip: true,
-                });
+                gtag('config', '${GA_ID}', { page_path: window.location.pathname, anonymize_ip: true });
               `}
             </Script>
           </>

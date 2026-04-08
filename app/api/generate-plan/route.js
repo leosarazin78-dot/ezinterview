@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { extractJSONArray } from "../../lib/parse-json";
 import { createRateLimit, rateLimitResponse } from "../../lib/rate-limit";
 import { sanitizeObject, sanitizeUrl } from "../../lib/sanitize";
+import { planRequestSchema } from "../../lib/validation";
 
 // Augmenter le timeout Next.js (300s = 5 min)
 export const maxDuration = 300;
@@ -151,8 +152,16 @@ export async function POST(request) {
 
   try {
     const raw = await request.json();
-    // Sanitize tous les inputs
-    const { jobData, stats, intensity, experienceLevel, interviewerRole, interviewDate, daysUntilInterview } = sanitizeObject(raw);
+
+    let validated;
+    try {
+      validated = planRequestSchema.parse(raw);
+    } catch (err) {
+      return Response.json({ error: "Données invalides", details: err.errors?.map(e => e.message) }, { status: 400 });
+    }
+
+    // Use validated data
+    const { jobData, stats, intensity, experienceLevel, interviewerRole, interviewDate, daysUntilInterview } = validated;
 
     if (!jobData) return Response.json({ error: "Données manquantes" }, { status: 400 });
 

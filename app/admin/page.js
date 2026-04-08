@@ -210,15 +210,33 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Analytics links */}
+        {/* Analytics & SEO links */}
         <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.2)" }}>
           <h4 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, color: "#7C5CFC" }}>Analytics & SEO</h4>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#5B8DEF", background: "rgba(91,141,239,0.12)", border: "1px solid rgba(91,141,239,0.25)", fontWeight: 500 }}>📊 Google Analytics</a>
-            <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#34D399", background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.25)", fontWeight: 500 }}>🔍 Search Console</a>
-            <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#FBBF24", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.25)", fontWeight: 500 }}>💰 Google Ads (SEA)</a>
+
+          {/* Open source analytics */}
+          <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, color: T.muted, textTransform: "uppercase", letterSpacing: "0.5px" }}>Open Source (recommandé)</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+            <a href="https://cloud.umami.is" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#7C5CFC", background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 600 }}>📊 Umami Analytics</a>
+            <a href="https://eu.posthog.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#F97316", background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.25)", fontWeight: 600 }}>🦔 PostHog</a>
+            <a href="https://plausible.io" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#8B5CF6", background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)", fontWeight: 500 }}>📈 Plausible</a>
           </div>
-          <p style={{ margin: "10px 0 0", fontSize: 11, color: "#8888A0" }}>Configure Google Analytics (GA4) dans les variables Vercel : NEXT_PUBLIC_GA_ID</p>
+
+          {/* Google tools */}
+          <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, color: T.muted, textTransform: "uppercase", letterSpacing: "0.5px" }}>Google (SEO & SEA)</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+            <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#34D399", background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 500 }}>🔍 Search Console</a>
+            <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#FBBF24", background: T.warnLt, border: `1px solid ${T.warnBd}`, fontWeight: 500 }}>💰 Google Ads (SEA)</a>
+            <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#60A5FA", background: T.blueLt, border: `1px solid ${T.blueBd}`, fontWeight: 500 }}>📉 Google Analytics</a>
+          </div>
+
+          {/* Setup instructions */}
+          <div style={{ padding: 12, borderRadius: 12, background: T.card, border: `1px solid ${T.border}`, fontSize: 11, color: T.muted, lineHeight: 1.6 }}>
+            <p style={{ margin: "0 0 4px", fontWeight: 600, color: T.text }}>Variables Vercel à configurer :</p>
+            <p style={{ margin: "0 0 2px" }}><span style={{ color: "#7C5CFC", fontFamily: "monospace" }}>NEXT_PUBLIC_UMAMI_URL</span> + <span style={{ color: "#7C5CFC", fontFamily: "monospace" }}>NEXT_PUBLIC_UMAMI_WEBSITE_ID</span> → Umami (gratuit, sans cookies, RGPD)</p>
+            <p style={{ margin: "0 0 2px" }}><span style={{ color: "#F97316", fontFamily: "monospace" }}>NEXT_PUBLIC_POSTHOG_KEY</span> → PostHog (1M events gratuits/mois, replays sessions)</p>
+            <p style={{ margin: 0 }}><span style={{ color: "#60A5FA", fontFamily: "monospace" }}>NEXT_PUBLIC_GA_ID</span> → Google Analytics (nécessite consentement cookies)</p>
+          </div>
         </div>
 
         {/* Tabs */}

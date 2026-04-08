@@ -1,6 +1,7 @@
 "use client";
 import { useState, useCallback, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { signupSchema, profileSchema, jobUrlSchema, cvInputSchema, feedbackSchema, reportSchema, zodFirstError } from "./lib/validation";
 
 // ─── Supabase browser client ───
 const supabase = typeof window !== "undefined"
@@ -496,14 +497,13 @@ function LandingPage({ user, onLogin }) {
         onLogin?.();
       } else {
         if (signupStep === 1) {
-          if (!isPasswordValid) { setError("Mot de passe trop faible (min 8 caractères, majuscule, chiffre)"); setLoading(false); return; }
+          try { signupSchema.parse({ email, password }); } catch (err) { setError(zodFirstError(err)); setLoading(false); return; }
           setSignupStep(2); setLoading(false); return;
         }
-        // Step 2: create account with profile data
-        if (!signupProfile.firstName.trim() || !signupProfile.lastName.trim()) { setError("Nom et prénom obligatoires"); setLoading(false); return; }
+        try { profileSchema.parse(signupProfile); } catch (err) { setError(zodFirstError(err)); setLoading(false); return; }
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { firstName: signupProfile.firstName, lastName: signupProfile.lastName, phone: signupProfile.phone, city: signupProfile.city, birthYear: signupProfile.birthYear, profileComplete: true } }
+          options: { data: { ...signupProfile, profileComplete: true } }
         });
         if (error) throw error;
         setMessage("Vérifie tes emails pour confirmer ton compte !");
@@ -1091,6 +1091,7 @@ export default function EzInterview() {
   const fetchJobData = async () => {
     setJobLoading(true); setJobError("");
     try {
+      jobUrlSchema.parse({ jobUrl, jobText, experienceLevel, interviewDate });
       const res = await safeFetch("/api/analyze-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1100,8 +1101,11 @@ export default function EzInterview() {
       setActiveTab("cv");
       setShowJobTextFallback(false);
     } catch (err) {
-      // Si erreur 422 (scraping échoué), proposer le mode texte
-      if (err.message.includes("422")) {
+      // Handle Zod validation errors
+      if (err?.errors) {
+        setJobError(zodFirstError(err));
+      } else if (err.message.includes("422")) {
+        // Si erreur 422 (scraping échoué), proposer le mode texte
         setShowJobTextFallback(true);
         setJobError("Impossible d'accéder au site. Colle le texte de l'offre ci-dessous.");
       } else {
@@ -1214,10 +1218,7 @@ export default function EzInterview() {
   };
 
   const handleSendFeedback = async () => {
-    if (!feedbackMessage.trim()) {
-      alert("Veuillez écrire un message");
-      return;
-    }
+    try { feedbackSchema.parse({ type: feedbackType, message: feedbackMessage, rating: feedbackRating || undefined, planId: currentPlanId || undefined }); } catch (err) { alert(zodFirstError(err)); return; }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       await safeFetch("/api/feedback", {
@@ -1673,7 +1674,7 @@ export default function EzInterview() {
                           <textarea placeholder="Décris le problème..." value={reportText} onChange={(e) => setReportText(e.target.value)} style={{ ...inp, minHeight: 60, marginBottom: 8 }} />
                           <div style={{ display: "flex", gap: 6 }}>
                             <button onClick={async () => {
-                              if (!reportText.trim()) { alert("Veuillez décrire le problème"); return; }
+                              try { reportSchema.parse({ planId: currentPlanId, dayIndex: expandedDay, itemIndex: i, itemTitle: item.title, reason: reportText }); } catch (err) { alert(zodFirstError(err)); return; }
                               try {
                                 const { data: { session: reportSession } } = await supabase.auth.getSession();
                                 await safeFetch("/api/report", {

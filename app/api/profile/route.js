@@ -1,4 +1,5 @@
 import { createServerClient } from "../../lib/supabase";
+import { profileUpdateSchema } from "../../lib/validation";
 
 // GET : récupérer le profil utilisateur
 export async function GET(request) {
@@ -37,7 +38,16 @@ export async function PUT(request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return Response.json({ error: "Non authentifié" }, { status: 401 });
 
-    const { firstName, lastName, phone, city, birthYear } = await request.json();
+    const body = await request.json();
+
+    let validated;
+    try {
+      validated = profileUpdateSchema.parse(body);
+    } catch (err) {
+      return Response.json({ error: "Données invalides", details: err.errors?.map(e => e.message) }, { status: 400 });
+    }
+
+    const { firstName, lastName, phone, city, birthYear } = validated;
 
     if (!firstName?.trim() || !lastName?.trim()) {
       return Response.json({ error: "Nom et prénom obligatoires" }, { status: 400 });

@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import { extractJSONObject } from "../../lib/parse-json";
 import { createRateLimit, rateLimitResponse } from "../../lib/rate-limit";
 import { sanitizeUrl, sanitizeString } from "../../lib/sanitize";
+import { analyzeJobServerSchema } from "../../lib/validation";
 
 const anthropic = new Anthropic();
 
@@ -169,9 +170,17 @@ export async function POST(request) {
 
   try {
     const raw = await request.json();
-    const jobUrl = sanitizeUrl(raw.jobUrl);
-    const jobText = sanitizeString(raw.jobText || "", 10000);
-    const experienceLevel = sanitizeString(raw.experienceLevel || "", 50);
+
+    let validated;
+    try {
+      validated = analyzeJobServerSchema.parse(raw);
+    } catch (err) {
+      return Response.json({ error: "Données invalides", details: err.errors?.map(e => e.message) }, { status: 400 });
+    }
+
+    const jobUrl = sanitizeUrl(validated.url);
+    const jobText = sanitizeString(validated.jobText || "", 10000);
+    const experienceLevel = sanitizeString(validated.experienceLevel || "", 50);
 
     // Mode texte collé (fallback quand scraping échoue)
     let pageText = null;
