@@ -19,81 +19,87 @@ export async function POST(request) {
     if (!jobData || !cvText)
       return Response.json({ error: "Données manquantes" }, { status: 400 });
 
-    let profileContent = cvText.slice(0, 6000);
+    let profileContent = cvText.slice(0, 8000);
     if (linkedinUrl) {
       profileContent += `\n\nProfil LinkedIn : ${linkedinUrl}`;
     }
 
     const levelLabel = experienceLevel || "non précisé";
     const levelGuidance = {
-      "Junior (0-2 ans)": "Ce candidat débute. Valorise les formations, stages, projets personnels et la motivation. Sois particulièrement encourageant sur les compétences émergentes.",
-      "Confirmé (3-7 ans)": "Ce candidat a de l'expérience. Valorise les réalisations concrètes, les responsabilités prises et la progression. Sois équilibré et constructif.",
-      "Senior (8+ ans)": "Ce candidat est expérimenté. Valorise le leadership, l'expertise approfondie, les contributions stratégiques. Sois exigeant mais juste."
+      "Junior (0-2 ans)": "Ce candidat débute. Valorise les formations, stages, projets personnels et la motivation. Sois encourageant sur les compétences émergentes mais HONNÊTE sur les lacunes.",
+      "Confirmé (3-7 ans)": "Ce candidat a de l'expérience. Valorise les réalisations concrètes et la progression. Sois équilibré et constructif.",
+      "Senior (8+ ans)": "Ce candidat est expérimenté. Valorise le leadership et l'expertise. Sois exigeant mais juste."
     };
 
     const guidance = levelGuidance[levelLabel] || "Évalue le profil de manière équilibrée.";
 
+    // Extraire les compétences requises de l'offre
+    const requirements = jobData.requirements?.map((r) => r.label) || [];
+    const reqList = requirements.length > 0 ? requirements.join(", ") : "voir description de l'offre";
+    const jobDescription = jobData.description || jobData.full_description || "";
+
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 3000,
+      max_tokens: 4000,
       messages: [
         {
           role: "user",
-          content: `Compare ce profil candidat avec cette offre d'emploi.
+          content: `Tu es un expert RH / recruteur senior. Analyse en PROFONDEUR la compatibilité entre ce CV et cette offre d'emploi.
 
-REGLE ABSOLUE : Sois HONNÊTE et PRÉCIS. NE MENS PAS sur les compétences du candidat.
-- Si une compétence n'apparaît NULLE PART dans le CV, elle est "weak". Point final.
-- N'invente JAMAIS d'expérience que le CV ne mentionne pas.
-- Si le CV ne mentionne pas du tout React, ne dis pas "partial" — c'est "weak".
-- Si le CV mentionne JavaScript mais pas React spécifiquement, c'est "partial" pour React (expérience connexe).
-- Mieux vaut dire honnêtement "tu n'as pas cette compétence, mais tu peux l'acquérir" que mentir.
-- C'est OK d'avoir beaucoup de "weak" — l'objectif est de BIEN PRÉPARER, pas de flatter.
+MÉTHODOLOGIE D'ANALYSE :
+1. Lis d'abord INTÉGRALEMENT le CV et l'offre
+2. Identifie CHAQUE compétence requise dans l'offre (techniques ET soft skills)
+3. Pour chaque compétence, cherche une preuve CONCRÈTE dans le CV (mots-clés, expériences, projets, formations)
+4. Évalue le niveau de correspondance basé UNIQUEMENT sur ce qui est écrit
 
-NIVEAU D'EXPÉRIENCE : ${levelLabel}
+REGLE ABSOLUE : Sois HONNÊTE et PRÉCIS.
+- Si une compétence n'apparaît NULLE PART dans le CV → "weak"
+- Si le CV mentionne une compétence CONNEXE mais pas exactement celle demandée → "partial"
+- Si le CV démontre clairement cette compétence avec expérience → "strong"
+- Ne DÉDUIS PAS de compétences non mentionnées. "5 ans d'expérience" ne veut pas dire "maîtrise de tous les outils"
+- Analyse les MOTS EXACTS du CV, pas ce que tu imagines
+
+NIVEAU D'EXPÉRIENCE DÉCLARÉ : ${levelLabel}
 ${guidance}
 
-OFFRE :
+═══ OFFRE D'EMPLOI ═══
 Poste : ${jobData.title} chez ${jobData.company}
-Compétences requises : ${jobData.requirements?.map((r) => r.label).join(", ")}
+Secteur : ${jobData.sector || "non précisé"}
+Compétences listées : ${reqList}
+${jobDescription ? `Description complète de l'offre :\n${jobDescription.slice(0, 3000)}` : ""}
 
-PROFIL DU CANDIDAT :
+═══ CV DU CANDIDAT ═══
 ${profileContent}
 
-Retourne UNIQUEMENT du JSON strict :
-
+═══ FORMAT DE RÉPONSE (JSON strict) ═══
 {
   "overallScore": 45,
-  "summary": "Résumé HONNÊTE en 2-3 phrases. Commence par les vrais points forts, puis indique clairement les lacunes. Termine par une note encourageante sur la préparation possible. Exemple : Tu as de solides bases en X. En revanche, Y et Z ne figurent pas dans ton parcours actuel. La bonne nouvelle : ces compétences s'acquièrent avec une préparation ciblée.",
+  "summary": "Résumé HONNÊTE en 3-4 phrases. 1) Points forts réels avec preuves du CV. 2) Lacunes principales avec honnêteté. 3) Note encourageante sur la préparation.",
+  "topStrength": "La compétence la plus forte avec citation du CV",
   "stats": {
-    "strongCount": 1,
-    "partialCount": 2,
+    "strongCount": 2,
+    "partialCount": 3,
     "weakCount": 4,
-    "topStrength": "La compétence la plus forte du candidat (ou vide si aucune)",
-    "improvementTip": "Conseil concret et actionnable pour la lacune la plus critique"
+    "improvementTip": "Conseil précis et actionnable sur LA lacune la plus critique à combler en priorité"
   },
   "matches": [
     {
       "reqId": 1,
-      "label": "Nom de la compétence requise",
-      "match": "strong",
-      "profileEvidence": "Pour strong : cite la preuve EXACTE du CV. Pour partial : explique ce qui est acquis et ce qui manque. Pour weak : dis clairement que ce n'est pas dans le CV, et donne une piste pour l'apprendre."
+      "label": "Nom exact de la compétence requise",
+      "match": "strong|partial|weak",
+      "profileEvidence": "CITATION EXACTE du CV qui prouve cette compétence, OU 'Non mentionné dans le CV — suggestion pour l'acquérir'"
     }
   ]
 }
 
-RÈGLES DE CLASSEMENT :
-- "strong" = le CV mentionne EXPLICITEMENT cette compétence avec de l'expérience concrète
-- "partial" = le CV mentionne une compétence CONNEXE ou un domaine proche (ex: JavaScript → TypeScript est partial)
-- "weak" = RIEN dans le CV ne couvre cette compétence, même de loin. C'est le classement par défaut si tu n'es pas sûr.
+RÈGLES DE SCORING :
+- overallScore = (strong×100 + partial×50) / (total_requirements×100) × 100. Arrondi.
+- Exemple : 2 strong + 3 partial + 4 weak sur 9 → (200+150)/900 = 39%
+- INCLUS au moins 8-12 compétences dans matches (techniques + soft skills + outils + méthodologies)
+- Ne te limite PAS aux "requirements" listés. Analyse TOUTE l'offre pour trouver des compétences implicites.
+- profileEvidence DOIT citer un passage réel du CV ou dire explicitement "Non mentionné"
 
-RÈGLES GÉNÉRALES :
-- overallScore : reflète VRAIMENT la couverture. 3 strong sur 8 requirements = ~35-40%, pas 70%
-- Ne gonfle PAS le score pour faire plaisir. Un score bas + un bon plan = meilleur résultat qu'un faux score élevé
-- Pour chaque match, la profileEvidence doit citer un élément RÉEL du CV ou dire clairement "Non mentionné dans votre CV"
-- summary : TOUJOURS encourageant sur la possibilité de progresser, mais HONNÊTE sur l'état actuel
-- Pas de caractères spéciaux, guillemets courbes ou retours à la ligne dans les strings
-
-Retourne UNIQUEMENT le JSON valide, rien d'autre.`,
+JSON uniquement, pas de texte avant ou après :`,
         },
       ],
     });

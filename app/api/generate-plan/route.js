@@ -201,7 +201,16 @@ CONTEXTE :
 - Toutes les compétences requises : ${allSkills.join(", ")}
 ${jobData?.companyInfo?.competitors?.length ? `- Concurrents : ${jobData.companyInfo.competitors.join(", ")}` : ""}
 ${jobData?.companyInfo?.techStack?.length ? `- Outils du poste : ${jobData.companyInfo.techStack.join(", ")}` : ""}
-${interviewerRole ? `- Interlocuteur : ${interviewerRole} — adapte les exercices et questions d'entretien pour correspondre aux attentes de ce profil. Un CTO posera des questions techniques stratégiques, un DRH des questions comportementales, un Manager des mises en situation, etc.` : ""}
+${interviewerRole ? `- Interlocuteur : ${interviewerRole} — adapte les exercices et questions d'entretien pour correspondre aux attentes de ce profil. Un CTO posera des questions techniques stratégiques, un DRH des questions comportementales, un Manager des mises en situation, etc.
+
+SECTION DÉDIÉE INTERLOCUTEUR — OBLIGATOIRE :
+Ajoute au Jour 1 un item de type "note" intitulé "Comprendre ton interlocuteur : ${interviewerRole}" qui explique :
+1. Ce que ce profil (${interviewerRole}) évalue typiquement en entretien (compétences techniques, soft skills, culture fit, vision stratégique, etc.)
+2. Les questions types qu'il/elle pose et ce qu'il/elle cherche derrière chaque question
+3. Les erreurs à éviter face à ce type d'interlocuteur
+4. Comment adapter ton discours et tes exemples pour ce profil spécifique
+5. Les signaux positifs que ce profil recherche chez un candidat
+Ce contenu doit être concret et actionnable, pas générique.` : ""}
 
 ADAPTATION AU NIVEAU (${levelKey}) :
 ${lc.focus}

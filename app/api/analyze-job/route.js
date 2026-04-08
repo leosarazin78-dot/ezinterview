@@ -244,6 +244,7 @@ Format attendu :
   ],
   "companyInfo": {
     "sector": "Secteur d'activite",
+    "website": "https://www.entreprise.com",
     "techStack": ["Outil/methode/techno 1", "Outil/methode/techno 2"]
   }
 }
@@ -252,6 +253,7 @@ IMPORTANT :
 - requirements : extrais les competences PROFESSIONNELLES et METIER demandees (techniques, outils, connaissances sectorielles, methodologies, certifications). Pas de soft skills ni de langues.
   Adapte au domaine : "React" pour un dev, "Modelisation financiere" pour un analyste, "Droit des contrats" pour un juriste, "SEO/SEA" pour un marketeur, "Normes IFRS" pour un comptable, "AutoCAD" pour un architecte, "Soudure TIG" pour un artisan, "Pedagogie differenciee" pour un enseignant
 - interviewSteps : extrais-les si le processus est decrit dans l'offre, sinon retourne un tableau vide []
+- companyInfo.website : le site officiel de l'entreprise si tu le connais avec certitude (ex: https://www.google.com pour Google), sinon null
 - companyInfo.techStack : liste les outils, technologies, methodes ou frameworks mentionnes
 - Retourne UNIQUEMENT le JSON valide`,
         },

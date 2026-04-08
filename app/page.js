@@ -435,20 +435,26 @@ function CulturePanel({ companyInfo, jobData }) {
       <div style={{ marginTop: 8, padding: 12, borderRadius: T.r, background: T.bgCard, border: `1px solid ${T.border}` }}>
         <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: T.accent }}>Liens utiles — à consulter avant l'entretien</p>
         <div className="ez-culture-links" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " site officiel")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
-            🌐 Site officiel
-          </a>
-          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " avis salariés glassdoor")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.green, background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 500, transition: "all 0.2s" }}>
+          {ci.website ? (
+            <a href={ci.website} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
+              🌐 Site officiel
+            </a>
+          ) : companyDomain ? (
+            <a href={`https://${companyDomain}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
+              🌐 Site officiel
+            </a>
+          ) : null}
+          <a href={`https://www.glassdoor.fr/Avis/index.htm?sc.keyword=${encodeURIComponent(company)}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.green, background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 500, transition: "all 0.2s" }}>
             ⭐ Avis Glassdoor
           </a>
-          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " actualités")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.warn, background: T.warnLt, border: `1px solid ${T.warnBd}`, fontWeight: 500, transition: "all 0.2s" }}>
-            📰 Actualités
+          <a href={`https://www.welcometothejungle.com/fr/companies?query=${encodeURIComponent(company)}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.warn, background: T.warnLt, border: `1px solid ${T.warnBd}`, fontWeight: 500, transition: "all 0.2s" }}>
+            📰 Welcome to the Jungle
           </a>
           <a href={`https://www.linkedin.com/company/${companySlug}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
             💼 Page LinkedIn
           </a>
-          <a href={`https://www.google.com/search?q=${encodeURIComponent(company + " carrières recrutement")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.purple, background: T.purpleLt, border: `1px solid ${T.purpleBd}`, fontWeight: 500, transition: "all 0.2s" }}>
-            🎯 Page Carrières
+          <a href={`https://www.societe.com/cgi-bin/search?champs=${encodeURIComponent(company)}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.purple, background: T.purpleLt, border: `1px solid ${T.purpleBd}`, fontWeight: 500, transition: "all 0.2s" }}>
+            🏢 Fiche Societe.com
           </a>
         </div>
       </div>
@@ -1383,6 +1389,15 @@ export default function EzInterview() {
             plans={savedPlans}
             onSelect={async (id) => {
               setCurrentPlanId(id);
+              // Essaie d'abord les données déjà en mémoire (plus rapide)
+              const cached = savedPlans.find(p => p.id === id);
+              if (cached?.plan_data) {
+                setPlan(cached.plan_data);
+                setJobData(cached.job_data);
+                setStep("plan");
+                return;
+              }
+              // Sinon charge depuis l'API
               setLoadingPlan(id);
               try {
                 const { data: { session } } = await supabase.auth.getSession();
