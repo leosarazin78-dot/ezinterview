@@ -178,7 +178,7 @@ export async function POST(request) {
       return Response.json({ error: "Données invalides", details: err.errors?.map(e => e.message) }, { status: 400 });
     }
 
-    const jobUrl = sanitizeUrl(validated.url);
+    const jobUrl = sanitizeUrl(validated.jobUrl);
     const jobText = sanitizeString(validated.jobText || "", 10000);
     const experienceLevel = sanitizeString(validated.experienceLevel || "", 50);
 

@@ -11,9 +11,11 @@ export async function GET(request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return Response.json({ error: "Non authentifié" }, { status: 401 });
 
+    // Ne charge PAS plan_data/job_data pour la liste (trop lourd)
+    // On les charge à la demande quand l'utilisateur ouvre un plan
     const { data, error } = await supabase
       .from("plans")
-      .select("id, job_title, company, interview_date, next_interlocutor, completed_days, plan_data, created_at")
+      .select("id, job_title, company, interview_date, next_interlocutor, completed_days, duration, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 

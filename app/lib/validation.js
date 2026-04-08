@@ -26,7 +26,7 @@ export const profileSchema = z.object({
 
 // ─── Job Input ───
 export const jobUrlSchema = z.object({
-  jobUrl: z.string().url("URL invalide").optional().or(z.literal("")),
+  jobUrl: z.string().optional().default(""),
   jobText: z.string().max(50000).optional().default(""),
   experienceLevel: z.enum(["Junior (0-2 ans)", "Confirmé (3-7 ans)", "Senior (8+ ans)"], {
     errorMap: () => ({ message: "Sélectionne ton niveau d'expérience" }),
@@ -78,12 +78,12 @@ export const reportSchema = z.object({
 
 // ─── Analyze Job (server-side) ───
 export const analyzeJobServerSchema = z.object({
-  url: z.string().url().optional().or(z.literal("")),
+  jobUrl: z.string().optional().default(""),
   jobText: z.string().max(50000).optional().default(""),
   experienceLevel: z.string().optional().default(""),
 }).refine(
-  (data) => data.url || data.jobText,
-  { message: "URL ou texte requis" }
+  (data) => data.jobUrl || data.jobText,
+  { message: "URL ou texte requis", path: ["jobUrl"] }
 );
 
 // ─── Profile API (server-side) ───

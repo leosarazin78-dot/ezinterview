@@ -900,7 +900,7 @@ function LandingPage({ user, onLogin }) {
 }
 
 // ─── Plans Dashboard ───
-function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, user, onLogout }) {
+function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, loadingPlan, user, onLogout }) {
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   return (
@@ -921,8 +921,11 @@ function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, user, 
             const done = Object.keys(plan.completed_days || {}).length;
             const daysLeft = plan.interview_date ? Math.max(0, Math.ceil((new Date(plan.interview_date) - new Date()) / 86400000)) : null;
             return (
-              <div key={plan.id} style={{ ...card, cursor: "pointer", position: "relative" }}>
-                <div onClick={() => onSelect(plan.id)}>
+              <div key={plan.id} style={{ ...card, cursor: loadingPlan === plan.id ? "wait" : "pointer", position: "relative", opacity: loadingPlan === plan.id ? 0.7 : 1, transition: "opacity 0.2s" }}>
+                <div onClick={() => !loadingPlan && onSelect(plan.id)}>
+                  {loadingPlan === plan.id && (
+                    <div style={{ position: "absolute", top: 16, right: 16, width: 16, height: 16, border: `2px solid ${T.accentBd}`, borderTopColor: T.accent, borderRadius: "50%", animation: "spin .6s linear infinite" }} />
+                  )}
                   <h3 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: T.text }}>{plan.job_title}</h3>
                   <p style={{ margin: "0 0 4px", fontSize: 12, color: T.muted }}>{plan.company}</p>
                   {plan.next_interlocutor && <p style={{ margin: "0 0 4px", fontSize: 11, color: T.accent }}>Face à : {plan.next_interlocutor}</p>}
@@ -988,6 +991,7 @@ export default function EzInterview() {
   const [plan, setPlan] = useState(null);
   const [planError, setPlanError] = useState("");
   const [deletingPlan, setDeletingPlan] = useState(null);
+  const [loadingPlan, setLoadingPlan] = useState(null);
 
   const [expandedDay, setExpandedDay] = useState(0);
   const [expandedItems, setExpandedItems] = useState({});
@@ -1040,17 +1044,20 @@ export default function EzInterview() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
-        try {
-          const profile = await safeFetch("/api/profile", { headers: { "Authorization": `Bearer ${session.access_token}` } });
-          if (!profile.profileComplete) {
-            setProfileData({ firstName: profile.firstName || "", lastName: profile.lastName || "", phone: profile.phone || "", city: profile.city || "", birthYear: profile.birthYear || "" });
-            setShowProfileForm(true);
-          }
-        } catch (e) { console.error("Profile load error:", e); }
-        try {
-          const plans = await safeFetch("/api/plans", { headers: { "Authorization": `Bearer ${session.access_token}` } });
-          setSavedPlans(plans);
-        } catch (e) { console.error("Plans load error:", e); }
+        const headers = { "Authorization": `Bearer ${session.access_token}` };
+        // Charge profil + plans EN PARALLÈLE (2x plus rapide)
+        const [profileResult, plansResult] = await Promise.allSettled([
+          safeFetch("/api/profile", { headers }),
+          safeFetch("/api/plans", { headers }),
+        ]);
+        if (profileResult.status === "fulfilled" && !profileResult.value.profileComplete) {
+          const p = profileResult.value;
+          setProfileData({ firstName: p.firstName || "", lastName: p.lastName || "", phone: p.phone || "", city: p.city || "", birthYear: p.birthYear || "" });
+          setShowProfileForm(true);
+        }
+        if (plansResult.status === "fulfilled") {
+          setSavedPlans(plansResult.value);
+        }
       }
     } catch (e) { console.error("Session error:", e); }
   };
@@ -1374,15 +1381,21 @@ export default function EzInterview() {
         <div className="ez-step" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
           <PlansDashboard
             plans={savedPlans}
-            onSelect={(id) => {
-              const found = savedPlans.find(p => p.id === id);
-              if (found?.plan_data) {
-                setPlan(found.plan_data);
-                setJobData(found.job_data);
-                setCurrentPlanId(id);
-                setStep("plan");
-              }
+            onSelect={async (id) => {
+              setCurrentPlanId(id);
+              setLoadingPlan(id);
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const fullPlan = await safeFetch(`/api/plans/${id}`, { headers: { "Authorization": `Bearer ${session.access_token}` } });
+                if (fullPlan?.plan_data) {
+                  setPlan(fullPlan.plan_data);
+                  setJobData(fullPlan.job_data);
+                  setStep("plan");
+                }
+              } catch (e) { console.error("Load plan error:", e); }
+              setLoadingPlan(null);
             }}
+            loadingPlan={loadingPlan}
             onNew={() => { setStep("input"); setActiveTab("offer"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setCvFile(null); setJobUrl(""); setExperienceLevel(""); setInterviewerRole(""); setInterviewDate(""); }}
             onDelete={handleDeletePlan}
             deletingPlan={deletingPlan}
