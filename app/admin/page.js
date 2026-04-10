@@ -20,6 +20,8 @@ const supabase = typeof window !== "undefined"
 
 export default function AdminPage() {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginMode, setLoginMode] = useState("password"); // "password" or "magic"
   const [authed, setAuthed] = useState(false);
   const [session, setSession] = useState(null);
   const [tab, setTab] = useState("users");
@@ -74,7 +76,28 @@ export default function AdminPage() {
     return () => subscription?.unsubscribe();
   }, []);
 
-  // Send magic link
+  // Login with password
+  const handlePasswordLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (authError) throw new Error(authError.message);
+      if (authData?.session) {
+        setSession(authData.session);
+        await fetchAdminData(authData.session.access_token);
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+    setLoading(false);
+  };
+
+  // Send magic link (fallback)
   const handleMagicLink = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -135,13 +158,14 @@ export default function AdminPage() {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif" }}>
         <div style={{ background: T.card, padding: 32, borderRadius: 16, border: `1px solid ${T.border}`, maxWidth: 400, width: "100%" }}>
-          <h1 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: T.text }}>Admin EZE</h1>
+          <h1 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: T.text }}>Admin EntretienZen</h1>
 
           {!magicLinkSent ? (
             <>
-              <p style={{ margin: "0 0 6px", fontSize: 13, color: T.muted }}>Connexion sécurisée par lien magique</p>
-              <p style={{ margin: "0 0 20px", fontSize: 11, color: T.muted }}>Un email de connexion sera envoyé à ton adresse admin</p>
-              <form onSubmit={handleMagicLink}>
+              <p style={{ margin: "0 0 20px", fontSize: 13, color: T.muted }}>
+                {loginMode === "password" ? "Connecte-toi avec ton compte admin" : "Un lien de connexion sera envoyé par email"}
+              </p>
+              <form onSubmit={loginMode === "password" ? handlePasswordLogin : handleMagicLink}>
                 <input
                   type="email"
                   placeholder="Email admin"
@@ -149,21 +173,35 @@ export default function AdminPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   style={{ width: "100%", padding: "12px 14px", border: `1px solid ${T.border}`, borderRadius: 12, fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 12, background: "rgba(255,255,255,0.05)", color: T.text }}
                 />
+                {loginMode === "password" && (
+                  <input
+                    type="password"
+                    placeholder="Mot de passe"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{ width: "100%", padding: "12px 14px", border: `1px solid ${T.border}`, borderRadius: 12, fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 12, background: "rgba(255,255,255,0.05)", color: T.text }}
+                  />
+                )}
                 <button
                   type="submit"
-                  disabled={loading || !email}
+                  disabled={loading || !email || (loginMode === "password" && !password)}
                   style={{ width: "100%", padding: "12px 20px", background: T.accentGradient, color: "#fff", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: (loading || !email) ? 0.6 : 1, boxShadow: "0 4px 16px rgba(124,92,252,0.25)" }}>
-                  {loading ? "Envoi..." : "Recevoir le lien de connexion"}
+                  {loading ? "Connexion..." : loginMode === "password" ? "Se connecter" : "Recevoir le lien"}
                 </button>
               </form>
+              <button
+                onClick={() => setLoginMode(loginMode === "password" ? "magic" : "password")}
+                style={{ background: "transparent", border: "none", cursor: "pointer", color: T.accent, fontSize: 12, marginTop: 12, padding: 0, fontFamily: "inherit" }}>
+                {loginMode === "password" ? "Utiliser un lien magique →" : "← Connexion par mot de passe"}
+              </button>
             </>
           ) : (
             <div style={{ textAlign: "center", padding: "16px 0" }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>📧</div>
               <p style={{ margin: "0 0 8px", fontSize: 15, fontWeight: 600, color: T.green }}>Lien envoyé !</p>
-              <p style={{ margin: "0 0 16px", fontSize: 13, color: T.muted }}>Vérifie ta boîte mail ({email}) et clique sur le lien de connexion. Cette page se mettra à jour automatiquement.</p>
-              <button onClick={() => { setMagicLinkSent(false); setEmail(""); }} style={{ background: "transparent", border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 16px", fontSize: 12, color: T.muted, cursor: "pointer" }}>
-                Renvoyer un lien
+              <p style={{ margin: "0 0 16px", fontSize: 13, color: T.muted }}>Vérifie ta boîte mail ({email}) et clique sur le lien de connexion.</p>
+              <button onClick={() => { setMagicLinkSent(false); setEmail(""); setLoginMode("password"); }} style={{ background: "transparent", border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 16px", fontSize: 12, color: T.muted, cursor: "pointer" }}>
+                Retour à la connexion
               </button>
             </div>
           )}

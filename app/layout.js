@@ -3,14 +3,14 @@ import CookieBanner from "./cookie-banner";
 
 export const metadata = {
   title: {
-    default: "EZE — Prépare ton entretien avec l'IA",
-    template: "%s | EZE"
+    default: "EntretienZen — Prépare ton entretien avec l'IA",
+    template: "%s | EntretienZen"
   },
   description: "Préparation d'entretien personnalisée avec IA : analyse de poste, matching CV, plan jour par jour avec quiz et ressources fiables. Gratuit et sans carte bancaire.",
-  keywords: ["préparation entretien", "entretien embauche", "coaching entretien", "simulation entretien", "IA entretien", "préparer entretien", "questions entretien", "plan préparation entretien", "EZE", "entretien technique", "entretien RH"],
-  authors: [{ name: "EZE" }],
-  creator: "EZE",
-  publisher: "EZE",
+  keywords: ["préparation entretien", "entretien embauche", "coaching entretien", "simulation entretien", "IA entretien", "préparer entretien", "questions entretien", "plan préparation entretien", "EntretienZen", "entretien technique", "entretien RH"],
+  authors: [{ name: "EntretienZen" }],
+  creator: "EntretienZen",
+  publisher: "EntretienZen",
   metadataBase: new URL("https://entretienzen.com"),
   alternates: {
     canonical: "/",
@@ -20,14 +20,14 @@ export const metadata = {
     type: "website",
     locale: "fr_FR",
     url: "https://entretienzen.com",
-    siteName: "EZE",
-    title: "EZE — Prépare ton entretien avec l'IA",
+    siteName: "EntretienZen",
+    title: "EntretienZen — Prépare ton entretien avec l'IA",
     description: "Plan de préparation personnalisé, jour par jour. Analyse ton CV, match avec l'offre, quiz adapté à ton niveau. Gratuit.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "EZE — Préparation d'entretien IA" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "EntretienZen — Préparation d'entretien IA" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "EZE — Prépare ton entretien avec l'IA",
+    title: "EntretienZen — Prépare ton entretien avec l'IA",
     description: "Plan personnalisé jour par jour pour réussir ton entretien. IA + quiz + ressources fiables.",
     images: ["/og-image.png"],
   },

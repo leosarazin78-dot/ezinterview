@@ -79,8 +79,10 @@ const safeFetch = async (url, opts = {}) => {
 const Logo = ({ size = 32 }) => (
   <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
     <rect width="40" height="40" rx="12" fill="url(#logoGrad)"/>
-    <path d="M10 12h10v3H13.5v4.5h6v3h-6V27H10V12Z" fill="#fff" opacity="0.9"/>
-    <path d="M21 12h9.5l-5 7.5L31 27h-4l-3.8-5.7L19.5 27H16l5.5-7.5L16.5 12H21Z" fill="#fff"/>
+    {/* E stylisé + zen circle */}
+    <path d="M9 12h12v3.2H12.8v4h7.2v3.2h-7.2v4.4H21v3.2H9V12Z" fill="#fff"/>
+    <circle cx="29" cy="20" r="6.5" stroke="#fff" strokeWidth="2.2" fill="none" opacity="0.85"/>
+    <circle cx="29" cy="20" r="2" fill="#fff" opacity="0.7"/>
     <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40"><stop stopColor="#7C5CFC"/><stop offset="1" stopColor="#5B8DEF"/></linearGradient></defs>
   </svg>
 );
@@ -574,7 +576,7 @@ function LandingPage({ user, onLogin }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "EZE",
+        "name": "EntretienZen",
         "description": "Préparation d'entretien personnalisée avec IA : analyse de poste, matching CV, plan jour par jour.",
         "url": "https://entretienzen.com",
         "applicationCategory": "EducationalApplication",
@@ -631,7 +633,7 @@ function LandingPage({ user, onLogin }) {
         <div className="ez-nav-inner" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
             <Logo size={32} />
-            <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}>EZE</span>
+            <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}>EntretienZen</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {user ? (
@@ -855,7 +857,7 @@ function LandingPage({ user, onLogin }) {
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Logo size={28} />
-            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}>EZE</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}>EntretienZen</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
             <a href="#pricing" style={{ fontSize: 12, color: T.muted, textDecoration: "none", transition: "all 0.2s" }}>Tarifs</a>
@@ -1093,6 +1095,7 @@ export default function EzInterview() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [trialExpired, setTrialExpired] = useState(false); // 48h passées sans feedback
   const [hasFeedback, setHasFeedback] = useState(false);   // a déjà envoyé un feedback
+  const [feedbackRequired, setFeedbackRequired] = useState(false); // feedback obligatoire (trial)
 
   const [reportingItem, setReportingItem] = useState(null);
   const [reportText, setReportText] = useState("");
@@ -1342,8 +1345,20 @@ export default function EzInterview() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    // onAuthStateChange gère le reset automatiquement
+    try {
+      await supabase.auth.signOut();
+    } catch (e) { console.error("Logout error:", e); }
+    // Reset forcé (onAuthStateChange peut rater selon le provider)
+    setUser(null);
+    setView("landing");
+    setStep("input");
+    setSavedPlans([]);
+    setPlan(null);
+    setJobData(null);
+    setStats(null);
+    setCurrentPlanId(null);
+    setTrialExpired(false);
+    setHasFeedback(false);
   };
 
   const handleSendFeedback = async () => {
@@ -1362,7 +1377,8 @@ export default function EzInterview() {
       });
       setFeedbackSent(true);
       setHasFeedback(true);
-      setTrialExpired(false); // Débloquer l'accès après feedback
+      setTrialExpired(false);
+      setFeedbackRequired(false); // Débloquer l'accès après feedback
       setTimeout(() => {
         setShowFeedback(false);
         setFeedbackSent(false);
@@ -1496,7 +1512,7 @@ export default function EzInterview() {
       <nav className="ez-plan-nav-top" style={{ background: T.bgGlass, borderBottom: `1px solid ${T.border}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", backdropFilter: "blur(20px)" }}>
         <div onClick={() => setView("landing")} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
           <Logo size={28} />
-          <span style={{ fontSize: 18, fontWeight: 700, color: T.text }}>EZE</span>
+          <span style={{ fontSize: 18, fontWeight: 700, color: T.text }}>EntretienZen</span>
         </div>
         <button onClick={() => setStep("dashboard")} style={btnS}>Mon espace</button>
       </nav>
@@ -1942,7 +1958,7 @@ export default function EzInterview() {
               Tu utilises EZE depuis plus de 48h. Pour continuer à accéder à tes plans et à l'application,
               fais-nous un retour rapide sur ton expérience. Ça nous aide énormément à améliorer le produit !
             </p>
-            <button onClick={() => { setTrialExpired(false); setShowFeedback(true); }} style={{ ...btnP, width: "100%", fontSize: 15, padding: "14px 24px" }}>
+            <button onClick={() => { setTrialExpired(false); setFeedbackRequired(true); setShowFeedback(true); }} style={{ ...btnP, width: "100%", fontSize: 15, padding: "14px 24px" }}>
               💬 Donner mon feedback pour continuer
             </button>
             <p style={{ margin: "16px 0 0", fontSize: 11, color: T.light }}>Un simple message suffit — 30 secondes max</p>
@@ -1952,13 +1968,16 @@ export default function EzInterview() {
 
       {/* Feedback Modal */}
       {showFeedback && (
-        <div className="ez-modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget) setShowFeedback(false); }}>
+        <div className="ez-modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }} onClick={(e) => { if (e.target === e.currentTarget && !feedbackRequired) setShowFeedback(false); }}>
           <div className="ez-modal-content" style={{ maxWidth: 420, width: "100%", background: T.bgGlass, borderRadius: 20, padding: 28, position: "relative", boxShadow: "0 24px 64px rgba(124,92,252,0.2)", animation: "fadeIn 0.25s ease", border: `1px solid ${T.border}`, backdropFilter: "blur(20px)" }}>
-            <button onClick={() => setShowFeedback(false)} style={{ position: "absolute", top: 16, right: 16, background: T.bgSoft, border: `1px solid ${T.border}`, fontSize: 16, color: T.muted, cursor: "pointer", fontFamily: "inherit", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8 }}>✕</button>
+            {!feedbackRequired && (
+              <button onClick={() => setShowFeedback(false)} style={{ position: "absolute", top: 16, right: 16, background: T.bgSoft, border: `1px solid ${T.border}`, fontSize: 16, color: T.muted, cursor: "pointer", fontFamily: "inherit", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8 }}>✕</button>
+            )}
 
             {!feedbackSent ? (
               <>
-                <h3 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 800, color: T.text }}>Ton avis nous aide !</h3>
+                <h3 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: T.text }}>{feedbackRequired ? "Feedback requis pour continuer" : "Ton avis nous aide !"}</h3>
+                {feedbackRequired && <p style={{ margin: "0 0 12px", fontSize: 12, color: T.warn, fontWeight: 500 }}>Envoie un retour pour débloquer l'accès à tes plans</p>}
 
                 <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: 600, color: T.muted }}>Type de retour</label>
                 <select value={feedbackType} onChange={(e) => setFeedbackType(e.target.value)} style={{ ...inp, marginBottom: 16 }}>
