@@ -19,6 +19,7 @@ Supabase utilise une variable "Site URL" pour construire les liens dans les emai
    https://entretienzen.com
    https://entretienzen.com/**
    https://entretienzen.com/admin
+   https://entretienzen.com/auth/callback
    ```
 6. **Sauvegarde**
 
@@ -140,15 +141,31 @@ Google met **1 a 4 semaines** pour indexer un nouveau site. Voici comment accele
 3. Colle le **Client ID** et **Client Secret**
 4. Sauvegarde
 
-### Etape 3 : Ecran de consentement OAuth
+### Etape 3 : Ecran de consentement OAuth (CRITIQUE — ce qui s'affiche a l'utilisateur)
+
+C'est ici que tu changes le nom qui apparait dans la popup Google ("Se connecter avec...").
+Par defaut, Google affiche l'ID du projet (ex: "prj-12345"). Il faut le changer :
+
 1. Dans Google Cloud Console : **APIs & Services > OAuth consent screen**
 2. Choisis **"External"**
 3. Remplis :
-   - App name : **EntretienZen**
+   - **App name** : `EntretienZen` ← C'EST CE NOM QUI S'AFFICHE aux utilisateurs
+   - **App logo** : upload ton logo (optionnel mais recommande, 120x120px)
+   - **App home page** : `https://entretienzen.com`
+   - **App privacy policy** : `https://entretienzen.com` (ou une page dediee)
+   - **App terms of service** : `https://entretienzen.com`
    - User support email : ton email
    - Developer contact : ton email
-4. Scopes : `email`, `profile`, `openid`
+4. **Scopes** (informations demandees a l'utilisateur) — ne coche QUE :
+   - `email` — pour identifier l'utilisateur
+   - `profile` — pour le prenom/nom
+   - `openid` — pour l'authentification
+   (Ne demande PAS d'acces au Drive, Agenda, etc. — ca effraie les utilisateurs)
 5. **PUBLIER L'APP** : OAuth consent screen > **"Publish App"** (sinon seuls les test users peuvent se connecter)
+
+> **Note** : Apres avoir publie, Google peut mettre 24-48h pour verifier ton app. En attendant,
+> les utilisateurs verront un ecran "Cette application n'est pas verifiee" mais pourront continuer
+> via "Parametres avances > Acceder a entretienzen.com".
 
 ### Si erreur "redirect_uri_mismatch" :
 - L'URI dans Google Cloud DOIT etre EXACTEMENT : `https://<TON-PROJET-REF>.supabase.co/auth/v1/callback`

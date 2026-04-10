@@ -354,9 +354,8 @@ export default function AdminPage() {
               <div style={{ padding: 12, borderRadius: 12, background: T.card, border: `1px solid ${T.border}` }}>
                 <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.text }}>Liens rapides</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
-                  <a href="https://cloud.umami.is" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", padding: "4px 10px", borderRadius: 8, fontSize: 11, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 600 }}>Umami</a>
+                  <a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", padding: "4px 10px", borderRadius: 8, fontSize: 11, textDecoration: "none", color: T.text, background: T.card, border: `1px solid ${T.border}`, fontWeight: 600 }}>Vercel Analytics</a>
                   <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", padding: "4px 10px", borderRadius: 8, fontSize: 11, textDecoration: "none", color: T.green, background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 600 }}>Supabase</a>
-                  <a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", padding: "4px 10px", borderRadius: 8, fontSize: 11, textDecoration: "none", color: T.text, background: T.card, border: `1px solid ${T.border}`, fontWeight: 600 }}>Vercel</a>
                 </div>
               </div>
             </div>
