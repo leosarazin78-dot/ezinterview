@@ -576,7 +576,7 @@ function LandingPage({ user, onLogin }) {
         "@type": "WebApplication",
         "name": "EZE",
         "description": "Préparation d'entretien personnalisée avec IA : analyse de poste, matching CV, plan jour par jour.",
-        "url": "https://eze-interview.vercel.app",
+        "url": "https://entretienzen.com",
         "applicationCategory": "EducationalApplication",
         "operatingSystem": "Web",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
@@ -983,7 +983,7 @@ function LandingPage({ user, onLogin }) {
 }
 
 // ─── Plans Dashboard ───
-function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, loadingPlan, user, onLogout }) {
+function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, loadingPlan, dashboardLoading, user, onLogout }) {
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   return (
@@ -996,7 +996,12 @@ function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, loadin
         <button onClick={onNew} style={btnP}>Nouveau plan</button>
       </div>
 
-      {!plans?.length ? (
+      {dashboardLoading ? (
+        <div style={{ textAlign: "center", padding: 40 }}>
+          <div style={{ width: 24, height: 24, border: `3px solid ${T.accentBd}`, borderTopColor: T.accent, borderRadius: "50%", animation: "spin .6s linear infinite", margin: "0 auto 12px" }} />
+          <p style={{ fontSize: 13, color: T.muted }}>Chargement de tes plans...</p>
+        </div>
+      ) : !plans?.length ? (
         <p style={{ fontSize: 13, color: T.muted, textAlign: "center", padding: 32 }}>Aucun plan encore. Crée-en un pour commencer !</p>
       ) : (
         <div className="ez-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
@@ -1046,6 +1051,7 @@ export default function EzInterview() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [savedPlans, setSavedPlans] = useState([]);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
   const [currentPlanId, setCurrentPlanId] = useState(null);
   const [view, setView] = useState("landing");
 
@@ -1123,6 +1129,7 @@ export default function EzInterview() {
   // Charge le profil et les plans d'un utilisateur connecté
   const loadUserData = async (currentUser) => {
     setUser(currentUser);
+    setDashboardLoading(true);
     const hash = window.location.hash.replace("#", "");
     if (hash === "prepare") { setView("dashboard"); setStep("input"); }
     else { setView("dashboard"); setStep("dashboard"); }
@@ -1161,6 +1168,7 @@ export default function EzInterview() {
         }
       }
     } catch (e) { console.error("Session error:", e); }
+    setDashboardLoading(false);
   };
 
   useEffect(() => {
@@ -1499,11 +1507,15 @@ export default function EzInterview() {
             plans={savedPlans}
             onSelect={async (id) => {
               setCurrentPlanId(id);
+              setExpandedDay(0);
+              setExpandedItems({});
+              setCompletedDays({});
               // Essaie d'abord les données déjà en mémoire (plus rapide)
               const cached = savedPlans.find(p => p.id === id);
               if (cached?.plan_data) {
                 setPlan(cached.plan_data);
                 setJobData(cached.job_data);
+                if (cached.completed_days) setCompletedDays(cached.completed_days);
                 setStep("plan");
                 return;
               }
@@ -1515,12 +1527,14 @@ export default function EzInterview() {
                 if (fullPlan?.plan_data) {
                   setPlan(fullPlan.plan_data);
                   setJobData(fullPlan.job_data);
+                  if (fullPlan.completed_days) setCompletedDays(fullPlan.completed_days);
                   setStep("plan");
                 }
               } catch (e) { console.error("Load plan error:", e); }
               setLoadingPlan(null);
             }}
             loadingPlan={loadingPlan}
+            dashboardLoading={dashboardLoading}
             onNew={() => { setStep("input"); setActiveTab("offer"); setPlan(null); setJobData(null); setStats(null); setCvText(""); setCvFile(null); setJobUrl(""); setExperienceLevel(""); setInterviewerRole(""); setInterviewDate(""); }}
             onDelete={handleDeletePlan}
             deletingPlan={deletingPlan}
@@ -1580,7 +1594,7 @@ export default function EzInterview() {
               </select>
 
               <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Date de l'entretien (optionnel)</label>
-              <input type="date" value={interviewDate} onChange={(e) => setInterviewDate(e.target.value)} min={addDays(today(), 1)} max={addDays(today(), 30)} style={inp} />
+              <input type="date" value={interviewDate} onChange={(e) => setInterviewDate(e.target.value)} min={addDays(today(), 1)} max={addDays(today(), 10)} style={inp} />
               {interviewDate && (() => {
                 const days = Math.ceil((new Date(interviewDate) - new Date()) / 86400000);
                 return <p style={{ margin: "6px 0 0", fontSize: 12, color: days <= 3 ? T.red : days <= 7 ? T.warn : T.green, fontWeight: 500 }}>J-{days} — {days <= 3 ? "Préparation express !" : days <= 7 ? "Préparation standard" : "Préparation approfondie"} · Le plan couvrira chaque jour jusqu'à l'entretien</p>;

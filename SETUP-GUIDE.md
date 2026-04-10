@@ -10,7 +10,7 @@ Va dans **Vercel > Settings > Environment Variables** et vérifie :
 
 ```
 NEXT_PUBLIC_UMAMI_URL = https://cloud.umami.is/script.js
-NEXT_PUBLIC_UMAMI_WEBSITE_ID = 7673b83b-03a5-4cfc-8e6d-00e61164e9df
+NEXT_PUBLIC_UMAMI_WEBSITE_ID = 385a2626-da7c-44cd-aabf-6faca0a35352
 ```
 
 **ATTENTION** : après avoir ajouté/modifié des variables, tu DOIS **redéployer** le projet (Deployments > Redeploy).
@@ -20,10 +20,10 @@ NEXT_PUBLIC_UMAMI_WEBSITE_ID = 7673b83b-03a5-4cfc-8e6d-00e61164e9df
 2. Connecte-toi à ton compte
 3. Dans **Settings > Websites**, vérifie que ton site est bien ajouté
 4. Le **Website ID** doit correspondre exactement à `7673b83b-03a5-4cfc-8e6d-00e61164e9df`
-5. Le **domaine** doit être `eze-interview.vercel.app` (sans https://)
+5. Le **domaine** doit être `entretienzen.com` (sans https://)
 
 #### C. Vérifier que le script se charge
-1. Va sur ton site https://eze-interview.vercel.app
+1. Va sur ton site https://entretienzen.com
 2. Ouvre les **DevTools** (F12 ou Cmd+Option+I)
 3. Onglet **Network** > filtre par "umami" ou "script.js"
 4. Recharge la page — tu devrais voir une requête vers `cloud.umami.is/script.js`
@@ -49,7 +49,7 @@ Google met **1 à 4 semaines** pour indexer un nouveau site. Voici comment accé
 ### Étapes :
 1. Va sur https://search.google.com/search-console
 2. Clique **"Ajouter une propriété"**
-3. Choisis **"Préfixe de l'URL"** et entre : `https://eze-interview.vercel.app`
+3. Choisis **"Préfixe de l'URL"** et entre : `https://entretienzen.com`
 4. Pour la **vérification**, choisis **"Balise HTML"**
    - Google te donne un code type : `<meta name="google-site-verification" content="XXXXX" />`
    - Copie uniquement la valeur du `content` (le `XXXXX`)
@@ -62,12 +62,12 @@ Google met **1 à 4 semaines** pour indexer un nouveau site. Voici comment accé
 
 ### Soumettre le sitemap :
 1. Dans Search Console, va dans **"Sitemaps"** (menu gauche)
-2. Entre : `https://eze-interview.vercel.app/sitemap.xml`
+2. Entre : `https://entretienzen.com/sitemap.xml`
 3. Clique **"Envoyer"**
 
 ### Demander l'indexation :
 1. Dans Search Console, va dans **"Inspection de l'URL"**
-2. Entre ton URL : `https://eze-interview.vercel.app`
+2. Entre ton URL : `https://entretienzen.com`
 3. Clique **"Demander l'indexation"**
 
 ---

@@ -11,7 +11,7 @@ export const metadata = {
   authors: [{ name: "EZE" }],
   creator: "EZE",
   publisher: "EZE",
-  metadataBase: new URL("https://eze-interview.vercel.app"),
+  metadataBase: new URL("https://entretienzen.com"),
   alternates: {
     canonical: "/",
     languages: { "fr-FR": "/" },
@@ -19,7 +19,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    url: "https://eze-interview.vercel.app",
+    url: "https://entretienzen.com",
     siteName: "EZE",
     title: "EZE — Prépare ton entretien avec l'IA",
     description: "Plan de préparation personnalisé, jour par jour. Analyse ton CV, match avec l'offre, quiz adapté à ton niveau. Gratuit.",

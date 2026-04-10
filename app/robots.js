@@ -7,6 +7,6 @@ export default function robots() {
         disallow: ["/api/", "/admin"],
       },
     ],
-    sitemap: "https://eze-interview.vercel.app/sitemap.xml",
+    sitemap: "https://entretienzen.com/sitemap.xml",
   };
 }
