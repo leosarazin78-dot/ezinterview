@@ -245,6 +245,11 @@ Format attendu :
   "companyInfo": {
     "sector": "Secteur d'activite",
     "website": "https://www.entreprise.com",
+    "linkedinUrl": "https://www.linkedin.com/company/nom-entreprise",
+    "glassdoorUrl": "https://www.glassdoor.fr/Avis/nom-entreprise-Avis-Exxxxx.htm",
+    "youtubeUrl": "https://www.youtube.com/@nom-entreprise",
+    "careersUrl": "https://www.entreprise.com/careers",
+    "welcomeToJungleUrl": "https://www.welcometothejungle.com/fr/companies/nom-entreprise",
     "techStack": ["Outil/methode/techno 1", "Outil/methode/techno 2"]
   }
 }
@@ -254,7 +259,13 @@ IMPORTANT :
   Adapte au domaine : "React" pour un dev, "Modelisation financiere" pour un analyste, "Droit des contrats" pour un juriste, "SEO/SEA" pour un marketeur, "Normes IFRS" pour un comptable, "AutoCAD" pour un architecte, "Soudure TIG" pour un artisan, "Pedagogie differenciee" pour un enseignant
 - interviewSteps : extrais-les si le processus est decrit dans l'offre, sinon retourne un tableau vide []
 - companyInfo.website : le site officiel de l'entreprise si tu le connais avec certitude (ex: https://www.google.com pour Google), sinon null
+- companyInfo.linkedinUrl : la page LinkedIn Company de l'entreprise si tu la connais (ex: https://www.linkedin.com/company/google), sinon null
+- companyInfo.glassdoorUrl : la page Glassdoor de l'entreprise si tu la connais (ex: https://www.glassdoor.fr/Avis/Google-Avis-E9079.htm), sinon null. IMPORTANT: utilise le vrai slug Glassdoor de l'entreprise, pas un slug invente.
+- companyInfo.youtubeUrl : la chaine YouTube officielle de l'entreprise si tu la connais (ex: https://www.youtube.com/@Google), sinon null. IMPORTANT: uniquement si tu es SUR de l'URL exacte.
+- companyInfo.careersUrl : la page carrieres/recrutement de l'entreprise si tu la connais (ex: https://careers.google.com), sinon null
+- companyInfo.welcomeToJungleUrl : la page Welcome to the Jungle de l'entreprise si tu la connais (ex: https://www.welcometothejungle.com/fr/companies/google), sinon null
 - companyInfo.techStack : liste les outils, technologies, methodes ou frameworks mentionnes
+- IMPORTANT : pour tous les URLs ci-dessus, ne retourne que des URLs dont tu es CERTAIN qu'elles existent. Mieux vaut null qu'un lien invente qui sera mort.
 - Retourne UNIQUEMENT le JSON valide`,
         },
       ],

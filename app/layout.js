@@ -64,7 +64,8 @@ export default function RootLayout({ children }) {
           <Script
             src={UMAMI_URL}
             data-website-id={UMAMI_ID}
-            strategy="lazyOnload"
+            strategy="afterInteractive"
+            async
           />
         )}
 

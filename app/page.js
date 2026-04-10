@@ -431,31 +431,40 @@ function CulturePanel({ companyInfo, jobData }) {
         </div>
       )}
 
-      {/* Company links */}
+      {/* Company links — AI-generated direct URLs with fallbacks */}
       <div style={{ marginTop: 8, padding: 12, borderRadius: T.r, background: T.bgCard, border: `1px solid ${T.border}` }}>
         <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: T.accent }}>Liens utiles — à consulter avant l'entretien</p>
         <div className="ez-culture-links" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {ci.website ? (
-            <a href={ci.website} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
+          {(ci.website || companyDomain) && (
+            <a href={ci.website || `https://${companyDomain}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
               🌐 Site officiel
             </a>
-          ) : companyDomain ? (
-            <a href={`https://${companyDomain}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
-              🌐 Site officiel
+          )}
+          {(ci.linkedinUrl || companySlug) && (
+            <a href={ci.linkedinUrl || `https://www.linkedin.com/company/${companySlug}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
+              💼 Page LinkedIn
             </a>
-          ) : null}
-          <a href={`https://www.glassdoor.fr/Avis/index.htm?sc.keyword=${encodeURIComponent(company)}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.green, background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 500, transition: "all 0.2s" }}>
-            ⭐ Avis Glassdoor
-          </a>
-          <a href={`https://www.welcometothejungle.com/fr/companies?query=${encodeURIComponent(company)}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.warn, background: T.warnLt, border: `1px solid ${T.warnBd}`, fontWeight: 500, transition: "all 0.2s" }}>
-            📰 Welcome to the Jungle
-          </a>
-          <a href={`https://www.linkedin.com/company/${companySlug}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 500, transition: "all 0.2s" }}>
-            💼 Page LinkedIn
-          </a>
-          <a href={`https://www.societe.com/cgi-bin/search?champs=${encodeURIComponent(company)}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.purple, background: T.purpleLt, border: `1px solid ${T.purpleBd}`, fontWeight: 500, transition: "all 0.2s" }}>
-            🏢 Fiche Societe.com
-          </a>
+          )}
+          {ci.glassdoorUrl && (
+            <a href={ci.glassdoorUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.green, background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 500, transition: "all 0.2s" }}>
+              ⭐ Avis Glassdoor
+            </a>
+          )}
+          {ci.youtubeUrl && (
+            <a href={ci.youtubeUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.red, background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.2)", fontWeight: 500, transition: "all 0.2s" }}>
+              ▶ Chaîne YouTube
+            </a>
+          )}
+          {ci.welcomeToJungleUrl && (
+            <a href={ci.welcomeToJungleUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.warn, background: T.warnLt, border: `1px solid ${T.warnBd}`, fontWeight: 500, transition: "all 0.2s" }}>
+              📰 Welcome to the Jungle
+            </a>
+          )}
+          {ci.careersUrl && (
+            <a href={ci.careersUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: T.r, fontSize: 12, textDecoration: "none", color: T.purple, background: T.purpleLt, border: `1px solid ${T.purpleBd}`, fontWeight: 500, transition: "all 0.2s" }}>
+              🎯 Page Carrières
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -770,6 +779,64 @@ function LandingPage({ user, onLogin }) {
         </div>
       </section>
 
+      {/* ─── Tarifs ─── */}
+      <section id="pricing" style={{ background: T.bg, borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+        <div className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px" }}>
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <div style={{ display: "inline-block", padding: "8px 16px", borderRadius: 20, background: T.greenLt, fontSize: 12, fontWeight: 700, color: T.green, marginBottom: 16, textTransform: "uppercase", letterSpacing: "1px", border: `1px solid ${T.greenBd}` }}>Tarifs</div>
+            <h2 style={{ fontSize: 40, fontWeight: 900, margin: "0 0 12px", color: T.text }}>Un plan pour chaque candidat</h2>
+            <p style={{ fontSize: 16, color: T.muted, margin: 0, maxWidth: 600, marginLeft: "auto", marginRight: "auto" }}>Commence gratuitement. Passe à la version complète quand tu veux.</p>
+          </div>
+          <div className="ez-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28, maxWidth: 1000, margin: "0 auto" }}>
+            {/* Free */}
+            <div style={{ ...card, borderColor: T.border, textAlign: "center" }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🆓</div>
+              <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 4px", color: T.text }}>Découverte</h3>
+              <p style={{ fontSize: 36, fontWeight: 900, color: T.accent, margin: "12px 0 4px" }}>0€</p>
+              <p style={{ fontSize: 13, color: T.muted, margin: "0 0 20px" }}>Essai 48h</p>
+              <div style={{ textAlign: "left", fontSize: 13, color: T.muted, lineHeight: 2 }}>
+                <div>✅ 1 plan de préparation complet</div>
+                <div>✅ Analyse d'offre + matching CV</div>
+                <div>✅ Quiz & exercices</div>
+                <div>✅ Feedback requis pour continuer</div>
+              </div>
+              <button onClick={() => user ? onLogin?.() : setShowAuth(true)} style={{ ...btnP, width: "100%", marginTop: 20 }}>
+                {user ? "Mon espace" : "Commencer gratuitement"}
+              </button>
+            </div>
+            {/* Pro — placeholder */}
+            <div style={{ ...card, borderColor: T.accentBd, background: T.accentLt, textAlign: "center", position: "relative" }}>
+              <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: T.accentGradient, color: "#fff", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>Populaire</div>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>⚡</div>
+              <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 4px", color: T.text }}>Pro</h3>
+              <p style={{ fontSize: 36, fontWeight: 900, color: T.accent, margin: "12px 0 4px" }}>—€</p>
+              <p style={{ fontSize: 13, color: T.muted, margin: "0 0 20px" }}>Bientôt disponible</p>
+              <div style={{ textAlign: "left", fontSize: 13, color: T.muted, lineHeight: 2 }}>
+                <div>✅ Plans illimités</div>
+                <div>✅ Simulations d'entretien IA</div>
+                <div>✅ Coaching personnalisé</div>
+                <div>✅ Support prioritaire</div>
+              </div>
+              <button disabled style={{ ...btnD, width: "100%", marginTop: 20 }}>Bientôt</button>
+            </div>
+            {/* Enterprise — placeholder */}
+            <div style={{ ...card, borderColor: T.border, textAlign: "center" }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🏢</div>
+              <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 4px", color: T.text }}>Entreprise</h3>
+              <p style={{ fontSize: 36, fontWeight: 900, color: T.accent, margin: "12px 0 4px" }}>Sur devis</p>
+              <p style={{ fontSize: 13, color: T.muted, margin: "0 0 20px" }}>Pour les équipes RH</p>
+              <div style={{ textAlign: "left", fontSize: 13, color: T.muted, lineHeight: 2 }}>
+                <div>✅ Tout le plan Pro</div>
+                <div>✅ Dashboard recruteur</div>
+                <div>✅ Intégration ATS</div>
+                <div>✅ Support dédié</div>
+              </div>
+              <button disabled style={{ ...btnD, width: "100%", marginTop: 20 }}>Nous contacter</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── CTA ─── */}
       <section className="ez-section" style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 32px" }}>
         <div className="ez-cta-box" style={{ maxWidth: 700, margin: "0 auto", padding: "64px 48px", borderRadius: 24, background: T.accentGradient, color: "#fff", textAlign: "center", boxShadow: "0 20px 60px rgba(124,92,252,0.25)" }}>
@@ -791,6 +858,7 @@ function LandingPage({ user, onLogin }) {
             <span style={{ fontSize: 16, fontWeight: 700, color: T.text }}>EZE</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+            <a href="#pricing" style={{ fontSize: 12, color: T.muted, textDecoration: "none", transition: "all 0.2s" }}>Tarifs</a>
             <a href="/mentions-legales" style={{ fontSize: 12, color: T.muted, textDecoration: "none", transition: "all 0.2s" }}>Mentions légales</a>
             <a href="/confidentialite" style={{ fontSize: 12, color: T.muted, textDecoration: "none", transition: "all 0.2s" }}>Confidentialité</a>
             <a href="/cgu" style={{ fontSize: 12, color: T.muted, textDecoration: "none", transition: "all 0.2s" }}>CGU</a>
@@ -811,6 +879,15 @@ function LandingPage({ user, onLogin }) {
               </div>
               <h3 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: T.text }}>Bienvenue</h3>
               <p style={{ margin: "6px 0 0", fontSize: 14, color: T.muted }}>Connecte-toi pour préparer ton entretien</p>
+              {mode === "signup" && (
+                <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: T.r, background: T.warnLt, border: `1px solid ${T.warnBd}`, textAlign: "left" }}>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: T.warn }}>🧪 Version bêta — Essai gratuit</p>
+                  <p style={{ margin: "4px 0 0", fontSize: 11, color: T.text, lineHeight: 1.5 }}>
+                    Tu contribues au développement d'EZE ! Ton plan est accessible pendant 48h.
+                    Après ce délai, un simple retour d'expérience te permet de continuer à utiliser l'app gratuitement.
+                  </p>
+                </div>
+              )}
             </div>
 
             <button onClick={handleGoogle} disabled={loading}
@@ -936,7 +1013,7 @@ function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, loadin
                   <p style={{ margin: "0 0 4px", fontSize: 12, color: T.muted }}>{plan.company}</p>
                   {plan.next_interlocutor && <p style={{ margin: "0 0 4px", fontSize: 11, color: T.accent }}>Face à : {plan.next_interlocutor}</p>}
                   {daysLeft !== null && <p style={{ fontSize: 11, color: T.warn, fontWeight: 600, margin: "0 0 8px" }}>J-{daysLeft}</p>}
-                  <div style={{ fontSize: 11, color: T.muted }}>Jour {done + 1} / {plan.duration || 7}</div>
+                  <div style={{ fontSize: 11, color: T.muted }}>Jour {done + 1} / {plan.plan_data?.length || plan.duration || 7}</div>
                 </div>
                 {confirmDelete === plan.id ? (
                   <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
@@ -1008,6 +1085,8 @@ export default function EzInterview() {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [trialExpired, setTrialExpired] = useState(false); // 48h passées sans feedback
+  const [hasFeedback, setHasFeedback] = useState(false);   // a déjà envoyé un feedback
 
   const [reportingItem, setReportingItem] = useState(null);
   const [reportText, setReportText] = useState("");
@@ -1064,16 +1143,37 @@ export default function EzInterview() {
         if (plansResult.status === "fulfilled") {
           setSavedPlans(plansResult.value);
         }
+
+        // Vérifier le trial 48h : si le compte a plus de 48h ET aucun feedback
+        const createdAt = new Date(currentUser.created_at);
+        const hoursSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+        if (hoursSinceCreation > 48) {
+          try {
+            const fbCheck = await safeFetch("/api/feedback/check", { headers });
+            if (fbCheck?.hasFeedback) {
+              setHasFeedback(true);
+              setTrialExpired(false);
+            } else {
+              setTrialExpired(true);
+              setHasFeedback(false);
+            }
+          } catch { setTrialExpired(false); }
+        }
       }
     } catch (e) { console.error("Session error:", e); }
   };
 
   useEffect(() => {
+    let didLoad = false; // empêche le double-appel checkAuth + onAuthStateChange
+
     // Check initial auth
     const checkAuth = async () => {
       try {
         const { data: { user: existingUser } } = await supabase.auth.getUser();
-        if (existingUser) await loadUserData(existingUser);
+        if (existingUser && !didLoad) {
+          didLoad = true;
+          await loadUserData(existingUser);
+        }
       } catch (err) {
         console.error("Auth error:", err);
       } finally {
@@ -1084,10 +1184,18 @@ export default function EzInterview() {
 
     // Écoute les changements d'auth en temps réel (Google OAuth, email confirm, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        await loadUserData(session.user);
+      // SIGNED_IN ou INITIAL_SESSION : charger les données si pas déjà fait
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
+        if (!didLoad) {
+          didLoad = true;
+          await loadUserData(session.user);
+        }
         setAuthLoading(false);
+      } else if (event === "TOKEN_REFRESHED" && session?.user) {
+        // Token refreshed : pas besoin de recharger, juste mettre à jour le user
+        setUser(session.user);
       } else if (event === "SIGNED_OUT") {
+        didLoad = false;
         setUser(null);
         setView("landing");
         setStep("input");
@@ -1245,6 +1353,8 @@ export default function EzInterview() {
         }),
       });
       setFeedbackSent(true);
+      setHasFeedback(true);
+      setTrialExpired(false); // Débloquer l'accès après feedback
       setTimeout(() => {
         setShowFeedback(false);
         setFeedbackSent(false);
@@ -1336,7 +1446,7 @@ export default function EzInterview() {
           .ez-profile-grid { grid-template-columns: 1fr !important; }
 
           /* ── Floating feedback button ── */
-          .ez-fab { bottom: 16px !important; right: 16px !important; width: 52px !important; height: 52px !important; }
+          .ez-fab { bottom: 16px !important; right: 16px !important; height: 44px !important; padding: 0 14px 0 12px !important; font-size: 13px !important; }
 
           /* ── Touch targets ── */
           button, a, select, input[type="file"] { min-height: 44px; }
@@ -1371,7 +1481,7 @@ export default function EzInterview() {
           .ez-plan-mobile-days button { padding: 8px 12px !important; font-size: 12px !important; }
           .ez-stepper-wrap button { padding: 8px 10px !important; font-size: 12px !important; }
           .ez-modal-content { padding: 20px 16px !important; }
-          .ez-fab { bottom: 12px !important; right: 12px !important; width: 48px !important; height: 48px !important; font-size: 18px !important; }
+          .ez-fab { bottom: 12px !important; right: 12px !important; height: 40px !important; font-size: 12px !important; }
         }
       `}</style>
 
@@ -1734,12 +1844,13 @@ export default function EzInterview() {
       {/* Floating Feedback Button (only when logged in, not on landing) */}
       {user && view !== "landing" && (
         <button className="ez-fab" onClick={() => setShowFeedback(true)} style={{
-          position: "fixed", bottom: 24, right: 24, width: 56, height: 56, borderRadius: "50%",
-          background: T.accentGradient, color: "#fff", border: "none", fontSize: 20, cursor: "pointer",
+          position: "fixed", bottom: 24, right: 24, height: 48, borderRadius: 24,
+          background: T.accentGradient, color: "#fff", border: "none", fontSize: 14, cursor: "pointer",
           boxShadow: "0 8px 24px rgba(124,92,252,0.35)", display: "flex", alignItems: "center",
-          justifyContent: "center", fontFamily: "inherit", zIndex: 50, transition: "all 0.2s ease"
-        }} onMouseEnter={(e) => e.target.style.transform = "scale(1.15)"} onMouseLeave={(e) => e.target.style.transform = "scale(1)"}>
-          💬
+          gap: 8, padding: "0 18px 0 14px",
+          justifyContent: "center", fontFamily: "inherit", zIndex: 50, transition: "all 0.2s ease", fontWeight: 600
+        }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
+          💬 <span>Feedback</span>
         </button>
       )}
 
@@ -1803,6 +1914,24 @@ export default function EzInterview() {
             <button onClick={() => setShowProfileForm(false)} style={{ ...btnS, width: "100%", marginTop: 8, fontSize: 12, color: T.muted }}>
               Plus tard
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Trial Expired Popup — 48h sans feedback */}
+      {trialExpired && !hasFeedback && user && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 16 }}>
+          <div style={{ maxWidth: 480, width: "100%", background: T.bgGlass, borderRadius: 20, padding: 36, textAlign: "center", boxShadow: "0 24px 64px rgba(124,92,252,0.25)", animation: "fadeIn 0.3s ease", border: `1px solid ${T.border}`, backdropFilter: "blur(20px)" }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, background: T.warnLt, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 32, marginBottom: 20, border: `1px solid ${T.warnBd}` }}>🧪</div>
+            <h3 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 800, color: T.text }}>Ta période d'essai est terminée</h3>
+            <p style={{ margin: "0 0 24px", fontSize: 14, color: T.muted, lineHeight: 1.6 }}>
+              Tu utilises EZE depuis plus de 48h. Pour continuer à accéder à tes plans et à l'application,
+              fais-nous un retour rapide sur ton expérience. Ça nous aide énormément à améliorer le produit !
+            </p>
+            <button onClick={() => { setTrialExpired(false); setShowFeedback(true); }} style={{ ...btnP, width: "100%", fontSize: 15, padding: "14px 24px" }}>
+              💬 Donner mon feedback pour continuer
+            </button>
+            <p style={{ margin: "16px 0 0", fontSize: 11, color: T.light }}>Un simple message suffit — 30 secondes max</p>
           </div>
         </div>
       )}

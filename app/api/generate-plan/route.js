@@ -173,10 +173,14 @@ export async function POST(request) {
     // Sinon, utilise la logique basée sur l'intensité
     let planDays;
     if (daysUntilInterview && daysUntilInterview > 0) {
+      // Le plan couvre CHAQUE jour jusqu'à l'entretien (max 30 pour coûts API)
       planDays = Math.min(daysUntilInterview, 30);
     } else {
+      // Sans date : adapte à l'intensité
       planDays = intensityKey === "Léger" ? 10 : intensityKey === "Intensif" ? 5 : 7;
     }
+    // Plus de jours = plus de contenu par jour adapté au temps quotidien
+    const totalHours = planDays * (intensityKey === "Léger" ? 0.5 : intensityKey === "Intensif" ? 2 : 1);
 
     const matches = stats?.matches || [];
     const weakAndPartial = matches.filter((m) => m.match === "weak" || m.match === "partial").map((m) => m.label);
@@ -194,7 +198,7 @@ export async function POST(request) {
 CONTEXTE :
 - Poste : ${jobData?.title} chez ${company}
 - Secteur : ${sector}
-- Intensité : ${ic.description} (${ic.dailyTime} par jour)
+- Intensité : ${ic.description} (${ic.dailyTime} par jour, ${totalHours}h au total sur ${planDays} jours)
 - Niveau d'expérience : ${levelKey}
 - Compétences à renforcer : ${weakAndPartial.length > 0 ? weakAndPartial.join(", ") : "aucune faiblesse identifiée"}
 - Points forts à consolider : ${strong.length > 0 ? strong.join(", ") : "à évaluer"}
@@ -268,7 +272,7 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
 ]
 
 RÈGLES DE CONTENU — TRÈS IMPORTANT :
-1. ${planDays} jours, ${ic.itemsPerDay} items chacun
+1. EXACTEMENT ${planDays} jours (ni plus, ni moins), ${ic.itemsPerDay} items chacun. Le plan DOIT couvrir les ${planDays} jours complets.
 2. CONCISION : Chaque note doit être COURTE et LISIBLE. Un humain doit pouvoir la lire en 5 minutes max. Pas de pavés de texte. summary = 2-3 phrases. keyPoints = max 4 points de 1 phrase.
 3. SOUS-CHAPITRES : Utilise le champ "sections" pour découper chaque note en 2-3 sous-parties avec un "heading" clair et 2-3 "points" courts. Ça rend le contenu scannable.
 4. Chaque jour finit par un quiz (${ic.quizQuestions} questions)
@@ -302,9 +306,11 @@ JSON uniquement :`;
             try {
               console.log(`Tentative ${attempt + 1}/2 de génération du plan...`);
 
+              // Plus de jours = plus de tokens nécessaires
+              const maxTokens = planDays <= 7 ? 8192 : planDays <= 14 ? 12000 : 16000;
               const message = await anthropic.messages.create({
                 model: "claude-sonnet-4-20250514",
-                max_tokens: 8192,
+                max_tokens: maxTokens,
                 messages: [{ role: "user", content: prompt }],
               });
 
