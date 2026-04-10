@@ -87,6 +87,36 @@ const Logo = ({ size = 32 }) => (
   </svg>
 );
 
+// ─── SVG Icons (Lucide-style) ───
+const Icon = ({ name, size = 24, color = "currentColor", strokeWidth = 2 }) => {
+  const icons = {
+    "book-open": <><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></>,
+    "target": <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>,
+    "lightbulb": <><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 019 14"/></>,
+    "trending-up": <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
+    "link": <><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></>,
+    "file-text": <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>,
+    "clipboard": <><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></>,
+    "gift": <><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></>,
+    "zap": <><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></>,
+    "building": <><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="6" x2="9" y2="6"/><line x1="15" y1="6" x2="15" y2="6"/><line x1="9" y1="10" x2="9" y2="10"/><line x1="15" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="9" y2="14"/><line x1="15" y1="14" x2="15" y2="14"/><path d="M9 18h6"/></>,
+    "shield": <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
+    "search": <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+    "check-circle": <><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>,
+    "users": <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></>,
+    "bar-chart": <><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></>,
+    "message-circle": <><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></>,
+    "star": <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></>,
+    "award": <><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></>,
+    "rocket": <><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+      {icons[name] || null}
+    </svg>
+  );
+};
+
 // ─── UI atoms ───
 const Badge = ({ children, v = "default" }) => {
   const s = {
@@ -504,6 +534,24 @@ function LandingPage({ user, onLogin }) {
   const pwStr = passwordStrength(password);
   const isPasswordValid = password.length >= 8 && pwStr.score >= 3;
 
+  // Lock body scroll when modal is open (mobile fix)
+  useEffect(() => {
+    if (showAuth) {
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+      document.body.style.top = `-${window.scrollY}px`;
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.top = "";
+      if (scrollY) window.scrollTo(0, parseInt(scrollY || "0") * -1);
+    }
+    return () => { document.body.style.overflow = ""; document.body.style.position = ""; document.body.style.width = ""; document.body.style.top = ""; };
+  }, [showAuth]);
+
   const handleEmail = async (e) => {
     e.preventDefault();
     setLoading(true); setError(""); setMessage("");
@@ -577,34 +625,30 @@ function LandingPage({ user, onLogin }) {
   ];
 
   const features = [
-    { icon: "📚", title: "Sources fiables, vraiment", desc: "Légifrance, MDN, PubMed, Investopedia, Coursera, docs officielles." },
-    { icon: "🎯", title: "Fini le hors-sujet", desc: "Chaque ressource est adaptée à l'offre que TU as fournie." },
-    { icon: "🧠", title: "Ton copilote, pas ton remplaçant", desc: "Des quiz, des exercices, des rappels — tu travailles vraiment." },
-    { icon: "📈", title: "Progression en temps réel", desc: "Vois exactement où tu en es. Aucune surprise le jour J." },
+    { iconName: "book-open", title: "Sources fiables, vraiment", desc: "Légifrance, MDN, PubMed, Investopedia, Coursera, docs officielles." },
+    { iconName: "target", title: "Fini le hors-sujet", desc: "Chaque ressource est adaptée à l'offre que TU as fournie." },
+    { iconName: "lightbulb", title: "Ton copilote, pas ton remplaçant", desc: "Des quiz, des exercices, des rappels — tu travailles vraiment." },
+    { iconName: "trending-up", title: "Progression en temps réel", desc: "Vois exactement où tu en es. Aucune surprise le jour J." },
   ];
 
-  // ─── Cookie Consent State ───
+  // ─── Cookie Consent State (localStorage-backed) ───
   const [cookieConsent, setCookieConsent] = useState(() => {
     if (typeof window !== "undefined") {
-      return window.__cookieConsent || null; // null = not yet answered
+      try {
+        const stored = localStorage.getItem("ez_cookie_consent");
+        if (stored === "true") return true;
+        if (stored === "false") return false;
+      } catch {}
     }
     return null;
   });
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Check if consent was already given (in-memory for this session)
-      const stored = window.__cookieConsent;
-      if (stored !== undefined) setCookieConsent(stored);
-    }
-  }, []);
-
   const handleCookieAccept = () => {
-    if (typeof window !== "undefined") window.__cookieConsent = true;
+    try { localStorage.setItem("ez_cookie_consent", "true"); } catch {}
     setCookieConsent(true);
   };
   const handleCookieRefuse = () => {
-    if (typeof window !== "undefined") window.__cookieConsent = false;
+    try { localStorage.setItem("ez_cookie_consent", "false"); } catch {}
     setCookieConsent(false);
   };
 
@@ -620,7 +664,7 @@ function LandingPage({ user, onLogin }) {
         }}>
           <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", justifyContent: "space-between" }}>
             <div style={{ flex: 1, minWidth: 280 }}>
-              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: T.text }}>🍪 Respect de ta vie privée</p>
+              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: T.text, display: "flex", alignItems: "center", gap: 8 }}><Icon name="shield" size={16} color={T.accent} /> Respect de ta vie privée</p>
               <p style={{ margin: 0, fontSize: 12, color: T.muted, lineHeight: 1.6 }}>
                 EntretienZen utilise des cookies d'analyse anonymes (Umami, sans tracking personnel) pour améliorer l'expérience.
                 Aucune donnée personnelle n'est partagée avec des tiers.
@@ -697,13 +741,13 @@ function LandingPage({ user, onLogin }) {
             <Logo size={32} />
             <span style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: "-0.5px" }}>EntretienZen</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {user ? (
-              <button onClick={() => onLogin?.()} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 14, fontWeight: 500, padding: "8px 16px", cursor: "pointer", fontFamily: "inherit", borderRadius: 8, transition: "all 0.2s" }}>Mon espace</button>
+              <button onClick={() => onLogin?.()} className="ez-btn" style={{ background: T.accentGradient, color: "#fff", border: "none", borderRadius: 10, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 16px rgba(124,92,252,0.25)" }}>Mon espace</button>
             ) : (
               <>
-                <button onClick={() => setShowAuth(true)} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 14, fontWeight: 500, padding: "8px 16px", cursor: "pointer", fontFamily: "inherit", borderRadius: 8, transition: "all 0.2s" }}>Se connecter</button>
-                <button className="ez-btn" onClick={() => setShowAuth(true)} style={{ background: T.accentGradient, color: "#fff", border: "none", borderRadius: 10, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 16px rgba(124,92,252,0.25)" }}>S'inscrire</button>
+                <button onClick={() => { setMode("login"); setShowAuth(true); }} style={{ background: "transparent", border: `1px solid ${T.border}`, color: T.text, fontSize: 13, fontWeight: 500, padding: "8px 18px", cursor: "pointer", fontFamily: "inherit", borderRadius: 10, transition: "all 0.2s" }}>Se connecter</button>
+                <button className="ez-btn" onClick={() => { setMode("signup"); setSignupStep(1); setShowAuth(true); }} style={{ background: T.accentGradient, color: "#fff", border: "none", borderRadius: 10, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 16px rgba(124,92,252,0.25)" }}>S'inscrire</button>
               </>
             )}
           </div>
@@ -735,7 +779,7 @@ function LandingPage({ user, onLogin }) {
           <div className="ez-hero-mockup" style={{ animation: "fadeIn 0.7s ease" }}>
             <div style={{ background: T.bgGlass, borderRadius: 24, padding: 24, border: `1px solid ${T.border}`, boxShadow: "0 20px 60px rgba(124,92,252,0.2)", backdropFilter: "blur(20px)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: T.accentGradient, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 20 }}>📋</div>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: T.accentGradient, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="clipboard" size={22} color="#fff" /></div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Développeur Frontend React</div>
                   <div style={{ fontSize: 11, color: T.muted }}>Exemple interactif — clique pour explorer</div>
@@ -805,12 +849,12 @@ function LandingPage({ user, onLogin }) {
           </div>
           <div className="ez-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28 }}>
             {[
-              { title: "Analyse de l'offre", desc: "L'IA identifie les compétences clés, analyse l'entreprise et ses attentes.", icon: "🔗", n: 1 },
-              { title: "Matching CV", desc: "Compare ton profil à l'offre. On identifie tes forces et tes points à travailler.", icon: "📄", n: 2 },
-              { title: "Plan de préparation", desc: "Plan jour par jour : cours, exercices, quiz et ressources adaptées à ton métier.", icon: "🎯", n: 3 },
+              { title: "Analyse de l'offre", desc: "L'IA identifie les compétences clés, analyse l'entreprise et ses attentes.", iconName: "search", n: 1 },
+              { title: "Matching CV", desc: "Compare ton profil à l'offre. On identifie tes forces et tes points à travailler.", iconName: "file-text", n: 2 },
+              { title: "Plan de préparation", desc: "Plan jour par jour : cours, exercices, quiz et ressources adaptées à ton métier.", iconName: "target", n: 3 },
             ].map((c, i) => (
               <div key={i} className="ez-card" style={{ ...card, borderColor: T.accentBd }}>
-                <div style={{ width: 56, height: 56, borderRadius: T.r, background: T.accentLt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, marginBottom: 16 }}>{c.icon}</div>
+                <div style={{ width: 56, height: 56, borderRadius: T.r, background: T.accentLt, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16, border: `1px solid ${T.accentBd}` }}><Icon name={c.iconName} size={28} color={T.accent} /></div>
                 <div>
                   <div style={{ display: "inline-block", padding: "6px 12px", borderRadius: 20, background: T.accentLt, fontSize: 11, fontWeight: 700, color: T.accent, marginBottom: 8, textTransform: "uppercase", border: `1px solid ${T.accentBd}` }}>Étape {c.n}</div>
                   <h3 style={{ fontSize: 19, fontWeight: 700, margin: "0 0 10px", color: T.text }}>{c.title}</h3>
@@ -832,7 +876,7 @@ function LandingPage({ user, onLogin }) {
           {features.map((h, i) => (
             <div key={i} style={{ ...card, borderColor: T.border }}>
               <div style={{ display: "flex", gap: 20 }}>
-                <div style={{ width: 56, height: 56, borderRadius: T.r, background: T.accentLt, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, flexShrink: 0, border: `1px solid ${T.accentBd}` }}>{h.icon}</div>
+                <div style={{ width: 56, height: 56, borderRadius: T.r, background: T.accentLt, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: `1px solid ${T.accentBd}` }}><Icon name={h.iconName} size={28} color={T.accent} /></div>
                 <div>
                   <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 6px", color: T.text }}>{h.title}</h3>
                   <p style={{ fontSize: 14, color: T.muted, margin: 0, lineHeight: 1.6 }}>{h.desc}</p>
@@ -854,7 +898,7 @@ function LandingPage({ user, onLogin }) {
           <div className="ez-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 28, maxWidth: 1000, margin: "0 auto" }}>
             {/* Free */}
             <div style={{ ...card, borderColor: T.border, textAlign: "center" }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🆓</div>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: T.accentLt, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12, border: `1px solid ${T.accentBd}` }}><Icon name="gift" size={28} color={T.accent} /></div>
               <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 4px", color: T.text }}>Découverte</h3>
               <p style={{ fontSize: 36, fontWeight: 900, color: T.accent, margin: "12px 0 4px" }}>0€</p>
               <p style={{ fontSize: 13, color: T.muted, margin: "0 0 20px" }}>Essai 48h</p>
@@ -871,7 +915,7 @@ function LandingPage({ user, onLogin }) {
             {/* Pro — placeholder */}
             <div style={{ ...card, borderColor: T.accentBd, background: T.accentLt, textAlign: "center", position: "relative" }}>
               <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "4px 16px", borderRadius: 20, background: T.accentGradient, color: "#fff", fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>Populaire</div>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>⚡</div>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: T.accentLt, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12, border: `1px solid ${T.accentBd}` }}><Icon name="zap" size={28} color={T.accent} /></div>
               <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 4px", color: T.text }}>Pro</h3>
               <p style={{ fontSize: 36, fontWeight: 900, color: T.accent, margin: "12px 0 4px" }}>—€</p>
               <p style={{ fontSize: 13, color: T.muted, margin: "0 0 20px" }}>Bientôt disponible</p>
@@ -885,7 +929,7 @@ function LandingPage({ user, onLogin }) {
             </div>
             {/* Enterprise — placeholder */}
             <div style={{ ...card, borderColor: T.border, textAlign: "center" }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🏢</div>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: T.accentLt, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 12, border: `1px solid ${T.accentBd}` }}><Icon name="building" size={28} color={T.accent} /></div>
               <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 4px", color: T.text }}>Entreprise</h3>
               <p style={{ fontSize: 36, fontWeight: 900, color: T.accent, margin: "12px 0 4px" }}>Sur devis</p>
               <p style={{ fontSize: 13, color: T.muted, margin: "0 0 20px" }}>Pour les équipes RH</p>
@@ -1884,27 +1928,35 @@ export default function EzInterview() {
           {/* Desktop sidebar */}
           <div className="ez-plan-sidebar" style={{ display: "flex", flexDirection: "column", gap: 8, position: "sticky", top: 80, alignSelf: "start" }}>
             <button onClick={() => { setStep("dashboard"); setExpandedItems({}); }} style={{ ...btnS, marginBottom: 8, fontSize: 12 }}>← Mes préparations</button>
-            {plan.map((day, i) => (
-              <button key={i} onClick={() => { setExpandedDay(i); setExpandedItems({}); }} style={{ padding: "12px 14px", borderRadius: T.r, border: `1px solid ${expandedDay === i ? T.accent : T.border}`, background: expandedDay === i ? T.accentLt : T.bgCard, color: T.text, textAlign: "left", cursor: "pointer", fontFamily: "inherit", fontWeight: expandedDay === i ? 700 : 500, fontSize: 13, transition: "all 0.2s" }}>
-                <span style={{ fontWeight: 700 }}>J{i + 1}</span> — {day.title?.slice(0, 25)}{day.title?.length > 25 ? "…" : ""}
-              </button>
-            ))}
+            {plan.map((day, i) => {
+              const locked = i >= 10;
+              return (
+                <button key={i} onClick={() => { if (!locked) { setExpandedDay(i); setExpandedItems({}); } }} style={{ padding: "12px 14px", borderRadius: T.r, border: `1px solid ${locked ? T.border : expandedDay === i ? T.accent : T.border}`, background: locked ? "rgba(255,255,255,0.02)" : expandedDay === i ? T.accentLt : T.bgCard, color: locked ? T.light : T.text, textAlign: "left", cursor: locked ? "not-allowed" : "pointer", fontFamily: "inherit", fontWeight: expandedDay === i ? 700 : 500, fontSize: 13, transition: "all 0.2s", opacity: locked ? 0.4 : 1 }}>
+                  <span style={{ fontWeight: 700 }}>J{i + 1}</span> — {day.title?.slice(0, 25)}{day.title?.length > 25 ? "…" : ""}
+                  {locked && <span style={{ fontSize: 10, color: T.light, display: "block", marginTop: 2 }}>Disponible en version Pro</span>}
+                </button>
+              );
+            })}
           </div>
 
           {/* Mobile horizontal day selector */}
           <div className="ez-plan-mobile-days" style={{ display: "none", overflowX: "auto", gap: 6, paddingBottom: 8, WebkitOverflowScrolling: "touch", gridColumn: "1 / -1" }}>
             <button onClick={() => { setStep("dashboard"); setExpandedItems({}); }} style={{ ...btnS, padding: "6px 10px", fontSize: 11, flexShrink: 0, whiteSpace: "nowrap" }}>←</button>
-            {plan.map((day, i) => (
-              <button key={i} onClick={() => { setExpandedDay(i); setExpandedItems({}); }}
-                style={{
-                  padding: "8px 12px", borderRadius: 20, border: `1px solid ${expandedDay === i ? T.accent : T.border}`,
-                  background: expandedDay === i ? T.accent : T.bgCard, color: expandedDay === i ? "#fff" : T.text,
-                  fontWeight: expandedDay === i ? 700 : 500, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
-                  flexShrink: 0, whiteSpace: "nowrap",
-                }}>
-                <span style={{ fontWeight: 600 }}>J{i + 1}</span> {plan[i].title?.slice(0, 15)}{plan[i].title?.length > 15 ? "…" : ""}
-              </button>
-            ))}
+            {plan.map((day, i) => {
+              const locked = i >= 10;
+              return (
+                <button key={i} onClick={() => { if (!locked) { setExpandedDay(i); setExpandedItems({}); } }}
+                  style={{
+                    padding: "8px 12px", borderRadius: 20, border: `1px solid ${locked ? T.border : expandedDay === i ? T.accent : T.border}`,
+                    background: locked ? "rgba(255,255,255,0.02)" : expandedDay === i ? T.accent : T.bgCard,
+                    color: locked ? T.light : expandedDay === i ? "#fff" : T.text,
+                    fontWeight: expandedDay === i ? 700 : 500, fontSize: 12, cursor: locked ? "not-allowed" : "pointer", fontFamily: "inherit",
+                    flexShrink: 0, whiteSpace: "nowrap", opacity: locked ? 0.4 : 1,
+                  }}>
+                  <span style={{ fontWeight: 600 }}>J{i + 1}</span> {locked ? "Pro" : `${plan[i].title?.slice(0, 15)}${plan[i].title?.length > 15 ? "…" : ""}`}
+                </button>
+              );
+            })}
           </div>
 
           <div className="ez-plan-main" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
@@ -1916,7 +1968,8 @@ export default function EzInterview() {
                   {/* Day navigation */}
                   <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                     {expandedDay > 0 && <button onClick={() => { setExpandedDay(expandedDay - 1); setExpandedItems({}); }} style={{ ...btnS, padding: "6px 14px", fontSize: 12 }}>← Jour {expandedDay}</button>}
-                    {expandedDay < plan.length - 1 && <button onClick={() => { setExpandedDay(expandedDay + 1); setExpandedItems({}); }} style={{ ...btnS, padding: "6px 14px", fontSize: 12 }}>Jour {expandedDay + 2} →</button>}
+                    {expandedDay < Math.min(plan.length - 1, 9) && <button onClick={() => { setExpandedDay(expandedDay + 1); setExpandedItems({}); }} style={{ ...btnS, padding: "6px 14px", fontSize: 12 }}>Jour {expandedDay + 2} →</button>}
+                    {expandedDay === 9 && plan.length > 10 && <span style={{ fontSize: 11, color: T.muted, padding: "6px 0" }}>Jours 11+ disponibles en version Pro</span>}
                   </div>
                 </div>
 
@@ -1930,7 +1983,7 @@ export default function EzInterview() {
                           <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>{item.title}</h3>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                             <Badge v={typeV[item.type] || "default"}>{typeL[item.type] || item.type}</Badge>
-                            {item.duration && <span style={{ fontSize: 11, color: T.muted }}>{item.duration}</span>}
+                            {/* duration removed — user goes at their own pace */}
                           </div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
@@ -1974,15 +2027,16 @@ export default function EzInterview() {
       )}
 
       {/* Floating Feedback Button (only when logged in, not on landing) */}
-      {user && view !== "landing" && (
+      {user && view !== "landing" && !showFeedback && !trialExpired && (
         <button className="ez-fab" onClick={() => setShowFeedback(true)} style={{
-          position: "fixed", bottom: 24, right: 24, height: 48, borderRadius: 24,
-          background: T.accentGradient, color: "#fff", border: "none", fontSize: 14, cursor: "pointer",
-          boxShadow: "0 8px 24px rgba(124,92,252,0.35)", display: "flex", alignItems: "center",
-          gap: 8, padding: "0 18px 0 14px",
-          justifyContent: "center", fontFamily: "inherit", zIndex: 50, transition: "all 0.2s ease", fontWeight: 600
+          position: "fixed", bottom: 24, right: 24, height: 44, borderRadius: 22,
+          background: T.accentGradient, color: "#fff", border: "none", fontSize: 13, cursor: "pointer",
+          boxShadow: "0 4px 16px rgba(124,92,252,0.3)", display: "flex", alignItems: "center",
+          gap: 6, padding: "0 16px 0 12px",
+          justifyContent: "center", fontFamily: "inherit", zIndex: 50, transition: "all 0.2s ease", fontWeight: 600,
+          whiteSpace: "nowrap",
         }} onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"} onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}>
-          💬 <span>Feedback</span>
+          <Icon name="message-circle" size={16} color="#fff" /> <span>Feedback</span>
         </button>
       )}
 

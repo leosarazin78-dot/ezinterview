@@ -60,9 +60,9 @@ artisanat.fr, compagnons-du-devoir.com, fr.wikipedia.org, scholar.google.com
 `;
 
 const INTENSITY_CONFIG = {
-  "Léger": { dailyTime: "30 min", itemsPerDay: "2-3", quizQuestions: "3-5", description: "plan léger adapté à un emploi du temps chargé" },
-  "Standard": { dailyTime: "1h", itemsPerDay: "3-5", quizQuestions: "5-8", description: "plan équilibré entre effort et efficacité" },
-  "Intensif": { dailyTime: "2h+", itemsPerDay: "5-7", quizQuestions: "8-10", description: "plan intensif pour une préparation en profondeur" },
+  "Léger": { itemsPerDay: "4-5", quizQuestions: "5-8", description: "plan léger adapté à un emploi du temps chargé" },
+  "Standard": { itemsPerDay: "5-8", quizQuestions: "8-10", description: "plan équilibré entre effort et efficacité" },
+  "Intensif": { itemsPerDay: "8-12", quizQuestions: "10-15", description: "plan intensif pour une préparation en profondeur" },
 };
 
 const LEVEL_CONFIG = {
@@ -198,7 +198,7 @@ export async function POST(request) {
 CONTEXTE :
 - Poste : ${jobData?.title} chez ${company}
 - Secteur : ${sector}
-- Intensité : ${ic.description} (${ic.dailyTime} par jour, ${totalHours}h au total sur ${planDays} jours)
+- Intensité : ${ic.description} (${ic.itemsPerDay} activités par jour sur ${planDays} jours)
 - Niveau d'expérience : ${levelKey}
 - Compétences à renforcer : ${weakAndPartial.length > 0 ? weakAndPartial.join(", ") : "aucune faiblesse identifiée"}
 - Points forts à consolider : ${strong.length > 0 ? strong.join(", ") : "à évaluer"}
@@ -233,17 +233,20 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
       {
         "type": "note",
         "title": "Titre précis (max 8 mots)",
-        "duration": "15 min",
         "content": {
-          "summary": "Explication CONCISE en 2-3 phrases max. Va droit au but.",
+          "summary": "Explication détaillée en 4-6 phrases. Couvre le sujet en profondeur avec des exemples concrets.",
           "sections": [
             {
               "heading": "Sous-titre du concept",
-              "points": ["Point concis (1 phrase)", "Point concis (1 phrase)"]
+              "points": ["Point détaillé avec exemple (2 phrases)", "Point détaillé (2 phrases)", "Point détaillé (2 phrases)"]
+            },
+            {
+              "heading": "Deuxième sous-partie",
+              "points": ["Point détaillé (2 phrases)", "Point détaillé (2 phrases)"]
             }
           ],
-          "keyPoints": ["Point clé en 1 phrase courte (max 15 mots)"],
-          "tips": ["Astuce en 1 phrase courte"],
+          "keyPoints": ["Point clé détaillé (max 20 mots)", "Deuxième point clé", "Troisième point clé"],
+          "tips": ["Astuce pratique détaillée", "Deuxième astuce"],
           "links": [{"label": "Nom", "url": "URL VÉRIFIÉE", "type": "article"}]
         },
         "miniQuiz": [{"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0}]
@@ -251,18 +254,16 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
       {
         "type": "exercise",
         "title": "Exercice pratique (max 8 mots)",
-        "duration": "20 min",
         "content": {
           "objective": "Objectif en 1 phrase",
-          "steps": ["Étape courte et actionnable"],
-          "tips": ["Conseil en 1 phrase"],
+          "steps": ["Étape détaillée et actionnable", "Deuxième étape", "Troisième étape"],
+          "tips": ["Conseil détaillé", "Deuxième conseil"],
           "links": [{"label": "Nom", "url": "URL", "type": "lab"}]
         }
       },
       {
         "type": "quiz",
         "title": "Quiz du jour",
-        "duration": "10 min",
         "content": {
           "questions": [{"q": "Question ?", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "Explication en 1 phrase"}]
         }
@@ -273,18 +274,20 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
 
 RÈGLES DE CONTENU — TRÈS IMPORTANT :
 1. EXACTEMENT ${planDays} jours (ni plus, ni moins), ${ic.itemsPerDay} items chacun. Le plan DOIT couvrir les ${planDays} jours complets.
-2. CONCISION : Chaque note doit être COURTE et LISIBLE. Un humain doit pouvoir la lire en 5 minutes max. Pas de pavés de texte. summary = 2-3 phrases. keyPoints = max 4 points de 1 phrase.
-3. SOUS-CHAPITRES : Utilise le champ "sections" pour découper chaque note en 2-3 sous-parties avec un "heading" clair et 2-3 "points" courts. Ça rend le contenu scannable.
-4. Chaque jour finit par un quiz (${ic.quizQuestions} questions)
-5. Les notes ont des miniQuiz (1-2 questions)
-6. URLS : utilise UNIQUEMENT les domaines de la liste ci-dessus. NE PAS inventer de sous-pages.
-7. Adapte au domaine du poste (${sector}).
-8. Jour 1 ou 2 : inclus un item 'culture' sur ${company}. Explique pourquoi connaître la culture est crucial même pour un entretien technique.
-9. Dernier jour = révision + quiz final 10 questions
-10. JSON COMPLET et VALIDE, pas de troncature, pas de guillemets courbes
-11. Répartis les compétences uniformément. Premiers jours = fondamentaux et faiblesses. Derniers jours = révision, simulation d'entretien.
-12. Adapte la difficulté au niveau ${levelKey} : ${lc.quizDifficulty}
-13. LISIBILITÉ : Imagine un candidat stressé qui doit apprendre. Chaque partie doit être digeste, organisée et aller à l'essentiel. Pas de répétitions. Pas de phrases inutiles.
+2. CONTENU RICHE : Chaque note doit être COMPLÈTE et DÉTAILLÉE. Le summary = 4-6 phrases avec exemples. Les sections = 3-4 sous-parties avec 3-4 points DÉTAILLÉS chacune. Les keyPoints = 4-6 points développés. Le candidat doit pouvoir apprendre SANS autre source.
+3. SOUS-CHAPITRES : Utilise le champ "sections" pour découper chaque note en 3-4 sous-parties avec un "heading" clair et 3-4 "points" développés (2 phrases chacun). Ça rend le contenu scannable ET complet.
+4. PAS DE DURÉE : N'inclus PAS de champ "duration" dans les items. Le candidat avance à son rythme.
+5. Chaque jour finit par un quiz (${ic.quizQuestions} questions)
+6. QUIZ DIFFÉRENCIÉS — CRITIQUE : Les miniQuiz intégrés aux notes testent la COMPRÉHENSION IMMÉDIATE du concept étudié (définitions, cas simples). Le quiz de fin de journée est DIFFÉRENT : il teste la MISE EN SITUATION et l'APPLICATION des concepts vus dans la journée (scénarios d'entretien, résolution de problèmes, cas pratiques). Les questions NE DOIVENT PAS se répéter entre miniQuiz et quiz du jour. Zéro question en doublon.
+7. Les notes ont des miniQuiz (1-2 questions de compréhension directe)
+8. URLS : utilise UNIQUEMENT les domaines de la liste ci-dessus. NE PAS inventer de sous-pages.
+9. Adapte au domaine du poste (${sector}).
+10. Jour 1 ou 2 : inclus un item 'culture' sur ${company}. Explique pourquoi connaître la culture est crucial même pour un entretien technique.
+11. Dernier jour = révision + quiz final 15 questions de mise en situation
+12. JSON COMPLET et VALIDE, pas de troncature, pas de guillemets courbes
+13. Répartis les compétences uniformément. Premiers jours = fondamentaux et faiblesses. Derniers jours = révision, simulation d'entretien.
+14. Adapte la difficulté au niveau ${levelKey} : ${lc.quizDifficulty}
+15. QUALITÉ : Imagine un candidat stressé qui doit apprendre. Chaque partie doit être détaillée, organisée et aller en profondeur. Pas de répétitions entre sections. Pas de contenu superficiel.
 
 JSON uniquement :`;
 
@@ -307,7 +310,7 @@ JSON uniquement :`;
               console.log(`Tentative ${attempt + 1}/2 de génération du plan...`);
 
               // Plus de jours = plus de tokens nécessaires
-              const maxTokens = planDays <= 7 ? 8192 : planDays <= 14 ? 12000 : 16000;
+              const maxTokens = planDays <= 5 ? 12000 : planDays <= 10 ? 16000 : 20000;
               const message = await anthropic.messages.create({
                 model: "claude-sonnet-4-20250514",
                 max_tokens: maxTokens,
