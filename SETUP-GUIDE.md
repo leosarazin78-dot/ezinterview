@@ -54,19 +54,41 @@ Supabase utilise une variable "Site URL" pour construire les liens dans les emai
 <p style="color:#888;font-size:12px;">— L'equipe EntretienZen</p>
 ```
 
-3. Dans **SMTP Settings** (optionnel mais recommande pour eviter les spams) :
-   - Active "Enable Custom SMTP"
-   - Host : `smtp.gmail.com`
-   - Port : `465`
-   - Username : ton email Gmail
-   - Password : un "App Password" Google (pas ton mot de passe normal)
-   
+3. **Changer le nom d'expediteur** (IMPORTANT — les utilisateurs voient "Supabase Auth" par defaut) :
+   - Va dans **Authentication > SMTP Settings**
+   - Active **"Enable Custom SMTP"**
+   - Remplis :
+     - **Sender email** : `noreply@entretienzen.com` (ou ton email Gmail)
+     - **Sender name** : `EntretienZen`
+     - **Host** : `smtp.gmail.com`
+     - **Port** : `465`
+     - **Username** : ton email Gmail (ex: leo.sarazin78@gmail.com)
+     - **Password** : un "App Password" Google (PAS ton mot de passe normal)
+   - **Sauvegarde**
+
+   > Avec cette config, les emails arriveront de "EntretienZen <noreply@entretienzen.com>"
+   > au lieu de "Supabase Auth <noreply@mail.app.supabase.io>"
+
    Pour creer un App Password Gmail :
-   1. Va sur https://myaccount.google.com/apppasswords
-   2. Connecte-toi
-   3. Genere un mot de passe pour "Mail" > "Other" > "Supabase"
-   4. Copie le mot de passe (16 caracteres)
-   5. Colle-le dans le champ Password de Supabase SMTP
+   1. Va sur https://myaccount.google.com/security
+   2. Assure-toi que la **verification en 2 etapes** est activee
+   3. Va sur https://myaccount.google.com/apppasswords
+   4. Genere un mot de passe pour "Mail" > "Other" > tape "EntretienZen"
+   5. Copie le mot de passe (16 caracteres, sans espaces)
+   6. Colle-le dans le champ **Password** de Supabase SMTP
+
+   > **Si tu n'as pas de domaine custom pour l'email** :
+   > Tu peux utiliser ton Gmail directement comme sender :
+   > - Sender email : `leo.sarazin78@gmail.com`
+   > - Sender name : `EntretienZen`
+   > Les emails arriveront de "EntretienZen <leo.sarazin78@gmail.com>"
+   > C'est mieux que "Supabase Auth" et ca fonctionne immediatement.
+
+   > **ATTENTION** : sans SMTP custom, les emails :
+   > - Arrivent de "Supabase Auth" (pas professionnel)
+   > - Peuvent atterrir dans les spams
+   > - Ont un taux de delivrabilite plus faible
+   > Configurer le SMTP est donc FORTEMENT recommande.
 
 #### C. Verifier que ca marche
 1. Apres avoir sauvegarde, teste :
@@ -173,19 +195,29 @@ Par defaut, Google affiche l'ID du projet (ex: "prj-12345"). Il faut le changer 
 
 ---
 
-## 4. Umami Analytics (RGPD, sans cookies)
+## 4. Vercel Analytics (zero-config, automatique)
 
-### Variables Vercel :
+Vercel Analytics est integre directement dans le code via `@vercel/analytics/next`.
+Aucune variable d'environnement a configurer — c'est automatique sur Vercel.
+
+### Activer dans le dashboard Vercel :
+1. Va sur https://vercel.com/dashboard
+2. Selectionne ton projet **entretienzen**
+3. Va dans **Analytics** (menu gauche)
+4. Clique **"Enable"** si pas deja actif
+5. Tu verras les pages vues, visiteurs uniques, pays, devices, etc.
+
+### Avantages vs Umami :
+- Zero config, pas de variable d'env
+- Integre dans Vercel (meme dashboard que le deploy)
+- Web Vitals (LCP, FID, CLS) inclus
+- Conforme RGPD (pas de cookies)
+
+### Anciennes variables Umami a supprimer dans Vercel :
 ```
-NEXT_PUBLIC_UMAMI_URL = https://cloud.umami.is/script.js
-NEXT_PUBLIC_UMAMI_WEBSITE_ID = 385a2626-da7c-44cd-aabf-6faca0a35352
+NEXT_PUBLIC_UMAMI_URL        ← SUPPRIMER
+NEXT_PUBLIC_UMAMI_WEBSITE_ID ← SUPPRIMER
 ```
-
-### Sur Umami Cloud (https://cloud.umami.is) :
-- Le domaine doit etre `entretienzen.com` (sans https://)
-- Le Website ID doit matcher
-
-### Redeploy apres changement de variables.
 
 ---
 
@@ -197,10 +229,6 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
-# Umami Analytics
-NEXT_PUBLIC_UMAMI_URL=https://cloud.umami.is/script.js
-NEXT_PUBLIC_UMAMI_WEBSITE_ID=385a2626-da7c-44cd-aabf-6faca0a35352
-
 # Google Search Console
 NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=ta-valeur-ici
 
@@ -209,6 +237,9 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 # Admin (liste des emails admin, separes par des virgules)
 ADMIN_EMAILS=leo.sarazin78@gmail.com
+
+# (Vercel Analytics = automatique, pas de variable necessaire)
+# (Umami supprime — supprimer NEXT_PUBLIC_UMAMI_URL et NEXT_PUBLIC_UMAMI_WEBSITE_ID si encore presentes)
 ```
 
 **Rappel** : apres chaque changement de variable, il faut **redeployer** sur Vercel (Deployments > Redeploy).
