@@ -1,4 +1,4 @@
-# EZE — Guide de configuration complet
+# EntretienZen — Guide de configuration complet
 
 ## 1. Umami Analytics (RGPD, sans cookies)
 
@@ -19,7 +19,7 @@ NEXT_PUBLIC_UMAMI_WEBSITE_ID = 385a2626-da7c-44cd-aabf-6faca0a35352
 1. Va sur https://cloud.umami.is
 2. Connecte-toi à ton compte
 3. Dans **Settings > Websites**, vérifie que ton site est bien ajouté
-4. Le **Website ID** doit correspondre exactement à `7673b83b-03a5-4cfc-8e6d-00e61164e9df`
+4. Le **Website ID** doit correspondre exactement à `385a2626-da7c-44cd-aabf-6faca0a35352`
 5. Le **domaine** doit être `entretienzen.com` (sans https://)
 
 #### C. Vérifier que le script se charge
@@ -98,7 +98,7 @@ Google met **1 à 4 semaines** pour indexer un nouveau site. Voici comment accé
 1. Dans Google Cloud Console, va dans **APIs & Services > OAuth consent screen**
 2. Choisis **"External"** (pour que tout le monde puisse se connecter)
 3. Remplis les infos :
-   - App name : **EZE**
+   - App name : **EntretienZen**
    - User support email : ton email
    - Developer contact : ton email
 4. Ajoute les scopes : `email`, `profile`, `openid`
@@ -122,7 +122,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 
 # Umami Analytics
 NEXT_PUBLIC_UMAMI_URL=https://cloud.umami.is/script.js
-NEXT_PUBLIC_UMAMI_WEBSITE_ID=7673b83b-03a5-4cfc-8e6d-00e61164e9df
+NEXT_PUBLIC_UMAMI_WEBSITE_ID=385a2626-da7c-44cd-aabf-6faca0a35352
 
 # Google Search Console
 NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=ta-valeur-ici

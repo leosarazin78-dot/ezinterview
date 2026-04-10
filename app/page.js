@@ -537,6 +537,19 @@ function LandingPage({ user, onLogin }) {
     } catch (err) { setError(err.message); setLoading(false); }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email || !isValidEmail(email)) { setError("Entre ton email pour réinitialiser ton mot de passe"); return; }
+    setLoading(true); setError(""); setMessage("");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}#reset-password`,
+      });
+      if (error) throw error;
+      setMessage("Un email de réinitialisation a été envoyé ! Vérifie ta boîte mail.");
+    } catch (err) { setError(err.message); }
+    setLoading(false);
+  };
+
   const mockupDays = [
     { day: 1, title: "Fondamentaux React & Hooks", status: "completed", items: [
       { t: "Les Hooks essentiels", type: "Note", done: true },
@@ -570,8 +583,57 @@ function LandingPage({ user, onLogin }) {
     { icon: "📈", title: "Progression en temps réel", desc: "Vois exactement où tu en es. Aucune surprise le jour J." },
   ];
 
+  // ─── Cookie Consent State ───
+  const [cookieConsent, setCookieConsent] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.__cookieConsent || null; // null = not yet answered
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Check if consent was already given (in-memory for this session)
+      const stored = window.__cookieConsent;
+      if (stored !== undefined) setCookieConsent(stored);
+    }
+  }, []);
+
+  const handleCookieAccept = () => {
+    if (typeof window !== "undefined") window.__cookieConsent = true;
+    setCookieConsent(true);
+  };
+  const handleCookieRefuse = () => {
+    if (typeof window !== "undefined") window.__cookieConsent = false;
+    setCookieConsent(false);
+  };
+
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: T.text, background: T.bg, minHeight: "100vh", lineHeight: 1.6 }}>
+      {/* ─── Cookie Consent Banner ─── */}
+      {cookieConsent === null && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 2000,
+          background: "rgba(26,26,36,0.97)", backdropFilter: "blur(16px)",
+          borderTop: `1px solid ${T.border}`, padding: "20px 24px",
+          animation: "fadeIn 0.4s ease",
+        }}>
+          <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", justifyContent: "space-between" }}>
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: T.text }}>🍪 Respect de ta vie privée</p>
+              <p style={{ margin: 0, fontSize: 12, color: T.muted, lineHeight: 1.6 }}>
+                EntretienZen utilise des cookies d'analyse anonymes (Umami, sans tracking personnel) pour améliorer l'expérience.
+                Aucune donnée personnelle n'est partagée avec des tiers.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
+              <button onClick={handleCookieRefuse} style={{ ...btnS, padding: "10px 20px", fontSize: 13 }}>Refuser</button>
+              <button onClick={handleCookieAccept} style={{ ...btnP, padding: "10px 20px", fontSize: 13 }}>Accepter</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* JSON-LD Structured Data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
@@ -885,7 +947,7 @@ function LandingPage({ user, onLogin }) {
                 <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: T.r, background: T.warnLt, border: `1px solid ${T.warnBd}`, textAlign: "left" }}>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: T.warn }}>🧪 Version bêta — Essai gratuit</p>
                   <p style={{ margin: "4px 0 0", fontSize: 11, color: T.text, lineHeight: 1.5 }}>
-                    Tu contribues au développement d'EZE ! Ton plan est accessible pendant 48h.
+                    Tu contribues au développement d'EntretienZen ! Ton plan est accessible pendant 48h.
                     Après ce délai, un simple retour d'expérience te permet de continuer à utiliser l'app gratuitement.
                   </p>
                 </div>
@@ -932,6 +994,11 @@ function LandingPage({ user, onLogin }) {
                   <button type="submit" disabled={loading || !email || !password || !isValidEmail(email) || (mode === "signup" && !isPasswordValid)} style={{ ...(!isValidEmail(email) || !password || (mode === "signup" && !isPasswordValid) ? btnD : btnP) }}>
                     {loading ? "..." : mode === "login" ? "Connexion" : "Continuer →"}
                   </button>
+                  {mode === "login" && (
+                    <button type="button" onClick={handleForgotPassword} style={{ background: "transparent", border: "none", color: T.accent, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: "4px 0", textAlign: "right" }}>
+                      Mot de passe oublié ?
+                    </button>
+                  )}
                 </>
               )}
 
@@ -1099,6 +1166,10 @@ export default function EzInterview() {
 
   const [reportingItem, setReportingItem] = useState(null);
   const [reportText, setReportText] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
 
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [profileData, setProfileData] = useState({ firstName: "", lastName: "", phone: "", city: "", birthYear: "" });
@@ -1202,6 +1273,9 @@ export default function EzInterview() {
           await loadUserData(session.user);
         }
         setAuthLoading(false);
+      } else if (event === "PASSWORD_RECOVERY") {
+        // L'utilisateur arrive via le lien "mot de passe oublié"
+        setShowResetPassword(true);
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         // Token refreshed : pas besoin de recharger, juste mettre à jour le user
         setUser(session.user);
@@ -1371,8 +1445,8 @@ export default function EzInterview() {
         body: JSON.stringify({
           type: feedbackType,
           message: feedbackMessage,
-          rating: feedbackRating,
-          page: step,
+          rating: feedbackRating > 0 ? feedbackRating : undefined,
+          planId: currentPlanId || undefined,
         }),
       });
       setFeedbackSent(true);
@@ -1535,7 +1609,10 @@ export default function EzInterview() {
                 setStep("plan");
                 return;
               }
-              // Sinon charge depuis l'API
+              // Bascule immédiatement vers la vue plan (avec loading)
+              setPlan(null);
+              setJobData(null);
+              setStep("plan");
               setLoadingPlan(id);
               try {
                 const { data: { session } } = await supabase.auth.getSession();
@@ -1544,9 +1621,12 @@ export default function EzInterview() {
                   setPlan(fullPlan.plan_data);
                   setJobData(fullPlan.job_data);
                   if (fullPlan.completed_days) setCompletedDays(fullPlan.completed_days);
-                  setStep("plan");
+                  // Met à jour le cache local
+                  setSavedPlans(prev => prev.map(p => p.id === id ? { ...p, plan_data: fullPlan.plan_data, job_data: fullPlan.job_data, completed_days: fullPlan.completed_days } : p));
+                } else {
+                  setStep("dashboard"); // Retour si pas de données
                 }
-              } catch (e) { console.error("Load plan error:", e); }
+              } catch (e) { console.error("Load plan error:", e); setStep("dashboard"); }
               setLoadingPlan(null);
             }}
             loadingPlan={loadingPlan}
@@ -1777,6 +1857,28 @@ export default function EzInterview() {
         </div>
       )}
 
+      {/* Plan loading skeleton */}
+      {step === "plan" && !plan && loadingPlan && (
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px", animation: "fadeIn 0.2s ease" }}>
+          <div style={{ ...card, padding: 32, textAlign: "center" }}>
+            <div style={{ width: 32, height: 32, border: `3px solid ${T.accentBd}`, borderTopColor: T.accent, borderRadius: "50%", animation: "spin .6s linear infinite", margin: "0 auto 16px" }} />
+            <p style={{ fontSize: 15, fontWeight: 600, color: T.text, margin: "0 0 6px" }}>Chargement de ton plan...</p>
+            <p style={{ fontSize: 12, color: T.muted, margin: 0 }}>Les données arrivent dans quelques secondes</p>
+          </div>
+          {/* Skeleton cards */}
+          <div style={{ display: "flex", gap: 12, marginTop: 16, overflowX: "auto" }}>
+            {[1,2,3,4,5].map(i => (
+              <div key={i} style={{ minWidth: 80, height: 44, borderRadius: T.r, background: T.bgCard, border: `1px solid ${T.border}`, opacity: 0.5 + (i * 0.1) }} />
+            ))}
+          </div>
+          <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+            {[1,2,3].map(i => (
+              <div key={i} style={{ height: 60, borderRadius: T.r, background: T.bgCard, border: `1px solid ${T.border}`, opacity: 0.4 + (i * 0.15) }} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {step === "plan" && plan && (
         <div className="ez-plan-container" style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 24, padding: 24, maxWidth: "100%", margin: "0 auto" }}>
           {/* Desktop sidebar */}
@@ -1948,6 +2050,39 @@ export default function EzInterview() {
         </div>
       )}
 
+      {/* ─── Reset Password Modal ─── */}
+      {showResetPassword && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1200, padding: 16 }}>
+          <div style={{ maxWidth: 420, width: "100%", background: T.bgGlass, borderRadius: 20, padding: 32, textAlign: "center", boxShadow: "0 24px 64px rgba(124,92,252,0.25)", animation: "fadeIn 0.3s ease", border: `1px solid ${T.border}`, backdropFilter: "blur(20px)" }}>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: T.accentGradient, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16, fontSize: 24 }}>🔑</div>
+            <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: T.text }}>Nouveau mot de passe</h3>
+            <p style={{ margin: "0 0 20px", fontSize: 13, color: T.muted }}>Choisis un nouveau mot de passe sécurisé</p>
+            <input
+              type="password" placeholder="Nouveau mot de passe (min 8 car.)"
+              value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+              style={{ ...inp, marginBottom: 12, textAlign: "center" }}
+            />
+            <button
+              disabled={resetLoading || newPassword.length < 8}
+              onClick={async () => {
+                setResetLoading(true); setResetMessage("");
+                try {
+                  const { error } = await supabase.auth.updateUser({ password: newPassword });
+                  if (error) throw error;
+                  setResetMessage("Mot de passe mis à jour !");
+                  setTimeout(() => { setShowResetPassword(false); setNewPassword(""); setResetMessage(""); }, 2000);
+                } catch (err) { setResetMessage(err.message); }
+                setResetLoading(false);
+              }}
+              style={{ ...(newPassword.length < 8 ? btnD : btnP), width: "100%", marginBottom: 8 }}>
+              {resetLoading ? "Mise à jour..." : "Changer le mot de passe"}
+            </button>
+            {resetMessage && <p style={{ fontSize: 13, color: resetMessage.includes("mis à jour") ? T.green : T.red, margin: "8px 0 0" }}>{resetMessage}</p>}
+            <button onClick={() => { setShowResetPassword(false); setNewPassword(""); }} style={{ background: "transparent", border: "none", color: T.muted, fontSize: 12, cursor: "pointer", marginTop: 8 }}>Annuler</button>
+          </div>
+        </div>
+      )}
+
       {/* Trial Expired Popup — 48h sans feedback */}
       {trialExpired && !hasFeedback && user && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(10,10,15,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 16 }}>
@@ -1955,7 +2090,7 @@ export default function EzInterview() {
             <div style={{ width: 64, height: 64, borderRadius: 16, background: T.warnLt, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 32, marginBottom: 20, border: `1px solid ${T.warnBd}` }}>🧪</div>
             <h3 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 800, color: T.text }}>Ta période d'essai est terminée</h3>
             <p style={{ margin: "0 0 24px", fontSize: 14, color: T.muted, lineHeight: 1.6 }}>
-              Tu utilises EZE depuis plus de 48h. Pour continuer à accéder à tes plans et à l'application,
+              Tu utilises EntretienZen depuis plus de 48h. Pour continuer à accéder à tes plans et à l'application,
               fais-nous un retour rapide sur ton expérience. Ça nous aide énormément à améliorer le produit !
             </p>
             <button onClick={() => { setTrialExpired(false); setFeedbackRequired(true); setShowFeedback(true); }} style={{ ...btnP, width: "100%", fontSize: 15, padding: "14px 24px" }}>

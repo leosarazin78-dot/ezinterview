@@ -31,6 +31,9 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [confirmResetAll, setConfirmResetAll] = useState(false);
+  const [resetAllLoading, setResetAllLoading] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(null);
 
   // Fetch admin data via API
   const fetchAdminData = async (token) => {
@@ -225,7 +228,7 @@ export default function AdminPage() {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Inter', sans-serif", color: T.text }}>
       <nav style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 18, fontWeight: 800 }}>Admin — <span style={{ color: T.accent }}>EZE</span></span>
+        <span style={{ fontSize: 18, fontWeight: 800 }}>Admin — <span style={{ color: T.accent }}>EntretienZen</span></span>
         <button onClick={handleLogout} style={{ background: "transparent", border: "none", color: T.muted, cursor: "pointer", fontSize: 13 }}>Déconnexion</button>
       </nav>
 
@@ -248,32 +251,115 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* Analytics & SEO links */}
-        <div style={{ marginTop: 16, padding: 16, borderRadius: 16, background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.2)" }}>
-          <h4 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, color: "#7C5CFC" }}>Analytics & SEO</h4>
-
-          {/* Open source analytics */}
-          <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, color: T.muted, textTransform: "uppercase", letterSpacing: "0.5px" }}>Open Source (recommandé)</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-            <a href="https://cloud.umami.is" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#7C5CFC", background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 600 }}>📊 Umami Analytics</a>
-            <a href="https://eu.posthog.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#F97316", background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.25)", fontWeight: 600 }}>🦔 PostHog</a>
-            <a href="https://plausible.io" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#8B5CF6", background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)", fontWeight: 500 }}>📈 Plausible</a>
+        {/* ─── Monitoring Utilisateurs ─── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+          {/* Activité récente */}
+          <div style={{ padding: 16, borderRadius: 16, background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.2)" }}>
+            <h4 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, color: T.accent }}>Activité utilisateurs</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {(() => {
+                const now = new Date();
+                const day1 = users.filter(u => (now - new Date(u.created_at)) < 86400000).length;
+                const day7 = users.filter(u => (now - new Date(u.created_at)) < 7 * 86400000).length;
+                const day30 = users.filter(u => (now - new Date(u.created_at)) < 30 * 86400000).length;
+                const activeRecent = users.filter(u => u.last_sign_in_at && (now - new Date(u.last_sign_in_at)) < 7 * 86400000).length;
+                const conversionRate = stats.totalUsers > 0 ? Math.round((stats.usersWithPlans / stats.totalUsers) * 100) : 0;
+                const avgPlansPerUser = stats.usersWithPlans > 0 ? (stats.totalPlans / stats.usersWithPlans).toFixed(1) : 0;
+                const googleUsers = users.filter(u => u.provider === "google").length;
+                const emailUsers = users.filter(u => u.provider === "email").length;
+                return (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "6px 10px", borderRadius: 8, background: T.card }}>
+                      <span style={{ color: T.muted }}>Inscriptions 24h</span><span style={{ fontWeight: 700, color: T.green }}>{day1}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "6px 10px", borderRadius: 8, background: T.card }}>
+                      <span style={{ color: T.muted }}>Inscriptions 7j</span><span style={{ fontWeight: 700, color: T.green }}>{day7}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "6px 10px", borderRadius: 8, background: T.card }}>
+                      <span style={{ color: T.muted }}>Inscriptions 30j</span><span style={{ fontWeight: 700, color: T.accent }}>{day30}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "6px 10px", borderRadius: 8, background: T.card }}>
+                      <span style={{ color: T.muted }}>Actifs 7j (login)</span><span style={{ fontWeight: 700, color: T.blue }}>{activeRecent}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "6px 10px", borderRadius: 8, background: T.card }}>
+                      <span style={{ color: T.muted }}>Taux conversion (user → plan)</span><span style={{ fontWeight: 700, color: T.warn }}>{conversionRate}%</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "6px 10px", borderRadius: 8, background: T.card }}>
+                      <span style={{ color: T.muted }}>Plans/utilisateur actif</span><span style={{ fontWeight: 700, color: T.accent }}>{avgPlansPerUser}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "6px 10px", borderRadius: 8, background: T.card }}>
+                      <span style={{ color: T.muted }}>Google OAuth</span><span style={{ fontWeight: 700, color: T.blue }}>{googleUsers}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "6px 10px", borderRadius: 8, background: T.card }}>
+                      <span style={{ color: T.muted }}>Email/password</span><span style={{ fontWeight: 700, color: T.accent }}>{emailUsers}</span>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
           </div>
 
-          {/* Google tools */}
-          <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, color: T.muted, textTransform: "uppercase", letterSpacing: "0.5px" }}>Google (SEO & SEA)</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-            <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#34D399", background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 500 }}>🔍 Search Console</a>
-            <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#FBBF24", background: T.warnLt, border: `1px solid ${T.warnBd}`, fontWeight: 500 }}>💰 Google Ads (SEA)</a>
-            <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 12, fontSize: 12, textDecoration: "none", color: "#60A5FA", background: T.blueLt, border: `1px solid ${T.blueBd}`, fontWeight: 500 }}>📉 Google Analytics</a>
-          </div>
+          {/* Actions admin */}
+          <div style={{ padding: 16, borderRadius: 16, background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.15)" }}>
+            <h4 style={{ margin: "0 0 12px", fontSize: 14, fontWeight: 700, color: T.red }}>Actions admin</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ padding: 12, borderRadius: 12, background: T.card, border: `1px solid ${T.border}` }}>
+                <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 600, color: T.text }}>Supprimer tous les utilisateurs</p>
+                <p style={{ margin: "0 0 10px", fontSize: 11, color: T.muted }}>Supprime tous les comptes sauf les admins, ainsi que leurs plans, feedbacks et reports.</p>
+                {confirmResetAll ? (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={async () => {
+                      setResetAllLoading(true);
+                      try {
+                        const res = await fetch("/api/admin", {
+                          method: "DELETE",
+                          headers: { "Authorization": `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+                          body: JSON.stringify({ deleteAll: true }),
+                        });
+                        const result = await res.json();
+                        if (result.success) {
+                          alert(`${result.deleted} utilisateur(s) supprimé(s)`);
+                          await fetchAdminData(session.access_token);
+                        } else { alert(result.error || "Erreur"); }
+                      } catch (err) { alert(err.message); }
+                      setResetAllLoading(false);
+                      setConfirmResetAll(false);
+                    }} disabled={resetAllLoading}
+                      style={{ padding: "8px 16px", borderRadius: 8, background: T.red, color: "#fff", border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: resetAllLoading ? 0.6 : 1 }}>
+                      {resetAllLoading ? "Suppression..." : "Confirmer la suppression"}
+                    </button>
+                    <button onClick={() => setConfirmResetAll(false)}
+                      style={{ padding: "8px 16px", borderRadius: 8, background: T.card, color: T.muted, border: `1px solid ${T.border}`, fontSize: 12, cursor: "pointer" }}>
+                      Annuler
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmResetAll(true)}
+                    style={{ padding: "8px 16px", borderRadius: 8, background: T.redLt, color: T.red, border: `1px solid ${T.redBd}`, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                    Réinitialiser les utilisateurs
+                  </button>
+                )}
+              </div>
 
-          {/* Setup instructions */}
-          <div style={{ padding: 12, borderRadius: 12, background: T.card, border: `1px solid ${T.border}`, fontSize: 11, color: T.muted, lineHeight: 1.6 }}>
-            <p style={{ margin: "0 0 4px", fontWeight: 600, color: T.text }}>Variables Vercel à configurer :</p>
-            <p style={{ margin: "0 0 2px" }}><span style={{ color: "#7C5CFC", fontFamily: "monospace" }}>NEXT_PUBLIC_UMAMI_URL</span> + <span style={{ color: "#7C5CFC", fontFamily: "monospace" }}>NEXT_PUBLIC_UMAMI_WEBSITE_ID</span> → Umami (gratuit, sans cookies, RGPD)</p>
-            <p style={{ margin: "0 0 2px" }}><span style={{ color: "#F97316", fontFamily: "monospace" }}>NEXT_PUBLIC_POSTHOG_KEY</span> → PostHog (1M events gratuits/mois, replays sessions)</p>
-            <p style={{ margin: 0 }}><span style={{ color: "#60A5FA", fontFamily: "monospace" }}>NEXT_PUBLIC_GA_ID</span> → Google Analytics (nécessite consentement cookies)</p>
+              <div style={{ padding: 12, borderRadius: 12, background: T.card, border: `1px solid ${T.border}` }}>
+                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.text }}>Note de rating moyen</p>
+                <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: T.warn }}>
+                  {feedback.filter(f => f.rating).length > 0
+                    ? (feedback.filter(f => f.rating).reduce((a, f) => a + f.rating, 0) / feedback.filter(f => f.rating).length).toFixed(1)
+                    : "—"
+                  } <span style={{ fontSize: 14, color: T.muted }}>/ 5</span>
+                </p>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 12, background: T.card, border: `1px solid ${T.border}` }}>
+                <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 600, color: T.text }}>Liens rapides</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+                  <a href="https://cloud.umami.is" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", padding: "4px 10px", borderRadius: 8, fontSize: 11, textDecoration: "none", color: T.accent, background: T.accentLt, border: `1px solid ${T.accentBd}`, fontWeight: 600 }}>Umami</a>
+                  <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", padding: "4px 10px", borderRadius: 8, fontSize: 11, textDecoration: "none", color: T.green, background: T.greenLt, border: `1px solid ${T.greenBd}`, fontWeight: 600 }}>Supabase</a>
+                  <a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", padding: "4px 10px", borderRadius: 8, fontSize: 11, textDecoration: "none", color: T.text, background: T.card, border: `1px solid ${T.border}`, fontWeight: 600 }}>Vercel</a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -299,6 +385,7 @@ export default function AdminPage() {
                   <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, borderBottom: `1px solid ${T.border}` }}>Inscription</th>
                   <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, borderBottom: `1px solid ${T.border}` }}>Dernière connexion</th>
                   <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600, borderBottom: `1px solid ${T.border}` }}>Confirmé</th>
+                  <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600, borderBottom: `1px solid ${T.border}` }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -312,6 +399,28 @@ export default function AdminPage() {
                       <td style={{ padding: "10px 14px", color: T.muted }}>{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
                       <td style={{ padding: "10px 14px", color: T.muted }}>{u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("fr-FR") : "—"}</td>
                       <td style={{ padding: "10px 14px", textAlign: "center" }}>{u.confirmed ? "✅" : "❌"}</td>
+                      <td style={{ padding: "10px 14px", textAlign: "center" }}>
+                        {deletingUser === u.id ? (
+                          <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                            <button onClick={async () => {
+                              try {
+                                const res = await fetch("/api/admin", {
+                                  method: "DELETE",
+                                  headers: { "Authorization": `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+                                  body: JSON.stringify({ userId: u.id }),
+                                });
+                                const result = await res.json();
+                                if (result.success) await fetchAdminData(session.access_token);
+                                else alert(result.error || "Erreur");
+                              } catch (err) { alert(err.message); }
+                              setDeletingUser(null);
+                            }} style={{ padding: "4px 8px", borderRadius: 6, background: T.red, color: "#fff", border: "none", fontSize: 10, cursor: "pointer", fontWeight: 600 }}>Oui</button>
+                            <button onClick={() => setDeletingUser(null)} style={{ padding: "4px 8px", borderRadius: 6, background: T.card, color: T.muted, border: `1px solid ${T.border}`, fontSize: 10, cursor: "pointer" }}>Non</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setDeletingUser(u.id)} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: 14, color: T.muted, padding: 2 }} title="Supprimer">🗑</button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}

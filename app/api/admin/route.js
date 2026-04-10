@@ -134,6 +134,53 @@ export async function GET(request) {
   }
 }
 
+// DELETE : supprimer un utilisateur (et ses données associées)
+export async function DELETE(request) {
+  try {
+    const supabase = createServerClient();
+    const { authorized, error } = await verifyAdminAccess(request, supabase);
+    if (!authorized) return Response.json({ error }, { status: 403 });
+
+    const { userId, deleteAll } = await request.json();
+
+    if (deleteAll) {
+      // Supprimer TOUS les utilisateurs (sauf l'admin connecté)
+      const { data: { users }, error: listError } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      if (listError) throw listError;
+
+      const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim()).filter(Boolean);
+      const toDelete = users.filter(u => !adminEmails.includes(u.email));
+
+      let deleted = 0;
+      for (const u of toDelete) {
+        // Supprimer plans, feedback, reports de cet utilisateur
+        await supabase.from("plans").delete().eq("user_id", u.id);
+        await supabase.from("feedback").delete().eq("user_id", u.id);
+        await supabase.from("reports").delete().eq("user_id", u.id);
+        // Supprimer le user auth
+        const { error: delError } = await supabase.auth.admin.deleteUser(u.id);
+        if (!delError) deleted++;
+      }
+      return Response.json({ success: true, deleted, total: toDelete.length });
+    }
+
+    if (!userId) return Response.json({ error: "userId requis" }, { status: 400 });
+
+    // Supprimer les données associées
+    await supabase.from("plans").delete().eq("user_id", userId);
+    await supabase.from("feedback").delete().eq("user_id", userId);
+    await supabase.from("reports").delete().eq("user_id", userId);
+    // Supprimer le user
+    const { error: delError } = await supabase.auth.admin.deleteUser(userId);
+    if (delError) throw delError;
+
+    return Response.json({ success: true });
+  } catch (err) {
+    console.error("Admin DELETE error:", err);
+    return Response.json({ error: err.message }, { status: 500 });
+  }
+}
+
 // PATCH : mettre à jour le statut d'un report
 export async function PATCH(request) {
   try {
