@@ -1,25 +1,25 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+// OAuth callback route for Google login (PKCE flow).
+// After Google authenticates, Supabase redirects here with ?code=XXX.
+// We forward the code to the main page where the client-side Supabase
+// SDK will detect it and complete the session exchange automatically.
 export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const origin = requestUrl.origin;
 
   if (code) {
-    // Exchange the code for a session using the service role key
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-
-    try {
-      await supabase.auth.exchangeCodeForSession(code);
-    } catch (err) {
-      console.error("Auth callback error:", err);
+    // Forward all auth params to root — the Supabase browser client
+    // will detect them via detectSessionInUrl and exchange the code
+    const redirectUrl = new URL(origin);
+    redirectUrl.searchParams.set("code", code);
+    // Copy other params that Supabase may need
+    for (const [key, value] of requestUrl.searchParams.entries()) {
+      if (key !== "code") redirectUrl.searchParams.set(key, value);
     }
+    return NextResponse.redirect(redirectUrl.toString());
   }
 
-  // Redirect to dashboard after successful auth
-  const origin = requestUrl.origin;
-  return NextResponse.redirect(`${origin}/#dashboard`);
+  return NextResponse.redirect(origin);
 }

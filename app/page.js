@@ -580,7 +580,13 @@ function LandingPage({ user, onLogin }) {
   const handleGoogle = async () => {
     setLoading(true); setError("");
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/auth/callback` } });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: { access_type: "offline", prompt: "consent" },
+        }
+      });
       if (error) throw error;
     } catch (err) { setError(err.message); setLoading(false); }
   };
@@ -1308,6 +1314,16 @@ export default function EzInterview() {
   useEffect(() => {
     let didLoad = false; // empêche le double-appel checkAuth + onAuthStateChange
 
+    // Clean up ?code= from URL after OAuth redirect (Supabase reads it automatically)
+    if (typeof window !== "undefined" && window.location.search.includes("code=")) {
+      // Let Supabase process the code first, then clean the URL
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("code");
+        window.history.replaceState(null, "", url.pathname + url.hash);
+      }, 1000);
+    }
+
     // Check initial auth
     const checkAuth = async () => {
       try {
@@ -1567,13 +1583,12 @@ export default function EzInterview() {
     }
   };
 
-  if (authLoading) return <Spin text="Chargement..." />;
+  // Show loading during initial auth check OR during login transition (view=dashboard but user not yet loaded)
+  if (authLoading || (view === "dashboard" && !user)) return <Spin text="Chargement..." />;
 
-  if (view === "landing") {
+  if (view === "landing" || !user) {
     return <LandingPage user={user} onLogin={() => { setView("dashboard"); setStep("dashboard"); }} />;
   }
-
-  if (!user) return <LandingPage />;
 
   // ─── EDITOR VIEW (when logged in) ───
   return (
