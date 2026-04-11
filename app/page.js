@@ -5,7 +5,14 @@ import { signupSchema, profileSchema, jobUrlSchema, cvInputSchema, feedbackSchem
 
 // ─── Supabase browser client ───
 const supabase = typeof window !== "undefined"
-  ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+      auth: {
+        flowType: "implicit",
+        detectSessionInUrl: true,
+        autoRefreshToken: true,
+        persistSession: true,
+      }
+    })
   : null;
 
 // ─── PREMIUM 2026 THEME ───
@@ -583,8 +590,7 @@ function LandingPage({ user, onLogin }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: { access_type: "offline", prompt: "consent" },
+          redirectTo: window.location.origin,
         }
       });
       if (error) throw error;
@@ -1312,51 +1318,36 @@ export default function EzInterview() {
   };
 
   useEffect(() => {
-    let didLoad = false; // empêche le double-appel checkAuth + onAuthStateChange
+    let mounted = true;
+    let userLoaded = false;
 
-    // Clean up ?code= from URL after OAuth redirect (Supabase reads it automatically)
-    if (typeof window !== "undefined" && window.location.search.includes("code=")) {
-      // Let Supabase process the code first, then clean the URL
-      setTimeout(() => {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("code");
-        window.history.replaceState(null, "", url.pathname + url.hash);
-      }, 1000);
-    }
-
-    // Check initial auth
-    const checkAuth = async () => {
-      try {
-        const { data: { user: existingUser } } = await supabase.auth.getUser();
-        if (existingUser && !didLoad) {
-          didLoad = true;
-          await loadUserData(existingUser);
-        }
-      } catch (err) {
-        console.error("Auth error:", err);
-      } finally {
-        setAuthLoading(false);
-      }
+    const handleUser = async (currentUser) => {
+      if (!mounted || userLoaded) return;
+      userLoaded = true;
+      await loadUserData(currentUser);
+      if (mounted) setAuthLoading(false);
     };
-    checkAuth();
 
-    // Écoute les changements d'auth en temps réel (Google OAuth, email confirm, etc.)
+    // Écoute les changements d'auth (couvre TOUS les cas : session existante, OAuth redirect, email login)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // SIGNED_IN ou INITIAL_SESSION : charger les données si pas déjà fait
-      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
-        if (!didLoad) {
-          didLoad = true;
-          await loadUserData(session.user);
+      if (!mounted) return;
+
+      if (event === "INITIAL_SESSION") {
+        // Session existante ou tokens dans l'URL — traiter dans tous les cas
+        if (session?.user) {
+          await handleUser(session.user);
+        } else {
+          setAuthLoading(false);
         }
-        setAuthLoading(false);
+      } else if (event === "SIGNED_IN" && session?.user) {
+        // Login email/password ou Google OAuth
+        await handleUser(session.user);
       } else if (event === "PASSWORD_RECOVERY") {
-        // L'utilisateur arrive via le lien "mot de passe oublié"
         setShowResetPassword(true);
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
-        // Token refreshed : pas besoin de recharger, juste mettre à jour le user
         setUser(session.user);
       } else if (event === "SIGNED_OUT") {
-        didLoad = false;
+        userLoaded = false;
         setUser(null);
         setView("landing");
         setStep("input");
@@ -1367,7 +1358,27 @@ export default function EzInterview() {
       }
     });
 
-    return () => subscription?.unsubscribe();
+    // Fallback: si onAuthStateChange ne fire pas dans les 3s (edge case navigateur)
+    const timeout = setTimeout(async () => {
+      if (!userLoaded && mounted) {
+        try {
+          const { data: { user: existingUser } } = await supabase.auth.getUser();
+          if (existingUser && !userLoaded) {
+            await handleUser(existingUser);
+          } else if (mounted) {
+            setAuthLoading(false);
+          }
+        } catch {
+          if (mounted) setAuthLoading(false);
+        }
+      }
+    }, 3000);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const fetchJobData = async () => {
@@ -1423,7 +1434,7 @@ export default function EzInterview() {
       // Calculer daysUntilInterview si interviewDate est fournie
       let daysUntilInterview = null;
       if (interviewDate) {
-        daysUntilInterview = Math.ceil((new Date(interviewDate) - new Date()) / 86400000);
+        daysUntilInterview = Math.min(10, Math.max(1, Math.ceil((new Date(interviewDate) - new Date()) / 86400000)));
       }
       // Lecture streaming : le backend envoie des heartbeats (espaces) puis le JSON final
       const response = await fetch("/api/generate-plan", {
@@ -1815,9 +1826,18 @@ export default function EzInterview() {
               </select>
 
               <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Date de l'entretien (optionnel)</label>
-              <input type="date" value={interviewDate} onChange={(e) => setInterviewDate(e.target.value)} min={addDays(today(), 1)} max={addDays(today(), 10)} style={inp} />
+              <input type="date" value={interviewDate} onChange={(e) => {
+                const val = e.target.value;
+                if (val) {
+                  const days = Math.ceil((new Date(val) - new Date()) / 86400000);
+                  if (days > 10) { setInterviewDate(addDays(today(), 10)); return; }
+                  if (days < 1) { setInterviewDate(addDays(today(), 1)); return; }
+                }
+                setInterviewDate(val);
+              }} min={addDays(today(), 1)} max={addDays(today(), 10)} style={inp} />
               {interviewDate && (() => {
                 const days = Math.ceil((new Date(interviewDate) - new Date()) / 86400000);
+                if (days > 10) return <p style={{ margin: "6px 0 0", fontSize: 12, color: T.red, fontWeight: 500 }}>Maximum 10 jours — sélectionne une date plus proche</p>;
                 return <p style={{ margin: "6px 0 0", fontSize: 12, color: days <= 3 ? T.red : days <= 7 ? T.warn : T.green, fontWeight: 500 }}>J-{days} — {days <= 3 ? "Préparation express !" : days <= 7 ? "Préparation standard" : "Préparation approfondie"} · Le plan couvrira chaque jour jusqu'à l'entretien</p>;
               })()}
 
@@ -2060,10 +2080,52 @@ export default function EzInterview() {
           </div>
 
           <div className="ez-plan-main" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
+            {/* ─── Progress bar top ─── */}
+            {(() => {
+              const maxDay = Math.min(plan.length, 10);
+              const doneCount = Object.keys(completedDays).filter(k => parseInt(k) < maxDay).length;
+              const pct = Math.round((doneCount / maxDay) * 100);
+              return (
+                <div style={{ padding: "16px 20px", borderRadius: T.r, background: "linear-gradient(135deg, rgba(124,92,252,0.06) 0%, rgba(91,141,239,0.04) 100%)", border: `1px solid ${T.accentBd}`, backdropFilter: "blur(20px)" }}>
+                  {/* Job info + matching */}
+                  {(jobData?.job_title || jobData?.company) && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>{jobData.job_title || ""}</p>
+                        {jobData.company && <p style={{ margin: "2px 0 0", fontSize: 12, color: T.muted }}>{jobData.company}</p>}
+                      </div>
+                      {stats?.overallScore && (
+                        <div style={{ textAlign: "right" }}>
+                          <span style={{ fontSize: 22, fontWeight: 800, color: stats.overallScore > 70 ? T.green : stats.overallScore > 50 ? T.warn : T.red }}>{stats.overallScore}%</span>
+                          <p style={{ margin: 0, fontSize: 10, color: T.muted }}>matching</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Progress */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: T.text }}>Progression</span>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: pct >= 100 ? T.green : T.accent }}>{pct}%</span>
+                      </div>
+                      <div style={{ height: 8, borderRadius: 10, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct}%`, borderRadius: 10, background: pct >= 100 ? T.green : T.accentGradient, transition: "width 0.5s ease" }} />
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 12, color: T.muted, whiteSpace: "nowrap", flexShrink: 0 }}>{doneCount}/{maxDay} jours</span>
+                  </div>
+                </div>
+              );
+            })()}
+
             {plan[expandedDay] && (
               <>
-                <div className="ez-plan-day-header" style={{ ...card }}>
-                  <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700, color: T.text }}>Jour {expandedDay + 1} — {plan[expandedDay].title}</h2>
+                <div className="ez-plan-day-header" style={{ ...card, borderLeft: completedDays[expandedDay] ? `3px solid ${T.green}` : `3px solid ${T.accent}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                    {completedDays[expandedDay] && <Icon name="check-circle" size={20} color={T.green} />}
+                    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text }}>Jour {expandedDay + 1} — {plan[expandedDay].title}</h2>
+                  </div>
                   <p style={{ margin: 0, fontSize: 12, color: T.muted }}>{plan[expandedDay].focus}</p>
                   {/* Day navigation */}
                   <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
@@ -2076,8 +2138,18 @@ export default function EzInterview() {
                 {(expandedDay === 0 || jobData?.companyInfo) && <CulturePanel companyInfo={jobData?.companyInfo} jobData={jobData} />}
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {plan[expandedDay].items?.map((item, i) => (
-                    <div key={i} className="ez-plan-item" style={{ ...card, marginBottom: 0 }}>
+                  {plan[expandedDay].items?.map((item, i) => {
+                    // Couleurs distinctes par type d'item
+                    const typeColors = {
+                      memo: { border: T.accentBd, bg: "rgba(124,92,252,0.04)", icon: T.accent },
+                      video: { border: T.orangeBd, bg: "rgba(251,146,60,0.04)", icon: T.orange },
+                      exercise: { border: T.purpleBd, bg: "rgba(167,139,250,0.04)", icon: T.purple },
+                      note: { border: T.border, bg: T.bgGlass, icon: T.muted },
+                      quiz: { border: T.warnBd, bg: "rgba(251,191,36,0.04)", icon: T.warn },
+                    };
+                    const tc = typeColors[item.type] || typeColors.note;
+                    return (
+                    <div key={i} className="ez-plan-item" style={{ ...card, marginBottom: 0, borderLeft: `3px solid ${tc.border}`, background: tc.bg }}>
                       <div onClick={() => setExpandedItems(p => ({ ...p, [i]: !p[i] }))} style={{ cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>{item.title}</h3>
@@ -2117,7 +2189,8 @@ export default function EzInterview() {
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* ─── Day validation button ─── */}

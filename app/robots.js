@@ -4,9 +4,15 @@ export default function robots() {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/admin"],
+        disallow: ["/api/", "/admin", "/auth/"],
+      },
+      {
+        userAgent: "Googlebot",
+        allow: "/",
+        disallow: ["/api/", "/admin", "/auth/"],
       },
     ],
     sitemap: "https://entretienzen.com/sitemap.xml",
+    host: "https://entretienzen.com",
   };
 }

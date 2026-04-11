@@ -139,6 +139,39 @@ Google met **1 a 4 semaines** pour indexer un nouveau site. Voici comment accele
 - Dans Search Console > "Couverture" tu verras quelles pages sont indexees
 - Recherche `site:entretienzen.com` sur Google pour voir les pages indexees
 
+### Changer le logo/icone dans les resultats Google :
+
+Google utilise le **favicon** du site comme icone dans les resultats de recherche.
+Le code est deja configure pour utiliser le bon fichier. Voici comment le personnaliser :
+
+1. **Le favicon est deja genere** dans `/public/` :
+   - `favicon.ico` (32x32) — icone navigateur
+   - `icon-192.png` (192x192) — icone Google Search
+   - `icon-512.png` (512x512) — icone haute resolution
+   - `apple-touch-icon.png` (180x180) — icone iPhone/iPad
+
+2. **Pour changer le logo** : remplace ces fichiers dans `/public/` par tes propres images.
+   - Le format doit etre **PNG** (fond transparent OK)
+   - Taille minimale recommandee par Google : **48x48 px**
+   - Taille ideale : **512x512 px** (Google redimensionne)
+   - Le fichier le plus important est `icon-512.png` — c'est celui utilise par Google et le JSON-LD
+
+3. **Forcer Google a re-scanner le favicon** :
+   - Va dans **Google Search Console > Inspection de l'URL**
+   - Entre `https://entretienzen.com`
+   - Clique **"Demander l'indexation"**
+   - Google mettra a jour le favicon dans les resultats sous **quelques jours a 2 semaines**
+
+4. **Pour un logo custom** (ex: depuis Canva ou Figma) :
+   - Cree un logo carre 512x512 avec fond de couleur (pas transparent pour Google)
+   - Exporte en PNG
+   - Renomme-le `icon-512.png` et mets-le dans `/public/`
+   - Redimensionne aussi en 192x192 → `icon-192.png`, 180x180 → `apple-touch-icon.png`, 32x32 → `favicon-32.png`
+   - Pour generer le `.ico` : utilise https://favicon.io/favicon-converter/
+
+> **Note** : Google peut mettre 2-4 semaines pour afficher le nouveau favicon dans les resultats.
+> C'est normal, il n'y a pas moyen d'accelerer ce processus.
+
 ---
 
 ## 3. Connexion Gmail (Google OAuth)
