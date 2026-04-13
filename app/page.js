@@ -4,11 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 import { signupSchema, profileSchema, jobUrlSchema, cvInputSchema, feedbackSchema, reportSchema, zodFirstError } from "./lib/validation";
 
 // ─── Supabase browser client ───
-// PKCE flow = plus sécurisé et compatible tous navigateurs (Brave, Safari, Firefox, Chrome)
+// Flow implicite : simple, fiable, compatible tous navigateurs
 const supabase = typeof window !== "undefined"
   ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
       auth: {
-        flowType: "pkce",
+        flowType: "implicit",
         detectSessionInUrl: true,
         autoRefreshToken: true,
         persistSession: true,
@@ -593,7 +593,9 @@ function LandingPage({ user, onLogin }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          // Flow implicite : redirige directement vers la page principale (pas /auth/callback)
+          // Le token arrive dans le hash (#access_token=...) et Supabase le détecte automatiquement
+          redirectTo: window.location.origin,
         }
       });
       if (error) throw error;
@@ -1296,11 +1298,10 @@ export default function EzInterview() {
         const createdAt = new Date(currentUser.created_at);
         const hoursSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
 
-        // Charge profile + plans LÉGERS + feedback/check TOUS EN PARALLÈLE (3x plus rapide)
-        // Note: plans-lite retourne SANS plan_data (trop lourd), plan_data charge à la demande quand user clique
+        // Charge profile + plans + feedback/check TOUS EN PARALLÈLE
         const [profileResult, plansResult, fbCheckResult] = await Promise.allSettled([
           safeFetch("/api/profile", { headers }),
-          safeFetch("/api/plans-lite", { headers }),  // Métadonnées légères, pas plan_data
+          safeFetch("/api/plans", { headers }),
           hoursSinceCreation > 48 ? safeFetch("/api/feedback/check", { headers }) : Promise.resolve(null),
         ]);
 
@@ -1353,63 +1354,19 @@ export default function EzInterview() {
       if (mounted) setAuthLoading(false);
     };
 
-    // PKCE : si ?code= est dans l'URL (retour OAuth), on l'échange côté client
-    const exchangeCodeIfPresent = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
+    // Nettoyer tout ?code= résiduel dans l'URL (legacy PKCE)
+    if (window.location.search.includes("code=")) {
+      window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+    }
 
-      if (code) {
-        console.log("🔐 PKCE: Code detected in URL:", code.substring(0, 10) + "...");
-
-        try {
-          console.log("🔐 PKCE: Attempting code exchange...");
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-          // TOUJOURS nettoyer l'URL IMMÉDIATEMENT (avant même de traiter l'erreur)
-          console.log("🔐 PKCE: Cleaning URL...");
-          window.history.replaceState({}, "", window.location.pathname + window.location.hash);
-
-          if (error) {
-            console.error("❌ Code exchange error:", error.message, error);
-            setAuthLoading(false);
-            return;
-          }
-
-          if (data?.user) {
-            console.log("✅ PKCE: Code exchanged successfully, user:", data.user.email);
-            await handleUser(data.user);
-          } else {
-            console.warn("⚠️ Code exchanged but no user returned. Data:", data);
-            setAuthLoading(false);
-          }
-        } catch (err) {
-          console.error("❌ PKCE exchange error:", err.message, err);
-          // Nettoyer l'URL même en cas d'erreur
-          console.log("🔐 PKCE: Cleaning URL after error...");
-          window.history.replaceState({}, "", window.location.pathname + window.location.hash);
-
-          // Vérifier si une session a quand même été établie (parfois Supabase crée la session malgré l'erreur)
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) {
-            console.log("✅ PKCE: Session found despite error, user:", session.user.email);
-            await handleUser(session.user);
-          } else {
-            setAuthLoading(false);
-          }
-        }
-      }
-    };
-    exchangeCodeIfPresent();
-
-    // Écoute les changements d'auth (couvre TOUS les cas : session existante, OAuth redirect, email login)
+    // Écoute les changements d'auth (flow implicite : le token arrive dans le hash, Supabase le détecte automatiquement)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
       if (event === "INITIAL_SESSION") {
         if (session?.user) {
           await handleUser(session.user);
-        } else if (!new URLSearchParams(window.location.search).has("code")) {
-          // Pas de session ET pas de code à échanger → pas connecté
+        } else {
           setAuthLoading(false);
         }
       } else if (event === "SIGNED_IN" && session?.user) {
@@ -1430,7 +1387,7 @@ export default function EzInterview() {
       }
     });
 
-    // Fallback: si onAuthStateChange ne fire pas dans les 5s (edge case navigateur strict comme Brave)
+    // Fallback: si onAuthStateChange ne fire pas dans les 4s (navigateur strict)
     const timeout = setTimeout(async () => {
       if (!userLoaded && mounted) {
         try {
@@ -1444,7 +1401,7 @@ export default function EzInterview() {
           if (mounted) setAuthLoading(false);
         }
       }
-    }, 5000);
+    }, 4000);
 
     return () => {
       mounted = false;
