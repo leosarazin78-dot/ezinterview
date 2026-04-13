@@ -1359,31 +1359,43 @@ export default function EzInterview() {
       const code = params.get("code");
 
       if (code) {
-        console.log("PKCE: Exchanging code for session...");
+        console.log("🔐 PKCE: Code detected in URL:", code.substring(0, 10) + "...");
+
         try {
+          console.log("🔐 PKCE: Attempting code exchange...");
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
           // TOUJOURS nettoyer l'URL IMMÉDIATEMENT (avant même de traiter l'erreur)
+          console.log("🔐 PKCE: Cleaning URL...");
           window.history.replaceState({}, "", window.location.pathname + window.location.hash);
 
           if (error) {
-            console.error("Code exchange error:", error.message);
+            console.error("❌ Code exchange error:", error.message, error);
             setAuthLoading(false);
             return;
           }
 
           if (data?.user) {
-            console.log("PKCE: Code exchanged successfully, session established");
+            console.log("✅ PKCE: Code exchanged successfully, user:", data.user.email);
             await handleUser(data.user);
           } else {
-            console.warn("Code exchanged but no user returned");
+            console.warn("⚠️ Code exchanged but no user returned. Data:", data);
             setAuthLoading(false);
           }
         } catch (err) {
-          console.error("PKCE exchange error:", err);
+          console.error("❌ PKCE exchange error:", err.message, err);
           // Nettoyer l'URL même en cas d'erreur
+          console.log("🔐 PKCE: Cleaning URL after error...");
           window.history.replaceState({}, "", window.location.pathname + window.location.hash);
-          setAuthLoading(false);
+
+          // Vérifier si une session a quand même été établie (parfois Supabase crée la session malgré l'erreur)
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            console.log("✅ PKCE: Session found despite error, user:", session.user.email);
+            await handleUser(session.user);
+          } else {
+            setAuthLoading(false);
+          }
         }
       }
     };
