@@ -14,12 +14,9 @@ export default function MentionsLegales() {
       <h2 style={h2}>Éditeur du site</h2>
       <p style={p}>
         EntretienZen<br />
-        {/* À COMPLÉTER avec tes infos */}
-        Responsable de la publication : [Ton nom complet]<br />
-        Adresse : [Ton adresse ou celle de ton entreprise]<br />
-        Email : admin@entretienzen.com<br />
-        Statut : [Auto-entrepreneur / SAS / etc.]<br />
-        SIRET : [Ton numéro SIRET]
+        Responsable de la publication : Léo Sarazin<br />
+        Email : contact@entretienzen.com<br />
+        Site : https://entretienzen.com
       </p>
 
       <h2 style={h2}>Hébergement</h2>

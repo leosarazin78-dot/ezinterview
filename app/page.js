@@ -1286,11 +1286,16 @@ export default function EzInterview() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
         const headers = { "Authorization": `Bearer ${session.access_token}` };
-        // Charge profil + plans EN PARALLÈLE (2x plus rapide)
-        const [profileResult, plansResult] = await Promise.allSettled([
+        const createdAt = new Date(currentUser.created_at);
+        const hoursSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
+
+        // Charge profile + plans + feedback/check TOUS EN PARALLÈLE (3x plus rapide que cascade)
+        const [profileResult, plansResult, fbCheckResult] = await Promise.allSettled([
           safeFetch("/api/profile", { headers }),
           safeFetch("/api/plans", { headers }),
+          hoursSinceCreation > 48 ? safeFetch("/api/feedback/check", { headers }) : Promise.resolve(null),
         ]);
+
         if (profileResult.status === "fulfilled" && !profileResult.value.profileComplete) {
           const p = profileResult.value;
           setProfileData({ firstName: p.firstName || "", lastName: p.lastName || "", phone: p.phone || "", city: p.city || "", birthYear: p.birthYear || "" });
@@ -1300,20 +1305,15 @@ export default function EzInterview() {
           setSavedPlans(plansResult.value);
         }
 
-        // Vérifier le trial 48h : si le compte a plus de 48h ET aucun feedback
-        const createdAt = new Date(currentUser.created_at);
-        const hoursSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
-        if (hoursSinceCreation > 48) {
-          try {
-            const fbCheck = await safeFetch("/api/feedback/check", { headers });
-            if (fbCheck?.hasFeedback) {
-              setHasFeedback(true);
-              setTrialExpired(false);
-            } else {
-              setTrialExpired(true);
-              setHasFeedback(false);
-            }
-          } catch { setTrialExpired(false); }
+        if (hoursSinceCreation > 48 && fbCheckResult.status === "fulfilled") {
+          const fbCheck = fbCheckResult.value;
+          if (fbCheck?.hasFeedback) {
+            setHasFeedback(true);
+            setTrialExpired(false);
+          } else {
+            setTrialExpired(true);
+            setHasFeedback(false);
+          }
         }
       }
     } catch (e) { console.error("Session error:", e); }

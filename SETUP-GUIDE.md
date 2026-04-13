@@ -58,18 +58,18 @@ Supabase utilise une variable "Site URL" pour construire les liens dans les emai
    - Va dans **Authentication > SMTP Settings**
    - Active **"Enable Custom SMTP"**
    - Remplis :
-     - **Sender email** : `admin@entretienzen.com`
+     - **Sender email** : `contact@entretienzen.com`
      - **Sender name** : `EntretienZen`
      - **Host** : SMTP de ton fournisseur email (ex: `smtp.gmail.com` si Google Workspace, ou le SMTP de ton hébergeur de domaine)
      - **Port** : `465` (SSL) ou `587` (TLS)
-     - **Username** : `admin@entretienzen.com`
+     - **Username** : `contact@entretienzen.com`
      - **Password** : le mot de passe de l'adresse ou un "App Password"
    - **Sauvegarde**
 
-   > Avec cette config, les emails arriveront de "EntretienZen <admin@entretienzen.com>"
+   > Avec cette config, les emails arriveront de "EntretienZen <contact@entretienzen.com>"
    > au lieu de "Supabase Auth <noreply@mail.app.supabase.io>"
 
-   Si tu utilises Google Workspace pour admin@entretienzen.com :
+   Si tu utilises Google Workspace pour contact@entretienzen.com :
    1. Va sur https://myaccount.google.com/security
    2. Assure-toi que la **verification en 2 etapes** est activee
    3. Va sur https://myaccount.google.com/apppasswords
@@ -202,8 +202,8 @@ Par defaut, Google affiche l'ID du projet (ex: "prj-12345"). Il faut le changer 
    - **App home page** : `https://entretienzen.com`
    - **App privacy policy** : `https://entretienzen.com` (ou une page dediee)
    - **App terms of service** : `https://entretienzen.com`
-   - User support email : ton email
-   - Developer contact : ton email
+   - User support email : `contact@entretienzen.com`
+   - Developer contact : `contact@entretienzen.com`
 4. **Scopes** (informations demandees a l'utilisateur) — ne coche QUE :
    - `email` — pour identifier l'utilisateur
    - `profile` — pour le prenom/nom
@@ -262,7 +262,7 @@ NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=ta-valeur-ici
 ANTHROPIC_API_KEY=sk-ant-...
 
 # Admin (liste des emails admin, separes par des virgules)
-ADMIN_EMAILS=leo.sarazin78@gmail.com
+ADMIN_EMAILS=contact@entretienzen.com
 
 # (Vercel Analytics = automatique, pas de variable necessaire)
 # (Umami supprime — supprimer NEXT_PUBLIC_UMAMI_URL et NEXT_PUBLIC_UMAMI_WEBSITE_ID si encore presentes)

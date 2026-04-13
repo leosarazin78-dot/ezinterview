@@ -43,7 +43,7 @@ export default function CGU() {
 
       <h2 style={h2}>7. Suppression de compte</h2>
       <p style={p}>
-        L'utilisateur peut demander la suppression de son compte et de toutes ses données à tout moment en envoyant un email à admin@entretienzen.com. La suppression est effective sous 30 jours. L'éditeur se réserve le droit de suspendre ou supprimer un compte en cas de violation des présentes CGU, sans préavis.
+        L'utilisateur peut demander la suppression de son compte et de toutes ses données à tout moment en envoyant un email à contact@entretienzen.com. La suppression est effective sous 30 jours. L'éditeur se réserve le droit de suspendre ou supprimer un compte en cas de violation des présentes CGU, sans préavis.
       </p>
 
       <h2 style={h2}>8. Disponibilité</h2>
@@ -63,7 +63,7 @@ export default function CGU() {
 
       <h2 style={h2}>11. Contact</h2>
       <p style={p}>
-        Pour toute question relative aux présentes CGU : admin@entretienzen.com
+        Pour toute question relative aux présentes CGU : contact@entretienzen.com
       </p>
 
       <p style={{ ...p, marginTop: 48, textAlign: "center" }}>
