@@ -1,28 +1,45 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
 // OAuth callback route (PKCE flow).
-// Le serveur échange le code auth contre une session, puis redirige vers la page principale.
-// Compatible avec tous les navigateurs (Brave, Safari, Firefox, Chrome).
+// Reçoit le code auth depuis Supabase et redirige vers la page principale
+// Le client PKCE stocke le code_verifier dans localStorage et échange le code
 export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const error = requestUrl.searchParams.get("error");
+  const errorDescription = requestUrl.searchParams.get("error_description");
   const origin = requestUrl.origin;
 
+  // Log pour debugging
+  if (code) console.log("Auth callback: Received code, redirecting to main app");
+  if (error) console.error("Auth callback error:", error, errorDescription);
+
   if (code) {
-    // Échange le code côté serveur via Supabase
-    // Le client PKCE stocke le code_verifier dans localStorage,
-    // donc on redirige simplement vers la page principale avec le code
-    // et le SDK client fera l'échange automatiquement
-    const redirectUrl = new URL(origin);
-    redirectUrl.searchParams.set("code", code);
-    // Copie les autres params auth nécessaires au PKCE
+    // Construit une URL avec le code EN PARAMETRE DE QUERY (pas en hash)
+    // Le SDK client Supabase PKCE extraira le code et l'échangera
+    const callbackUrl = new URL(origin);
+
+    // Ajoute le code ET tous les autres paramètres auth
+    callbackUrl.searchParams.set("code", code);
+
+    // Copie les autres params nécessaires pour PKCE (state, etc.)
     for (const [key, value] of requestUrl.searchParams.entries()) {
-      if (key !== "code") redirectUrl.searchParams.set(key, value);
+      if (key !== "code" && !callbackUrl.searchParams.has(key)) {
+        callbackUrl.searchParams.set(key, value);
+      }
     }
-    return NextResponse.redirect(redirectUrl.toString());
+
+    console.log("Redirecting to:", callbackUrl.toString());
+    return NextResponse.redirect(callbackUrl.toString());
   }
 
-  // Pas de code = on redirige vers l'accueil
+  // Erreur OAuth ou pas de code
+  if (error) {
+    const errorUrl = new URL(origin);
+    errorUrl.searchParams.set("auth_error", error);
+    return NextResponse.redirect(errorUrl.toString());
+  }
+
+  // Pas de code ni d'erreur = on redirige vers l'accueil
   return NextResponse.redirect(origin);
 }

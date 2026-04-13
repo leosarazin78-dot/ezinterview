@@ -1356,19 +1356,34 @@ export default function EzInterview() {
     // PKCE : si ?code= est dans l'URL (retour OAuth), on l'échange côté client
     const exchangeCodeIfPresent = async () => {
       const params = new URLSearchParams(window.location.search);
-      if (params.has("code")) {
+      const code = params.get("code");
+
+      if (code) {
+        console.log("PKCE: Exchanging code for session...");
         try {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(params.get("code"));
-          if (error) console.error("Code exchange error:", error.message);
-          // Nettoyer l'URL après échange (retire ?code=...)
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+          // TOUJOURS nettoyer l'URL IMMÉDIATEMENT (avant même de traiter l'erreur)
           window.history.replaceState({}, "", window.location.pathname + window.location.hash);
-          if (data?.user && !userLoaded) {
+
+          if (error) {
+            console.error("Code exchange error:", error.message);
+            setAuthLoading(false);
+            return;
+          }
+
+          if (data?.user) {
+            console.log("PKCE: Code exchanged successfully, session established");
             await handleUser(data.user);
+          } else {
+            console.warn("Code exchanged but no user returned");
+            setAuthLoading(false);
           }
         } catch (err) {
           console.error("PKCE exchange error:", err);
           // Nettoyer l'URL même en cas d'erreur
           window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+          setAuthLoading(false);
         }
       }
     };
