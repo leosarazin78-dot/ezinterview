@@ -191,10 +191,10 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
         />
 
-        {/* Google Analytics (si configuré) */}
-        {GA_ID && (
+        {/* Google Analytics (si configuré — chargé APRÈS le rendu pour ne pas bloquer) */}
+        {GA_ID && GA_ID.startsWith("G-") && (
           <>
-            <Script id="ga-consent-default" strategy="beforeInteractive">
+            <Script id="ga-consent-default" strategy="afterInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
@@ -204,8 +204,8 @@ export default function RootLayout({ children }) {
                 }
               `}
             </Script>
-            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
-            <Script id="google-analytics" strategy="afterInteractive">
+            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="lazyOnload" />
+            <Script id="google-analytics" strategy="lazyOnload">
               {`
                 window.__GA_ID = '${GA_ID}';
                 window.dataLayer = window.dataLayer || [];

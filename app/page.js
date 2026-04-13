@@ -1270,10 +1270,13 @@ export default function EzInterview() {
   }, [user, plan]);
 
   // Update hash when view/step changes + track in analytics
+  // IMPORTANT : landing = URL propre (pas de hash)
   useEffect(() => {
     let newPath = window.location.pathname;
-    if (view === "landing") { if (window.location.hash !== "") window.history.replaceState(null, "", window.location.pathname); }
-    else if (step === "dashboard") { window.history.replaceState(null, "", "#dashboard"); newPath += "#dashboard"; }
+    if (view === "landing") {
+      // Landing = URL propre, supprimer tout hash
+      if (window.location.hash !== "") window.history.replaceState(null, "", window.location.pathname);
+    } else if (step === "dashboard") { window.history.replaceState(null, "", "#dashboard"); newPath += "#dashboard"; }
     else if (step === "input") { window.history.replaceState(null, "", "#prepare"); newPath += "#prepare"; }
     else if (step === "plan") { window.history.replaceState(null, "", "#plan"); newPath += "#plan"; }
     else if (step === "bilan") { window.history.replaceState(null, "", "#bilan"); newPath += "#bilan"; }
@@ -1284,16 +1287,20 @@ export default function EzInterview() {
   }, [view, step]);
 
   // Charge le profil et les plans d'un utilisateur connecté
+  // IMPORTANT : ne change PAS la vue automatiquement — la landing reste par défaut
   const loadUserData = async (currentUser) => {
     setUser(currentUser);
     setDashboardLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
-        // Ne change la vue que APRÈS avoir une session valide
+        // Ne changer la vue vers dashboard que si le hash l'exige explicitement
         const hash = window.location.hash.replace("#", "");
-        if (hash === "prepare") { setView("dashboard"); setStep("input"); }
-        else { setView("dashboard"); setStep("dashboard"); }
+        if (hash === "dashboard") { setView("dashboard"); setStep("dashboard"); }
+        else if (hash === "prepare") { setView("dashboard"); setStep("input"); }
+        else if (hash === "plan") { setView("dashboard"); setStep("plan"); }
+        else if (hash === "bilan") { setView("dashboard"); setStep("bilan"); }
+        // Sinon : PAS de changement de vue → reste sur landing
         const headers = { "Authorization": `Bearer ${session.access_token}` };
         const createdAt = new Date(currentUser.created_at);
         const hoursSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
@@ -1623,8 +1630,8 @@ export default function EzInterview() {
     }
   };
 
-  // Show loading during initial auth check OR during login transition (view=dashboard but user not yet loaded)
-  if (authLoading || (view === "dashboard" && !user)) return <Spin text="Chargement..." />;
+  // Show loading UNIQUEMENT pendant le check auth initial (pas pour la landing)
+  if (authLoading && view !== "landing") return <Spin text="Chargement..." />;
 
   if (view === "landing" || !user) {
     return <LandingPage user={user} onLogin={() => { setView("dashboard"); setStep("dashboard"); }} />;
