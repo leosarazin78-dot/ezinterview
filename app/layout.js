@@ -164,8 +164,6 @@ const jsonLdBreadcrumb = {
 };
 
 export default function RootLayout({ children }) {
-  const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "";
-
   return (
     <html lang="fr">
       <head>
@@ -191,31 +189,6 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
         />
 
-        {/* Google Analytics (si configuré — chargé APRÈS le rendu pour ne pas bloquer) */}
-        {GA_ID && GA_ID.startsWith("G-") && (
-          <>
-            <Script id="ga-consent-default" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('consent', 'default', { analytics_storage: 'denied' });
-                if (typeof localStorage !== 'undefined' && localStorage.getItem('cookie-consent') === 'accepted') {
-                  gtag('consent', 'update', { analytics_storage: 'granted' });
-                }
-              `}
-            </Script>
-            <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="lazyOnload" />
-            <Script id="google-analytics" strategy="lazyOnload">
-              {`
-                window.__GA_ID = '${GA_ID}';
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${GA_ID}', { page_path: window.location.pathname, anonymize_ip: true });
-              `}
-            </Script>
-          </>
-        )}
       </head>
       <body style={{ margin: 0, padding: 0, background: "#0A0A0F" }}>
         {children}

@@ -1280,10 +1280,6 @@ export default function EzInterview() {
     else if (step === "input") { window.history.replaceState(null, "", "#prepare"); newPath += "#prepare"; }
     else if (step === "plan") { window.history.replaceState(null, "", "#plan"); newPath += "#plan"; }
     else if (step === "bilan") { window.history.replaceState(null, "", "#bilan"); newPath += "#bilan"; }
-    // Track page view in GA if available
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("config", window.__GA_ID || "", { page_path: newPath });
-    }
   }, [view, step]);
 
   // Charge le profil et les plans d'un utilisateur connecté
