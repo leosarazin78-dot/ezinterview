@@ -19,6 +19,7 @@ export const signupSchema = z.object({
 export const profileSchema = z.object({
   firstName: z.string().min(1, "Prénom obligatoire").max(50, "Prénom trop long"),
   lastName: z.string().min(1, "Nom obligatoire").max(50, "Nom trop long"),
+  username: z.string().max(50, "Nom d'utilisateur trop long").optional().default(""),
   phone: z.string().max(20).optional().default(""),
   city: z.string().max(100).optional().default(""),
   birthYear: z.string().max(4).optional().default(""),
@@ -90,6 +91,7 @@ export const analyzeJobServerSchema = z.object({
 export const profileUpdateSchema = z.object({
   firstName: z.string().min(1).max(50),
   lastName: z.string().min(1).max(50),
+  username: z.string().max(50).optional().default(""),
   phone: z.string().max(20).optional().default(""),
   city: z.string().max(100).optional().default(""),
   birthYear: z.string().max(4).optional().default(""),

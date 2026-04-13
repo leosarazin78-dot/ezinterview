@@ -42,7 +42,6 @@ export async function POST(request) {
       type: type,
       message: message.trim().slice(0, 2000),
       rating: rating || null,   // 1-5
-      plan_id: planId || null,
     };
 
     console.log("Inserting feedback:", feedbackData);

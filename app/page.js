@@ -520,7 +520,7 @@ function LandingPage({ user, onLogin }) {
   const [signupStep, setSignupStep] = useState(1); // 1=email+mdp, 2=profil
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [signupProfile, setSignupProfile] = useState({ firstName: "", lastName: "", phone: "", city: "", birthYear: "" });
+  const [signupProfile, setSignupProfile] = useState({ firstName: "", lastName: "", username: "", phone: "", city: "", birthYear: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -1078,6 +1078,10 @@ function LandingPage({ user, onLogin }) {
                     </div>
                   </div>
                   <div>
+                    <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 3 }}>Nom d'utilisateur (affiché en haut du dashboard)</label>
+                    <input type="text" placeholder="Jean (optionnel)" value={signupProfile.username} onChange={(e) => setSignupProfile(p => ({ ...p, username: e.target.value }))} style={inp} />
+                  </div>
+                  <div>
                     <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 3 }}>Téléphone</label>
                     <input type="tel" placeholder="06 12 34 56 78" value={signupProfile.phone} onChange={(e) => setSignupProfile(p => ({ ...p, phone: e.target.value }))} style={inp} />
                   </div>
@@ -1111,14 +1115,15 @@ function LandingPage({ user, onLogin }) {
 }
 
 // ─── Plans Dashboard ───
-function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, loadingPlan, dashboardLoading, user, onLogout }) {
+function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, loadingPlan, dashboardLoading, user, onLogout, username }) {
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const greeting = username ? `Bonjour ${username}` : "Bienvenue";
 
   return (
     <div style={card}>
       <div className="ez-dashboard-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text }}>Mes préparations</h2>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text }}>{greeting} 👋</h2>
           <p style={{ margin: "4px 0 0", fontSize: 12, color: T.muted }}>Continue ou crée une nouvelle</p>
         </div>
         <button onClick={onNew} style={btnP}>Nouveau plan</button>
@@ -1245,7 +1250,8 @@ export default function EzInterview() {
   const [resetMessage, setResetMessage] = useState("");
 
   const [showProfileForm, setShowProfileForm] = useState(false);
-  const [profileData, setProfileData] = useState({ firstName: "", lastName: "", phone: "", city: "", birthYear: "" });
+  const [profileData, setProfileData] = useState({ firstName: "", lastName: "", username: "", phone: "", city: "", birthYear: "" });
+  const [username, setUsername] = useState(""); // Global username pour afficher en haut
 
   // ─── Hash-based routing ───
   useEffect(() => {
@@ -1279,27 +1285,34 @@ export default function EzInterview() {
   const loadUserData = async (currentUser) => {
     setUser(currentUser);
     setDashboardLoading(true);
-    const hash = window.location.hash.replace("#", "");
-    if (hash === "prepare") { setView("dashboard"); setStep("input"); }
-    else { setView("dashboard"); setStep("dashboard"); }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
+        // Ne change la vue que APRÈS avoir une session valide
+        const hash = window.location.hash.replace("#", "");
+        if (hash === "prepare") { setView("dashboard"); setStep("input"); }
+        else { setView("dashboard"); setStep("dashboard"); }
         const headers = { "Authorization": `Bearer ${session.access_token}` };
         const createdAt = new Date(currentUser.created_at);
         const hoursSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
 
-        // Charge profile + plans + feedback/check TOUS EN PARALLÈLE (3x plus rapide que cascade)
+        // Charge profile + plans LÉGERS + feedback/check TOUS EN PARALLÈLE (3x plus rapide)
+        // Note: plans-lite retourne SANS plan_data (trop lourd), plan_data charge à la demande quand user clique
         const [profileResult, plansResult, fbCheckResult] = await Promise.allSettled([
           safeFetch("/api/profile", { headers }),
-          safeFetch("/api/plans", { headers }),
+          safeFetch("/api/plans-lite", { headers }),  // Métadonnées légères, pas plan_data
           hoursSinceCreation > 48 ? safeFetch("/api/feedback/check", { headers }) : Promise.resolve(null),
         ]);
 
-        if (profileResult.status === "fulfilled" && !profileResult.value.profileComplete) {
+        if (profileResult.status === "fulfilled") {
           const p = profileResult.value;
-          setProfileData({ firstName: p.firstName || "", lastName: p.lastName || "", phone: p.phone || "", city: p.city || "", birthYear: p.birthYear || "" });
-          setShowProfileForm(true);
+          // Charger le username pour affichage en haut
+          if (p.username) setUsername(p.username);
+
+          if (!profileResult.value.profileComplete) {
+            setProfileData({ firstName: p.firstName || "", lastName: p.lastName || "", username: p.username || "", phone: p.phone || "", city: p.city || "", birthYear: p.birthYear || "" });
+            setShowProfileForm(true);
+          }
         }
         if (plansResult.status === "fulfilled") {
           setSavedPlans(plansResult.value);
@@ -1315,8 +1328,17 @@ export default function EzInterview() {
             setHasFeedback(false);
           }
         }
+      } else {
+        // Pas de token valide → rester sur la landing page
+        setView("landing");
+        setStep("input");
       }
-    } catch (e) { console.error("Session error:", e); }
+    } catch (e) {
+      console.error("Session error:", e);
+      // En cas d'erreur → rester sur landing
+      setView("landing");
+      setStep("input");
+    }
     setDashboardLoading(false);
   };
 
@@ -1794,6 +1816,7 @@ export default function EzInterview() {
             onDelete={handleDeletePlan}
             deletingPlan={deletingPlan}
             user={user}
+            username={username}
             onLogout={handleLogout}
           />
         </div>
@@ -2444,6 +2467,11 @@ export default function EzInterview() {
             </div>
 
             <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Nom d'utilisateur (affiché en haut du dashboard)</label>
+              <input type="text" placeholder="Jean (optionnel)" value={profileData.username} onChange={(e) => setProfileData(p => ({ ...p, username: e.target.value }))} style={inp} />
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
               <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.muted, marginBottom: 4 }}>Téléphone</label>
               <input type="tel" placeholder="06 12 34 56 78" value={profileData.phone} onChange={(e) => setProfileData(p => ({ ...p, phone: e.target.value }))} style={inp} />
             </div>
@@ -2468,6 +2496,8 @@ export default function EzInterview() {
                   headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session?.access_token}` },
                   body: JSON.stringify(profileData),
                 });
+                // Mettre à jour le username global si changé
+                if (profileData.username) setUsername(profileData.username);
                 setShowProfileForm(false);
               } catch (err) {
                 console.error("Profile save error:", err);

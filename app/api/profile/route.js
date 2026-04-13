@@ -17,6 +17,7 @@ export async function GET(request) {
       email: user.email,
       firstName: user.user_metadata?.firstName || "",
       lastName: user.user_metadata?.lastName || "",
+      username: user.user_metadata?.username || "",
       phone: user.user_metadata?.phone || "",
       city: user.user_metadata?.city || "",
       birthYear: user.user_metadata?.birthYear || "",
@@ -47,7 +48,7 @@ export async function PUT(request) {
       return Response.json({ error: "Données invalides", details: err.errors?.map(e => e.message) }, { status: 400 });
     }
 
-    const { firstName, lastName, phone, city, birthYear } = validated;
+    const { firstName, lastName, username, phone, city, birthYear } = validated;
 
     if (!firstName?.trim() || !lastName?.trim()) {
       return Response.json({ error: "Nom et prénom obligatoires" }, { status: 400 });
@@ -58,6 +59,7 @@ export async function PUT(request) {
         ...user.user_metadata,
         firstName: firstName.trim().slice(0, 50),
         lastName: lastName.trim().slice(0, 50),
+        username: (username || "").trim().slice(0, 50),
         phone: (phone || "").trim().slice(0, 20),
         city: (city || "").trim().slice(0, 100),
         birthYear: birthYear || null,
