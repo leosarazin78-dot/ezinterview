@@ -14,7 +14,7 @@ export default function Confidentialite() {
       <h2 style={h2}>1. Responsable du traitement</h2>
       <p style={p}>
         EntretienZen, [ton adresse].<br />
-        Contact : contact@prepentretien.fr
+        Contact : admin@entretienzen.com
       </p>
 
       <h2 style={h2}>2. Données collectées</h2>
@@ -78,7 +78,7 @@ export default function Confidentialite() {
         <strong>Droit de retrait du consentement</strong> : retirer votre consentement à tout moment.
       </p>
       <p style={p}>
-        Pour exercer ces droits, envoyez un email à <strong>contact@prepentretien.fr</strong>. Nous répondrons sous 30 jours.
+        Pour exercer ces droits, envoyez un email à <strong>admin@entretienzen.com</strong>. Nous répondrons sous 30 jours.
       </p>
 
       <h2 style={h2}>9. Cookies</h2>

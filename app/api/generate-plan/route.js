@@ -273,21 +273,38 @@ FORMAT JSON — retourne UNIQUEMENT ce tableau :
 ]
 
 RÈGLES DE CONTENU — TRÈS IMPORTANT :
-1. EXACTEMENT ${planDays} jours (ni plus, ni moins), ${ic.itemsPerDay} items chacun. Le plan DOIT couvrir les ${planDays} jours complets.
-2. CONTENU RICHE : Chaque note doit être COMPLÈTE et DÉTAILLÉE. Le summary = 4-6 phrases avec exemples. Les sections = 3-4 sous-parties avec 3-4 points DÉTAILLÉS chacune. Les keyPoints = 4-6 points développés. Le candidat doit pouvoir apprendre SANS autre source.
-3. SOUS-CHAPITRES : Utilise le champ "sections" pour découper chaque note en 3-4 sous-parties avec un "heading" clair et 3-4 "points" développés (2 phrases chacun). Ça rend le contenu scannable ET complet.
-4. PAS DE DURÉE : N'inclus PAS de champ "duration" dans les items. Le candidat avance à son rythme.
+
+⚠️ NOMBRE DE JOURS — RÈGLE ABSOLUE ⚠️
+Le tableau JSON DOIT contenir EXACTEMENT ${planDays} objets jour (day: 1 à day: ${planDays}).
+PAS ${planDays - 1}. PAS ${planDays + 1}. EXACTEMENT ${planDays}.
+Si tu génères moins de ${planDays} jours, le plan est INVALIDE et sera rejeté.
+Vérifie que le dernier élément du tableau a "day": ${planDays}.
+
+1. ${ic.itemsPerDay} items par jour. Le plan couvre les ${planDays} jours complets du jour 1 au jour ${planDays}.
+2. CONTENU TECHNIQUE ET PROFOND — PAS DE BLABLA :
+   - Pour les entretiens techniques : inclus des questions d'entretien RÉELLES et CONCRÈTES (ex: "Expliquez la différence entre X et Y", "Comment résoudriez-vous ce problème ?", "Quel est le Big-O de cet algorithme ?")
+   - Chaque note doit contenir des EXEMPLES DE CODE, des SCHÉMAS MENTAUX, des CAS CONCRETS — pas des généralités
+   - Les exercices doivent être des VRAIS exercices techniques : debugging, refactoring, conception, implémentation
+   - summary = 4-6 phrases TECHNIQUES avec exemples concrets et cas réels
+   - sections = 3-4 sous-parties avec 3-4 points DÉTAILLÉS et TECHNIQUES (pas de phrases vagues)
+   - keyPoints = 4-6 points ACTIONABLES que le candidat peut utiliser en entretien
+3. SOUS-CHAPITRES : Utilise "sections" pour découper en 3-4 sous-parties avec "heading" clair et 3-4 "points" développés (2 phrases min chacun, EXEMPLES CONCRETS). Scannable ET profond.
+4. PAS DE DURÉE : N'inclus PAS de champ "duration".
 5. Chaque jour finit par un quiz (${ic.quizQuestions} questions)
-6. QUIZ DIFFÉRENCIÉS — CRITIQUE : Les miniQuiz intégrés aux notes testent la COMPRÉHENSION IMMÉDIATE du concept étudié (définitions, cas simples). Le quiz de fin de journée est DIFFÉRENT : il teste la MISE EN SITUATION et l'APPLICATION des concepts vus dans la journée (scénarios d'entretien, résolution de problèmes, cas pratiques). Les questions NE DOIVENT PAS se répéter entre miniQuiz et quiz du jour. Zéro question en doublon.
-7. Les notes ont des miniQuiz (1-2 questions de compréhension directe)
-8. URLS : utilise UNIQUEMENT les domaines de la liste ci-dessus. NE PAS inventer de sous-pages.
-9. Adapte au domaine du poste (${sector}).
-10. Jour 1 ou 2 : inclus un item 'culture' sur ${company}. Explique pourquoi connaître la culture est crucial même pour un entretien technique.
-11. Dernier jour = révision + quiz final 15 questions de mise en situation
-12. JSON COMPLET et VALIDE, pas de troncature, pas de guillemets courbes
-13. Répartis les compétences uniformément. Premiers jours = fondamentaux et faiblesses. Derniers jours = révision, simulation d'entretien.
+6. QUIZ DIFFÉRENCIÉS — CRITIQUE : Les miniQuiz testent la COMPRÉHENSION IMMÉDIATE. Le quiz de fin de journée teste la MISE EN SITUATION avec des scénarios d'entretien réalistes. Zéro doublon.
+7. Les notes ont des miniQuiz (1-2 questions techniques de compréhension directe)
+8. URLS : UNIQUEMENT les domaines de la liste ci-dessus. NE PAS inventer de sous-pages.
+9. Adapte au domaine du poste (${sector}). Pour les postes techniques, CHAQUE jour doit avoir au moins 1 exercice pratique ou problème à résoudre.
+10. Jour 1 ou 2 : inclus un item 'culture' sur ${company}.
+11. Dernier jour = révision intensive + quiz final 15 questions de mise en situation d'entretien
+12. JSON COMPLET et VALIDE, pas de troncature. Rappel : EXACTEMENT ${planDays} jours.
+13. Répartis les compétences uniformément. Premiers jours = fondamentaux et faiblesses. Milieu = approfondissement technique. Derniers jours = simulation d'entretien et révision.
 14. Adapte la difficulté au niveau ${levelKey} : ${lc.quizDifficulty}
-15. QUALITÉ : Imagine un candidat stressé qui doit apprendre. Chaque partie doit être détaillée, organisée et aller en profondeur. Pas de répétitions entre sections. Pas de contenu superficiel.
+15. PROFONDEUR TECHNIQUE : Le candidat doit pouvoir RÉPONDRE à des questions d'entretien après avoir lu le plan. Inclus :
+    - Questions d'entretien types avec réponses attendues
+    - Pièges courants à éviter en entretien
+    - Exemples de réponses structurées (méthode STAR pour comportemental, approche systématique pour technique)
+    - Cas pratiques issus du vrai monde professionnel
 
 JSON uniquement :`;
 
@@ -310,7 +327,7 @@ JSON uniquement :`;
               console.log(`Tentative ${attempt + 1}/2 de génération du plan...`);
 
               // Plus de jours = plus de tokens nécessaires
-              const maxTokens = planDays <= 5 ? 12000 : planDays <= 10 ? 16000 : 20000;
+              const maxTokens = planDays <= 5 ? 16000 : planDays <= 10 ? 24000 : planDays <= 20 ? 32000 : 40000;
               const message = await anthropic.messages.create({
                 model: "claude-sonnet-4-20250514",
                 max_tokens: maxTokens,
@@ -321,8 +338,21 @@ JSON uniquement :`;
               const parsed = cleanAndValidate(text);
 
               if (parsed) {
-                console.log(`Plan validé à la tentative ${attempt + 1}`);
-                result = parsed;
+                // Vérifier que le nombre de jours est correct
+                if (parsed.length !== planDays) {
+                  console.warn(`Tentative ${attempt + 1}: ${parsed.length} jours au lieu de ${planDays} — ajustement...`);
+                  // Si trop de jours, on tronque
+                  if (parsed.length > planDays) {
+                    result = parsed.slice(0, planDays).map((d, idx) => ({ ...d, day: idx + 1 }));
+                  } else {
+                    // Si pas assez de jours, on accepte quand même (mieux que rien) mais on log
+                    console.warn(`Plan incomplet: ${parsed.length}/${planDays} jours. Accepté.`);
+                    result = parsed.map((d, idx) => ({ ...d, day: idx + 1 }));
+                  }
+                } else {
+                  result = parsed.map((d, idx) => ({ ...d, day: idx + 1 }));
+                }
+                console.log(`Plan validé à la tentative ${attempt + 1} : ${result.length} jours`);
                 break;
               }
               console.warn(`Tentative ${attempt + 1}: JSON invalide ou structure incorrecte`);

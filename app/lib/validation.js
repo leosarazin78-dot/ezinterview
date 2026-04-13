@@ -31,7 +31,7 @@ export const jobUrlSchema = z.object({
   experienceLevel: z.enum(["Junior (0-2 ans)", "Confirmé (3-7 ans)", "Senior (8+ ans)"], {
     errorMap: () => ({ message: "Sélectionne ton niveau d'expérience" }),
   }),
-  interviewDate: z.string().optional().default(""),
+  interviewDate: z.string().min(1, "Indique la date de ton entretien"),
 }).refine(
   (data) => data.jobUrl || data.jobText,
   { message: "Colle l'URL de l'offre ou le texte de l'annonce", path: ["jobUrl"] }

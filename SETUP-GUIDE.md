@@ -58,31 +58,24 @@ Supabase utilise une variable "Site URL" pour construire les liens dans les emai
    - Va dans **Authentication > SMTP Settings**
    - Active **"Enable Custom SMTP"**
    - Remplis :
-     - **Sender email** : `noreply@entretienzen.com` (ou ton email Gmail)
+     - **Sender email** : `admin@entretienzen.com`
      - **Sender name** : `EntretienZen`
-     - **Host** : `smtp.gmail.com`
-     - **Port** : `465`
-     - **Username** : ton email Gmail (ex: leo.sarazin78@gmail.com)
-     - **Password** : un "App Password" Google (PAS ton mot de passe normal)
+     - **Host** : SMTP de ton fournisseur email (ex: `smtp.gmail.com` si Google Workspace, ou le SMTP de ton hébergeur de domaine)
+     - **Port** : `465` (SSL) ou `587` (TLS)
+     - **Username** : `admin@entretienzen.com`
+     - **Password** : le mot de passe de l'adresse ou un "App Password"
    - **Sauvegarde**
 
-   > Avec cette config, les emails arriveront de "EntretienZen <noreply@entretienzen.com>"
+   > Avec cette config, les emails arriveront de "EntretienZen <admin@entretienzen.com>"
    > au lieu de "Supabase Auth <noreply@mail.app.supabase.io>"
 
-   Pour creer un App Password Gmail :
+   Si tu utilises Google Workspace pour admin@entretienzen.com :
    1. Va sur https://myaccount.google.com/security
    2. Assure-toi que la **verification en 2 etapes** est activee
    3. Va sur https://myaccount.google.com/apppasswords
-   4. Genere un mot de passe pour "Mail" > "Other" > tape "EntretienZen"
+   4. Genere un mot de passe pour "Mail" > "Other" > tape "EntretienZen SMTP"
    5. Copie le mot de passe (16 caracteres, sans espaces)
    6. Colle-le dans le champ **Password** de Supabase SMTP
-
-   > **Si tu n'as pas de domaine custom pour l'email** :
-   > Tu peux utiliser ton Gmail directement comme sender :
-   > - Sender email : `leo.sarazin78@gmail.com`
-   > - Sender name : `EntretienZen`
-   > Les emails arriveront de "EntretienZen <leo.sarazin78@gmail.com>"
-   > C'est mieux que "Supabase Auth" et ca fonctionne immediatement.
 
    > **ATTENTION** : sans SMTP custom, les emails :
    > - Arrivent de "Supabase Auth" (pas professionnel)

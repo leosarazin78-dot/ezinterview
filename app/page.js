@@ -4,13 +4,16 @@ import { createClient } from "@supabase/supabase-js";
 import { signupSchema, profileSchema, jobUrlSchema, cvInputSchema, feedbackSchema, reportSchema, zodFirstError } from "./lib/validation";
 
 // ─── Supabase browser client ───
+// PKCE flow = plus sécurisé et compatible tous navigateurs (Brave, Safari, Firefox, Chrome)
 const supabase = typeof window !== "undefined"
   ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
       auth: {
-        flowType: "implicit",
+        flowType: "pkce",
         detectSessionInUrl: true,
         autoRefreshToken: true,
         persistSession: true,
+        storageKey: "ez-auth",
+        storage: typeof window !== "undefined" ? window.localStorage : undefined,
       }
     })
   : null;
@@ -590,7 +593,7 @@ function LandingPage({ user, onLogin }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}/auth/callback`,
         }
       });
       if (error) throw error;
@@ -1144,7 +1147,7 @@ function PlansDashboard({ plans, onSelect, onNew, onDelete, deletingPlan, loadin
                   {plan.next_interlocutor && <p style={{ margin: "0 0 4px", fontSize: 11, color: T.accent }}>Face à : {plan.next_interlocutor}</p>}
                   {daysLeft !== null && <p style={{ fontSize: 11, color: T.warn, fontWeight: 600, margin: "0 0 8px" }}>J-{daysLeft}</p>}
                   {(() => {
-                    const totalDays = Math.min(plan.plan_data?.length || plan.duration || 7, 10);
+                    const totalDays = plan.plan_data?.length || plan.duration || 7;
                     const allDone = done >= totalDays;
                     return allDone ? (
                       <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
@@ -1328,19 +1331,39 @@ export default function EzInterview() {
       if (mounted) setAuthLoading(false);
     };
 
+    // PKCE : si ?code= est dans l'URL (retour OAuth), on l'échange côté client
+    const exchangeCodeIfPresent = async () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("code")) {
+        try {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(params.get("code"));
+          if (error) console.error("Code exchange error:", error.message);
+          // Nettoyer l'URL après échange (retire ?code=...)
+          window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+          if (data?.user && !userLoaded) {
+            await handleUser(data.user);
+          }
+        } catch (err) {
+          console.error("PKCE exchange error:", err);
+          // Nettoyer l'URL même en cas d'erreur
+          window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+        }
+      }
+    };
+    exchangeCodeIfPresent();
+
     // Écoute les changements d'auth (couvre TOUS les cas : session existante, OAuth redirect, email login)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
       if (event === "INITIAL_SESSION") {
-        // Session existante ou tokens dans l'URL — traiter dans tous les cas
         if (session?.user) {
           await handleUser(session.user);
-        } else {
+        } else if (!new URLSearchParams(window.location.search).has("code")) {
+          // Pas de session ET pas de code à échanger → pas connecté
           setAuthLoading(false);
         }
       } else if (event === "SIGNED_IN" && session?.user) {
-        // Login email/password ou Google OAuth
         await handleUser(session.user);
       } else if (event === "PASSWORD_RECOVERY") {
         setShowResetPassword(true);
@@ -1358,7 +1381,7 @@ export default function EzInterview() {
       }
     });
 
-    // Fallback: si onAuthStateChange ne fire pas dans les 3s (edge case navigateur)
+    // Fallback: si onAuthStateChange ne fire pas dans les 5s (edge case navigateur strict comme Brave)
     const timeout = setTimeout(async () => {
       if (!userLoaded && mounted) {
         try {
@@ -1372,7 +1395,7 @@ export default function EzInterview() {
           if (mounted) setAuthLoading(false);
         }
       }
-    }, 3000);
+    }, 5000);
 
     return () => {
       mounted = false;
@@ -1431,10 +1454,10 @@ export default function EzInterview() {
     if (!stats) return;
     setGenerating(true); setPlanError("");
     try {
-      // Calculer daysUntilInterview si interviewDate est fournie
+      // Calculer daysUntilInterview si interviewDate est fournie (= nombre exact de jours entre maintenant et l'entretien)
       let daysUntilInterview = null;
       if (interviewDate) {
-        daysUntilInterview = Math.min(10, Math.max(1, Math.ceil((new Date(interviewDate) - new Date()) / 86400000)));
+        daysUntilInterview = Math.max(1, Math.ceil((new Date(interviewDate) - new Date()) / 86400000));
       }
       // Lecture streaming : le backend envoie des heartbeats (espaces) puis le JSON final
       const response = await fetch("/api/generate-plan", {
@@ -1538,7 +1561,7 @@ export default function EzInterview() {
       });
     } catch (e) { console.error("Save progress error:", e); }
     // Auto-advance to next day (or show bilan if all done)
-    const maxDay = Math.min((plan?.length || 10), 10);
+    const maxDay = plan?.length || 1;
     const completedCount = Object.keys(updated).length;
     if (completedCount >= maxDay) {
       setStep("bilan");
@@ -1735,7 +1758,7 @@ export default function EzInterview() {
                 const cd = cached.completed_days || {};
                 setCompletedDays(cd);
                 // Auto-redirect to bilan if all days are done
-                const maxD = Math.min(cached.plan_data.length, 10);
+                const maxD = cached.plan_data.length;
                 const doneD = Object.keys(cd).filter(k => parseInt(k) < maxD).length;
                 setStep(doneD >= maxD ? "bilan" : "plan");
                 return;
@@ -1756,7 +1779,7 @@ export default function EzInterview() {
                   // Met à jour le cache local
                   setSavedPlans(prev => prev.map(p => p.id === id ? { ...p, plan_data: fullPlan.plan_data, job_data: fullPlan.job_data, completed_days: cd2 } : p));
                   // Auto-redirect to bilan if all days done
-                  const maxD2 = Math.min(fullPlan.plan_data.length, 10);
+                  const maxD2 = fullPlan.plan_data.length;
                   const doneD2 = Object.keys(cd2).filter(k => parseInt(k) < maxD2).length;
                   if (doneD2 >= maxD2) setStep("bilan");
                 } else {
@@ -1825,20 +1848,18 @@ export default function EzInterview() {
                 <option value="Senior (8+ ans)">Senior (8+ ans)</option>
               </select>
 
-              <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Date de l'entretien (optionnel)</label>
+              <label style={{ display: "block", marginTop: 16, marginBottom: 12, fontSize: 14, fontWeight: 600 }}>Date de l'entretien <span style={{ color: T.red }}>*</span></label>
               <input type="date" value={interviewDate} onChange={(e) => {
                 const val = e.target.value;
                 if (val) {
                   const days = Math.ceil((new Date(val) - new Date()) / 86400000);
-                  if (days > 10) { setInterviewDate(addDays(today(), 10)); return; }
                   if (days < 1) { setInterviewDate(addDays(today(), 1)); return; }
                 }
                 setInterviewDate(val);
-              }} min={addDays(today(), 1)} max={addDays(today(), 10)} style={inp} />
+              }} min={addDays(today(), 1)} style={inp} />
               {interviewDate && (() => {
                 const days = Math.ceil((new Date(interviewDate) - new Date()) / 86400000);
-                if (days > 10) return <p style={{ margin: "6px 0 0", fontSize: 12, color: T.red, fontWeight: 500 }}>Maximum 10 jours — sélectionne une date plus proche</p>;
-                return <p style={{ margin: "6px 0 0", fontSize: 12, color: days <= 3 ? T.red : days <= 7 ? T.warn : T.green, fontWeight: 500 }}>J-{days} — {days <= 3 ? "Préparation express !" : days <= 7 ? "Préparation standard" : "Préparation approfondie"} · Le plan couvrira chaque jour jusqu'à l'entretien</p>;
+                return <p style={{ margin: "6px 0 0", fontSize: 12, color: days <= 3 ? T.red : days <= 7 ? T.warn : T.green, fontWeight: 500 }}>J-{days} — {days <= 3 ? "Préparation express !" : days <= 7 ? "Préparation standard" : "Préparation approfondie"} · Le plan couvrira exactement {days} jour{days > 1 ? "s" : ""} de préparation</p>;
               })()}
 
               {jobError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{jobError}</p>}
@@ -1852,7 +1873,7 @@ export default function EzInterview() {
                 </div>
               )}
 
-              <button onClick={fetchJobData} disabled={jobLoading || (!jobUrl && !jobText) || !experienceLevel} style={{ ...((!jobUrl && !jobText) || !experienceLevel ? btnD : btnP), marginTop: 16, width: "100%" }}>
+              <button onClick={fetchJobData} disabled={jobLoading || (!jobUrl && !jobText) || !experienceLevel || !interviewDate} style={{ ...((!jobUrl && !jobText) || !experienceLevel || !interviewDate ? btnD : btnP), marginTop: 16, width: "100%" }}>
                 {jobLoading ? "Analyse en cours..." : showJobTextFallback && jobText ? "Analyser le texte collé" : "Analyser l'offre"}
               </button>
 
@@ -1951,12 +1972,27 @@ export default function EzInterview() {
 
                 {stats.matches?.length > 0 && (
                   <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-                    {stats.matches.map((m, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: T.r, background: m.match === "strong" ? T.greenLt : m.match === "partial" ? T.warnLt : T.redLt, border: `1px solid ${m.match === "strong" ? T.greenBd : m.match === "partial" ? T.warnBd : T.redBd}` }}>
-                        <Badge v={m.match}>{m.match === "strong" ? "Acquis" : m.match === "partial" ? "Partiel" : "À travailler"}</Badge>
-                        <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{m.label}</span>
-                      </div>
-                    ))}
+                    <p style={{ margin: "0 0 4px", fontSize: 11, color: T.muted }}>Clique sur un état pour le modifier selon ton ressenti</p>
+                    {stats.matches.map((m, i) => {
+                      const cycleMatch = () => {
+                        const next = m.match === "strong" ? "partial" : m.match === "partial" ? "weak" : "strong";
+                        const newMatches = stats.matches.map((mm, j) => j === i ? { ...mm, match: next } : mm);
+                        const strongCount = newMatches.filter(x => x.match === "strong").length;
+                        const partialCount = newMatches.filter(x => x.match === "partial").length;
+                        const total = newMatches.length;
+                        const newScore = total > 0 ? Math.round((strongCount * 100 + partialCount * 50) / (total * 100) * 100) : 0;
+                        setStats({ ...stats, matches: newMatches, overallScore: newScore, stats: { ...stats.stats, strongCount, partialCount, weakCount: total - strongCount - partialCount } });
+                      };
+                      return (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: T.r, background: m.match === "strong" ? T.greenLt : m.match === "partial" ? T.warnLt : T.redLt, border: `1px solid ${m.match === "strong" ? T.greenBd : m.match === "partial" ? T.warnBd : T.redBd}`, transition: "all 0.2s" }}>
+                          <button onClick={cycleMatch} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center" }} title="Cliquer pour changer l'état">
+                            <Badge v={m.match}>{m.match === "strong" ? "Acquis" : m.match === "partial" ? "Partiel" : "À travailler"}</Badge>
+                          </button>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: T.text, flex: 1 }}>{m.label}</span>
+                          <button onClick={cycleMatch} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11, color: T.muted, padding: "2px 6px", borderRadius: 6, transition: "all 0.15s" }} title="Modifier">✎</button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1992,8 +2028,8 @@ export default function EzInterview() {
                   </div>
                 </div>
               ) : (
-                <button onClick={generatePlan} disabled={generating} style={{ ...btnP, width: "100%", marginTop: 16 }}>
-                  {generating ? "Génération en cours..." : "Préparer mon plan"}
+                <button onClick={generatePlan} disabled={generating || !interviewDate} style={{ ...(generating || !interviewDate ? btnD : btnP), width: "100%", marginTop: 16 }}>
+                  {generating ? "Génération en cours..." : !interviewDate ? "Indique la date de l'entretien d'abord" : "Préparer mon plan"}
                 </button>
               )}
               {planError && <p style={{ color: T.red, fontSize: 13, margin: "12px 0 0" }}>{planError}</p>}
@@ -2029,21 +2065,17 @@ export default function EzInterview() {
           {/* Desktop sidebar */}
           <div className="ez-plan-sidebar" style={{ display: "flex", flexDirection: "column", gap: 8, position: "sticky", top: 80, alignSelf: "start" }}>
             <button onClick={() => { setStep("dashboard"); setExpandedItems({}); }} style={{ ...btnS, marginBottom: 8, fontSize: 12 }}>← Mes préparations</button>
-            {plan.map((day, i) => {
-              const locked = i >= 10;
-              return (
-                <button key={i} onClick={() => { if (!locked) { setExpandedDay(i); setExpandedItems({}); } }} style={{ padding: "12px 14px", borderRadius: T.r, border: `1px solid ${locked ? T.border : completedDays[i] ? T.greenBd : expandedDay === i ? T.accent : T.border}`, background: locked ? "rgba(255,255,255,0.02)" : completedDays[i] ? T.greenLt : expandedDay === i ? T.accentLt : T.bgCard, color: locked ? T.light : T.text, textAlign: "left", cursor: locked ? "not-allowed" : "pointer", fontFamily: "inherit", fontWeight: expandedDay === i ? 700 : 500, fontSize: 13, transition: "all 0.2s", opacity: locked ? 0.4 : 1, position: "relative" }}>
+            {plan.map((day, i) => (
+                <button key={i} onClick={() => { setExpandedDay(i); setExpandedItems({}); }} style={{ padding: "12px 14px", borderRadius: T.r, border: `1px solid ${completedDays[i] ? T.greenBd : expandedDay === i ? T.accent : T.border}`, background: completedDays[i] ? T.greenLt : expandedDay === i ? T.accentLt : T.bgCard, color: T.text, textAlign: "left", cursor: "pointer", fontFamily: "inherit", fontWeight: expandedDay === i ? 700 : 500, fontSize: 13, transition: "all 0.2s", position: "relative" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     {completedDays[i] && <Icon name="check-circle" size={14} color={T.green} />}
                     <span><span style={{ fontWeight: 700 }}>J{i + 1}</span> — {day.title?.slice(0, 22)}{day.title?.length > 22 ? "…" : ""}</span>
                   </span>
-                  {locked && <span style={{ fontSize: 10, color: T.light, display: "block", marginTop: 2 }}>Disponible en version Pro</span>}
                 </button>
-              );
-            })}
+            ))}
             {/* Bilan button in sidebar */}
             {(() => {
-              const maxDay = Math.min(plan.length, 10);
+              const maxDay = plan.length;
               const doneCount = Object.keys(completedDays).filter(k => parseInt(k) < maxDay).length;
               return doneCount >= maxDay ? (
                 <button onClick={() => setStep("bilan")} style={{ padding: "14px 14px", borderRadius: T.r, border: `1px solid ${T.greenBd}`, background: T.greenLt, color: T.green, textAlign: "center", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: 13, transition: "all 0.2s", marginTop: 4 }}>
@@ -2062,27 +2094,24 @@ export default function EzInterview() {
           {/* Mobile horizontal day selector */}
           <div className="ez-plan-mobile-days" style={{ display: "none", overflowX: "auto", gap: 6, paddingBottom: 8, WebkitOverflowScrolling: "touch", gridColumn: "1 / -1" }}>
             <button onClick={() => { setStep("dashboard"); setExpandedItems({}); }} style={{ ...btnS, padding: "6px 10px", fontSize: 11, flexShrink: 0, whiteSpace: "nowrap" }}>←</button>
-            {plan.map((day, i) => {
-              const locked = i >= 10;
-              return (
-                <button key={i} onClick={() => { if (!locked) { setExpandedDay(i); setExpandedItems({}); } }}
+            {plan.map((day, i) => (
+                <button key={i} onClick={() => { setExpandedDay(i); setExpandedItems({}); }}
                   style={{
-                    padding: "8px 12px", borderRadius: 20, border: `1px solid ${locked ? T.border : completedDays[i] ? T.greenBd : expandedDay === i ? T.accent : T.border}`,
-                    background: locked ? "rgba(255,255,255,0.02)" : completedDays[i] && expandedDay !== i ? T.greenLt : expandedDay === i ? T.accent : T.bgCard,
-                    color: locked ? T.light : expandedDay === i ? "#fff" : T.text,
-                    fontWeight: expandedDay === i ? 700 : 500, fontSize: 12, cursor: locked ? "not-allowed" : "pointer", fontFamily: "inherit",
-                    flexShrink: 0, whiteSpace: "nowrap", opacity: locked ? 0.4 : 1,
+                    padding: "8px 12px", borderRadius: 20, border: `1px solid ${completedDays[i] ? T.greenBd : expandedDay === i ? T.accent : T.border}`,
+                    background: completedDays[i] && expandedDay !== i ? T.greenLt : expandedDay === i ? T.accent : T.bgCard,
+                    color: expandedDay === i ? "#fff" : T.text,
+                    fontWeight: expandedDay === i ? 700 : 500, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                    flexShrink: 0, whiteSpace: "nowrap",
                   }}>
-                  {completedDays[i] && <span style={{ marginRight: 2 }}>✓</span>}<span style={{ fontWeight: 600 }}>J{i + 1}</span> {locked ? "Pro" : `${plan[i].title?.slice(0, 15)}${plan[i].title?.length > 15 ? "…" : ""}`}
+                  {completedDays[i] && <span style={{ marginRight: 2 }}>✓</span>}<span style={{ fontWeight: 600 }}>J{i + 1}</span> {`${plan[i].title?.slice(0, 15)}${plan[i].title?.length > 15 ? "…" : ""}`}
                 </button>
-              );
-            })}
+            ))}
           </div>
 
           <div className="ez-plan-main" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
             {/* ─── Progress bar top ─── */}
             {(() => {
-              const maxDay = Math.min(plan.length, 10);
+              const maxDay = plan.length;
               const doneCount = Object.keys(completedDays).filter(k => parseInt(k) < maxDay).length;
               const pct = Math.round((doneCount / maxDay) * 100);
               return (
@@ -2214,7 +2243,7 @@ export default function EzInterview() {
                     )}
                     {/* Progress bar */}
                     {(() => {
-                      const maxDay = Math.min(plan.length, 10);
+                      const maxDay = plan.length;
                       const doneCount = Object.keys(completedDays).filter(k => parseInt(k) < maxDay).length;
                       return (
                         <div style={{ marginTop: 12 }}>
@@ -2251,7 +2280,7 @@ export default function EzInterview() {
               {jobData?.job_title ? `${jobData.job_title} — ${jobData?.company || ""}` : "Ton parcours complet"}
             </p>
             {(() => {
-              const maxDay = Math.min(plan.length, 10);
+              const maxDay = plan.length;
               const doneCount = Object.keys(completedDays).filter(k => parseInt(k) < maxDay).length;
               return (
                 <div style={{ marginTop: 16 }}>
@@ -2270,7 +2299,7 @@ export default function EzInterview() {
               </span>
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {plan.slice(0, Math.min(plan.length, 10)).map((day, i) => (
+              {plan.map((day, i) => (
                 <div key={i} style={{
                   padding: "14px 16px", borderRadius: T.r,
                   background: completedDays[i] ? T.greenLt : T.bgSoft,
@@ -2312,7 +2341,7 @@ export default function EzInterview() {
               </span>
             </h3>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {plan.slice(0, Math.min(plan.length, 10)).map((day, i) => (
+              {plan.map((day, i) => (
                 day.items?.filter(item => item.type === "memo" || item.type === "exercise").map((item, j) => (
                   <Badge key={`${i}-${j}`} v={completedDays[i] ? "strong" : "default"}>{item.title?.slice(0, 30)}</Badge>
                 ))
@@ -2332,14 +2361,14 @@ export default function EzInterview() {
             </p>
             {(() => {
               // Collect all quiz questions from the last day (which is the review/final quiz day)
-              const lastAccessibleDay = Math.min(plan.length, 10) - 1;
+              const lastAccessibleDay = plan.length - 1;
               const lastDay = plan[lastAccessibleDay];
               const finalQuizItem = lastDay?.items?.find(item => item.type === "quiz");
               const finalQuestions = finalQuizItem?.content?.questions || [];
 
               // Also collect mini-quiz questions from all days for a comprehensive quiz
               const allQuizQuestions = [];
-              plan.slice(0, Math.min(plan.length, 10)).forEach((day, dayIdx) => {
+              plan.forEach((day, dayIdx) => {
                 day.items?.forEach(item => {
                   if (item.miniQuiz?.length > 0) {
                     item.miniQuiz.forEach(q => allQuizQuestions.push(q));

@@ -17,7 +17,7 @@ export default function MentionsLegales() {
         {/* À COMPLÉTER avec tes infos */}
         Responsable de la publication : [Ton nom complet]<br />
         Adresse : [Ton adresse ou celle de ton entreprise]<br />
-        Email : contact@prepentretien.fr<br />
+        Email : admin@entretienzen.com<br />
         Statut : [Auto-entrepreneur / SAS / etc.]<br />
         SIRET : [Ton numéro SIRET]
       </p>
