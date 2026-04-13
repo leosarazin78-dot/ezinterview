@@ -648,52 +648,9 @@ function LandingPage({ user, onLogin }) {
     { iconName: "trending-up", title: "Progression en temps réel", desc: "Vois exactement où tu en es. Aucune surprise le jour J." },
   ];
 
-  // ─── Cookie Consent State (localStorage-backed) ───
-  const [cookieConsent, setCookieConsent] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("ez_cookie_consent");
-        if (stored === "true") return true;
-        if (stored === "false") return false;
-      } catch {}
-    }
-    return null;
-  });
-
-  const handleCookieAccept = () => {
-    try { localStorage.setItem("ez_cookie_consent", "true"); } catch {}
-    setCookieConsent(true);
-  };
-  const handleCookieRefuse = () => {
-    try { localStorage.setItem("ez_cookie_consent", "false"); } catch {}
-    setCookieConsent(false);
-  };
 
   return (
     <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: T.text, background: T.bg, minHeight: "100vh", lineHeight: 1.6 }}>
-      {/* ─── Cookie Consent Banner ─── */}
-      {cookieConsent === null && (
-        <div style={{
-          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 2000,
-          background: "rgba(26,26,36,0.97)", backdropFilter: "blur(16px)",
-          borderTop: `1px solid ${T.border}`, padding: "20px 24px",
-          animation: "fadeIn 0.4s ease",
-        }}>
-          <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", justifyContent: "space-between" }}>
-            <div style={{ flex: 1, minWidth: 280 }}>
-              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: T.text, display: "flex", alignItems: "center", gap: 8 }}><Icon name="shield" size={16} color={T.accent} /> Respect de ta vie privée</p>
-              <p style={{ margin: 0, fontSize: 12, color: T.muted, lineHeight: 1.6 }}>
-                EntretienZen utilise des cookies d'analyse anonymes (Umami, sans tracking personnel) pour améliorer l'expérience.
-                Aucune donnée personnelle n'est partagée avec des tiers.
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-              <button onClick={handleCookieRefuse} style={{ ...btnS, padding: "10px 20px", fontSize: 13 }}>Refuser</button>
-              <button onClick={handleCookieAccept} style={{ ...btnP, padding: "10px 20px", fontSize: 13 }}>Accepter</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* JSON-LD Structured Data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
