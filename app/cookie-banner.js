@@ -13,31 +13,11 @@ export default function CookieBanner() {
   const accept = () => {
     localStorage.setItem("cookie-consent", "accepted");
     setVisible(false);
-    // Active Google Analytics si le script est chargé
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("consent", "update", {
-        analytics_storage: "granted",
-      });
-    }
   };
 
   const refuse = () => {
     localStorage.setItem("cookie-consent", "refused");
     setVisible(false);
-    // Désactive Google Analytics
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("consent", "update", {
-        analytics_storage: "denied",
-      });
-    }
-    // Supprime les cookies GA existants
-    document.cookie.split(";").forEach((c) => {
-      const name = c.trim().split("=")[0];
-      if (name.startsWith("_ga") || name.startsWith("_gid")) {
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-      }
-    });
   };
 
   if (!visible) return null;
@@ -52,7 +32,7 @@ export default function CookieBanner() {
       fontFamily: "'Inter', sans-serif",
     }}>
       <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, maxWidth: 600 }}>
-        Ce site utilise des cookies essentiels (authentification) et, avec votre accord, des cookies analytiques (Google Analytics) pour améliorer le service.{" "}
+        Ce site utilise des cookies essentiels (authentification) pour votre expérience.{" "}
         <a href="/confidentialite" style={{ color: "#93C5FD", textDecoration: "underline" }}>En savoir plus</a>
       </p>
       <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
